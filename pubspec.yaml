@@ -1,0 +1,56 @@
+name: kiwii
+description: A Discord bot written with nyxx and nyxx_commands.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: '>=3.0.5 <4.0.0'
+
+dependencies:
+  nyxx_commands: 
+    git:
+      url: https://github.com/Rapougnac/nyxx_commands.git
+      ref: feat/lines
+  postgres: ^2.6.3
+  get_it: ^7.2.0
+  dartx: ^1.2.0
+  uwurandom: ^1.0.0
+  # perspective_api:
+    # path: ../perspective_api
+    # git:
+      # url: http://umbrel:8085/Rapougnac/perspective_api.git
+      # url: https://git.rapougnac.moe/Rapougnac/perspective_api.git
+  slang: ^3.23.0
+  path: ^1.8.3
+  drift: ^2.13.0
+  drift_postgres: ^0.1.0
+  json_annotation: ^4.8.1
+  http: ^1.1.0
+  nyxx_extensions: 
+    path: ../nyxx_extensions
+  dart_openai: 4.1.2
+  darq: ^2.0.0
+  stdlibc: ^0.1.4
+  # nyxx_utils:
+  #   # git: https://git.rapougnac.moe/Rapougnac/nyxx_utils.git
+  #   path: ../nyxx_utils
+  sentry: ^7.18.0
+  dart_eval: ^0.6.0
+  nyxx: ^6.2.1
+
+  dotenv: any
+dependency_overrides:
+  postgres:
+    git:
+      url: https://github.com/isoos/postgresql-dart.git
+  drift_postgres:
+    git:
+      url: https://github.com/simolus3/drift.git
+      path: extras/drift_postgres
+
+
+dev_dependencies:
+  build_runner: ^2.4.6
+  drift_dev: ^2.13.1
+  json_serializable: ^6.7.1
+  lints: ^3.0.0

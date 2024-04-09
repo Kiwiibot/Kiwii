@@ -1,0 +1,9 @@
+include: package:lints/recommended.yaml
+
+analyzer:
+  exclude: 
+    - lib/generated/**
+    - '*.g.dart'
+  language:
+    strict-raw-types: true
+    strict-casts: false

@@ -1,0 +1,71 @@
+version: "3.9"
+
+services:
+  kiwii:
+    build: 
+      context: .
+      target: kiwii
+    restart: always
+    env_file: .env
+    container_name: kiwii
+
+    links: [database, lavalink]
+    depends_on: [database, lavalink]
+    ports:
+      - "4242:4242"
+
+  api:
+    build:
+      context: .
+      target: api
+    restart: always
+    env_file: .env
+    container_name: kiwii_api
+    links: [kiwii]
+    ports: 
+      - "3000:3000"
+  database:
+    image: postgres
+    restart: always
+    # volumes:
+    #   - data:/var/lib/postgresql/data
+    env_file: .env
+
+  lavalink:
+    image: fredboat/lavalink:master
+    restart: always
+    volumes:
+      - ./lavalink.yml:/opt/Lavalink/application.yml
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - 9090:9090
+    container_name: prometheus_kiwii
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    links:
+      - kiwii
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "9191:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    links:
+      - prometheus
+    depends_on:
+      - prometheus
+
+volumes:
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  # data:
+  #   driver: local
