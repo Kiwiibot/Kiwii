@@ -13,10 +13,6 @@ final uwurandom = ChatCommand(
       @Description('The type of nonsense to generate')
       String? type = 'all',
       @UseConverter(IntConverter(min: 1, max: 512)) @Description('The length of the nonsense to generate') int length = 128,
-      // @Description('The seed to use for the nonsense')
-      // int? seed,
-      // @Description('Whether to show the seed')
-      // bool showSeed = false,
     ]) async {
       final result = switch (type) {
         'catgirlnonsense' => catGirlNonSense.generate(length),
