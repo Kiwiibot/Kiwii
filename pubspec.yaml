@@ -15,11 +15,6 @@ dependencies:
   get_it: ^7.2.0
   dartx: ^1.2.0
   uwurandom: ^1.0.0
-  # perspective_api:
-    # path: ../perspective_api
-    # git:
-      # url: http://umbrel:8085/Rapougnac/perspective_api.git
-      # url: https://git.rapougnac.moe/Rapougnac/perspective_api.git
   slang: ^3.23.0
   path: ^1.8.3
   drift: ^2.13.0
@@ -31,9 +26,6 @@ dependencies:
   dart_openai: 4.1.2
   darq: ^2.0.0
   stdlibc: ^0.1.4
-  # nyxx_utils:
-  #   # git: https://git.rapougnac.moe/Rapougnac/nyxx_utils.git
-  #   path: ../nyxx_utils
   sentry: ^7.18.0
   dart_eval: ^0.6.0
   nyxx: ^6.2.1

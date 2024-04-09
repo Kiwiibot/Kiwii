@@ -11,7 +11,7 @@ build/
 doc/api/
 
 # # dotenv environment variables file
-# .env*
+.env*
 # Do include our example file
 !.env.example
 
@@ -38,6 +38,5 @@ data/
 api/node_modules/
 
 # Private
-.env
-.env.old
 .vscode/launch.json
+logs/*

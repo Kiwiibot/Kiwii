@@ -212,3 +212,25 @@
 [2024-03-19 17:34:57.321834] [INFO] [Nyxx.Shards[0]] Connected to Gateway
 [2024-03-19 18:20:35.114439] [INFO] [Nyxx.Shards[0]] Connecting to Gateway
 [2024-03-19 18:20:35.330212] [INFO] [Nyxx.Shards[0]] Connected to Gateway
+[2024-04-09 10:36:17.855946] [INFO] [Commands] Registered command "ping"
+[2024-04-09 10:36:17.865902] [INFO] [Commands] Registered command "markov"
+[2024-04-09 10:36:17.867126] [INFO] [Commands] Registered command "uwurandom"
+[2024-04-09 10:36:17.869728] [INFO] [Commands] Registered command "tag"
+[2024-04-09 10:36:17.870570] [INFO] [Commands] Registered command "tag create"
+[2024-04-09 10:36:17.870943] [INFO] [Commands] Registered command "tag delete"
+[2024-04-09 10:36:17.871059] [INFO] [Commands] Registered command "tag edit"
+[2024-04-09 10:36:17.871150] [INFO] [Commands] Registered command "tag raw"
+[2024-04-09 10:36:17.871249] [INFO] [Commands] Registered command "tag list"
+[2024-04-09 10:36:17.872011] [INFO] [Commands] Registered command "help"
+[2024-04-09 10:36:17.872525] [INFO] [Commands] Registered command "source"
+[2024-04-09 10:36:17.879946] [INFO] [Nyxx] Connecting to the Gateway API
+[2024-04-09 10:36:18.614573] [INFO] [Nyxx.Gateway] Connecting 1/1 shards
+[2024-04-09 10:36:18.635961] [INFO] [Nyxx] Listening for SIGINT or SIGTERM to safely close
+[2024-04-09 10:36:18.868208] [INFO] [Nyxx.Shards[0]] Connecting to Gateway
+[2024-04-09 10:36:18.962301] [INFO] [Commands] Synced 5 commands to Discord
+[2024-04-09 10:36:19.109457] [INFO] [Nyxx.Shards[0]] Connected to Gateway
+[2024-04-09 10:38:20.863490] [INFO] [Nyxx] Caught SIGINT or SIGTERM, closing
+[2024-04-09 10:38:20.863792] [INFO] [Nyxx] Closing client
+[2024-04-09 10:38:20.865754] [INFO] [Nyxx.Shards[0]] Disposing
+[2024-04-09 10:38:20.876783] [INFO] [Nyxx.Shards[0]] Disconnecting: Dispose requested
+[2024-04-09 10:38:20.877912] [INFO] [Nyxx.Shards[0]] Shard exited
