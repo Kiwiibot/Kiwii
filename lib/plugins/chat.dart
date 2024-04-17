@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:dart_openai/dart_openai.dart';
-import 'package:kiwii/src/models/errors/unproxied.dart';
-import 'package:kiwii/src/settings.dart';
 import 'package:nyxx/nyxx.dart';
 
+import '../src/models/errors/unproxied.dart';
+import '../src/settings.dart';
+
+const escapeChar = r'\';
 const systemMessage = '''You are a friendly discord bot named Kiwii in a small personal Discod guild called Les Transcendantes.
 Your developer is Rapougnac, the owner of the guild, and you were written in Dart using the Nyxx library. 
 You should NOT PREFIX your messages with your username followed by a colon.
@@ -12,20 +14,9 @@ You can treat the username as the name of the author. However, you should not no
 "Kiwii (Bot)"). 
 You can use the emoji <:yang_adorable:1147202859654455296> to give members virtual pats when they feel down or ask for pets.
 ''';
-const escapeChar = r'\';
 const unproxiedMessages = <Snowflake>{};
 
 class ChatPlugin extends NyxxPlugin<NyxxGateway> {
-  @override
-  Future<NyxxGateway> doConnect(ApiOptions apiOptions, ClientOptions clientOptions, Future<NyxxGateway> Function() connect) async {
-    final client = await super.doConnect(apiOptions, clientOptions, connect);
-
-    OpenAI.apiKey = 'ghu_4gvRFZFl8qNUXN1KYpdSfcQxZIA8CE4fUYvH';
-    OpenAI.baseUrl = 'http://localhost:8080';
-
-    return client;
-  }
-
   @override
   Future<void> afterConnect(client) async {
     client.on<MessageCreateEvent>(
@@ -112,7 +103,7 @@ class ChatPlugin extends NyxxPlugin<NyxxGateway> {
           }
 
           typingTimer.cancel();
-        } on HttpResponseError catch(e) {
+        } on HttpResponseError catch (e) {
           typingTimer.cancel();
 
           if (e.errorCode == 50035) {
@@ -125,5 +116,15 @@ class ChatPlugin extends NyxxPlugin<NyxxGateway> {
         }
       },
     );
+  }
+
+  @override
+  Future<NyxxGateway> doConnect(ApiOptions apiOptions, ClientOptions clientOptions, Future<NyxxGateway> Function() connect) async {
+    final client = await super.doConnect(apiOptions, clientOptions, connect);
+
+    OpenAI.apiKey = 'ghu_4gvRFZFl8qNUXN1KYpdSfcQxZIA8CE4fUYvH';
+    OpenAI.baseUrl = 'http://localhost:8080';
+
+    return client;
   }
 }

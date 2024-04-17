@@ -1,12 +1,12 @@
 import 'package:get_it/get_it.dart';
-import 'package:kiwii/database.dart';
-import 'package:kiwii/utils/parser.dart';
+import '../../database.dart';
+import '../../utils/parser.dart';
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
 // ignore: implementation_imports
 import 'package:nyxx_commands/src/context/base.dart';
 // import 'package:kiwii/utils/parser.dart';
-import 'package:kiwii/src/settings.dart' as settings;
+import '../../src/settings.dart' as settings;
 
 class ContextBaseWithMessage extends ContextBase {
   final Message message;

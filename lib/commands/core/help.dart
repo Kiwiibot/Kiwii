@@ -9,8 +9,9 @@ final helpCommand = ChatCommand(
       final commands = ctx.commands.walkCommands().whereType<ChatCommand>();
       final embed = EmbedBuilder(fields: [])
         ..title = 'Help'
-        ..description = 'Use `${ctx is MessageChatContext ? ctx.prefix : '/'}help <command>` to get more information about a command.'
-        ..color = DiscordColor.parseHexString('#00ff00')
+        ..description =
+            'Use `${ctx is MessageChatContext ? ctx.prefix : '/'}help <command>` to get more information about a command.'
+        ..color = DiscordColor(0x00ff00)
         ..footer = EmbedFooterBuilder(
           text: 'Kiwii',
           iconUrl: (await ctx.client.user.get()).avatar.url,
@@ -35,14 +36,6 @@ final helpCommand = ChatCommand(
         text: 'Kiwii',
         iconUrl: (await ctx.client.user.get()).avatar.url,
       );
-
-    // for (final arg in command.arguments) {
-    //   embed.fields!.add(EmbedFieldBuilder(
-    //     name: arg.name,
-    //     value: arg.description ?? 'No description provided.',
-    //     isInline: false,
-    //   ));
-    // }
 
     if (command.children.isNotEmpty) {
       embed.fields!.add(EmbedFieldBuilder(

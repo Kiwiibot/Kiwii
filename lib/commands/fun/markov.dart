@@ -1,18 +1,34 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:kiwii/utils/utils.dart';
+import 'package:dartx/dartx.dart';
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
-import 'package:dartx/dartx.dart';
+
+import '../../utils/utils.dart';
 
 const codeUnitA = 65;
 const codeUnitZ = 90;
 const messageHundredsLimit = 10;
+const _internalCacheTTL = 60000;
+const _internalMessageCacheTTL = 120000;
+final markov = ChatCommand(
+  'markov',
+  'Generate a markov chain from the last 100 messages in the channel.',
+  id(
+    'markov',
+    (ChatContext ctx, [GuildTextChannel? channel]) async {
+      final markov = await retrieveMarkov(ctx.user, channel ?? ctx.channel);
+      final embed = EmbedBuilder(
+        description: cutText(markov.process().toString(), 2000),
+      );
+      await ctx.respond(MessageBuilder(embeds: [embed]));
+    },
+  ),
+);
 final _internalCache = Expando<Markov>();
 final _internalMessageCache = Expando<Map<Snowflake, Message>>();
-const _internalMessageCacheTTL = 120000;
-const _internalCacheTTL = 60000;
+
 final _internalUserCache = <String, Markov>{};
 
 Future<Map<Snowflake, Message>> fetchMessages(TextChannel channel, [User? user]) async {
@@ -85,16 +101,3 @@ Future<Markov> retrieveMarkov(User? user, TextChannel channel) async {
 
   return markov;
 }
-
-final markov = ChatCommand(
-  'markov',
-  'Generate a markov chain from the last 100 messages in the channel.',
-  id('markov', (ChatContext ctx, [GuildTextChannel? channel]) async {
-    final markov = await retrieveMarkov(ctx.user, channel ?? ctx.channel);
-    final embed = EmbedBuilder(
-      description: cutText(markov.process().toString(), 2000),
-    );
-
-    await ctx.respond(MessageBuilder(embeds: [embed]));
-  }),
-);

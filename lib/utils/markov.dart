@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:kiwii/utils/utils.dart';
+import 'utils.dart';
 
 class Markov {
   static final wordSeparator = RegExp(r'[, ]');

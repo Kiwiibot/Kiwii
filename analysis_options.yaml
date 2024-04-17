@@ -1,9 +1,14 @@
 include: package:lints/recommended.yaml
 
 analyzer:
-  exclude: 
+  exclude:
     - lib/generated/**
-    - '*.g.dart'
+    - "*.g.dart"
   language:
     strict-raw-types: true
     strict-casts: false
+    strict-inference: true
+
+linter:
+  rules:
+    - prefer_relative_imports

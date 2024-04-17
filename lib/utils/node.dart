@@ -6,29 +6,6 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
-Future<String> runSandboxedJS(String code, [Map<String, Object?>? context]) async {
-  final preamble = '''
-
-  const vm = require('node:vm');
-  const dartCtx = ${context != null ? json.encode(context) : '{}'};
-  const context = vm.createContext({...dartCtx});
-  const script = new vm.Script(decodeURIComponent(`${Uri.encodeComponent(code)}`));
-  script.runInContext(context);
-  console.log(JSON.stringify(context));
-
-''';
-
-// await File('preamble.js').writeAsString(preamble);
-
-  final process = await Process.run('/home/mleresche/.nvm/versions/node/v20.9.0/bin/node', ['-e', preamble]);
-
-  if (process.exitCode != 0) {
-    throw Exception(process.stderr.toString().replaceAll('mleresche', 'kiwii'));
-  }
-
-  return process.stdout.toString();
-}
-
 /// Run js code on the piston API
 Future<String> runPistonJS(String code, [Map<String, Object?>? context]) async {
   final preamble = '''
@@ -43,10 +20,11 @@ Future<String> runPistonJS(String code, [Map<String, Object?>? context]) async {
   final response = await http.post(
     Uri.parse('https://emkc.org/api/v2/piston/execute'),
     body: json.encode({
-      'language': 'nodejs',
+      'language': 'javascript',
       'files': [
         {'content': preamble},
       ],
+      'version': '18.15.0',
     }),
     headers: {
       'Content-Type': 'application/json',
@@ -59,4 +37,27 @@ Future<String> runPistonJS(String code, [Map<String, Object?>? context]) async {
 
   final result = json.decode(response.body);
   return result['run']['stdout'] as String;
+}
+
+Future<String> runSandboxedJS(String code, [Map<String, Object?>? context]) async {
+  final preamble = '''
+
+  const vm = require('node:vm');
+  const dartCtx = ${context != null ? json.encode(context) : '{}'};
+  const context = vm.createContext({...dartCtx});
+  const script = new vm.Script(decodeURIComponent(`${Uri.encodeComponent(code)}`));
+  script.runInContext(context);
+  console.log(JSON.stringify(context));
+
+''';
+
+// await File('preamble.js').writeAsString(preamble);
+
+  final process = await Process.run('node', ['-e', preamble]);
+
+  if (process.exitCode != 0) {
+    throw Exception(process.stderr.toString());
+  }
+
+  return process.stdout.toString();
 }

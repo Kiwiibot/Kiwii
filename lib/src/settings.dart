@@ -4,7 +4,7 @@ import 'package:nyxx/nyxx.dart';
 
 final dotenv = DotEnv()..load();
 
-String? getEnv(String key) => Platform.environment[key] ?? dotenv[key] ?? (String.fromEnvironment(key) == '' ? null : String.fromEnvironment(key));
+String? getEnv(String key) => Platform.environment[key] ?? dotenv[key] ?? (!bool.hasEnvironment(key) ? null : String.fromEnvironment(key));
 
 const version = '0.1.0';
 
@@ -46,5 +46,3 @@ final chatbotChannels = fromEnvironment('CHATBOT_CHANNELS', '912636659504414731'
 final dsn = fromEnvironment('SENTRY_DSN');
 
 final ownerId = Snowflake.parse(fromEnvironment('OWNER_ID', '253554702858452992'));
-
-

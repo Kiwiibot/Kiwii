@@ -5,6 +5,6 @@
 //   'compile',
 //   '',
 //   id('compile', (MessageChatContext ctx, Type arg) async {
-    
+
 //   }),
 // );

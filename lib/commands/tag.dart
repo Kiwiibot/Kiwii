@@ -1,11 +1,12 @@
 import 'package:drift_postgres/drift_postgres.dart';
 import 'package:get_it/get_it.dart';
-import 'package:kiwii/database.dart';
-import 'package:kiwii/utils/extensions.dart';
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
-import 'package:postgres/postgres.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
+import 'package:postgres/postgres.dart';
+
+import '../database.dart';
+import '../utils/extensions.dart';
 
 final tag = ChatCommand(
   'tag',

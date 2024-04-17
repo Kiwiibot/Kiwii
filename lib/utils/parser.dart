@@ -5,14 +5,14 @@ import 'dart:math' as math;
 
 import 'package:dartx/dartx.dart';
 import 'package:http/http.dart' as http;
-import 'package:kiwii/database.dart';
-import 'package:kiwii/utils/node.dart';
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
-import 'package:kiwii/plugins/tag/tag.dart';
 import 'package:nyxx_commands/src/converters/built_in/member.dart';
 import 'package:nyxx_commands/src/converters/built_in/snowflake.dart';
 
+import '../database.dart';
+import '../plugins/tag/tag.dart';
+import 'node.dart';
 
 const permissions = {
   'CREATE_INSTANT_INVITE': Permissions.createInstantInvite,
@@ -62,22 +62,6 @@ const permissions = {
   // 'SEND_VOICE_MESSAGES': Permissions.sendVoiceMessages,
 };
 
-extension on String {
-  /// Like [operator.[]] but returns null if the index is out of bounds.
-  /// Also allows negative indices.
-  String? at(int index) {
-    if (index < 0) {
-      index = length + index;
-    }
-
-    if (index < 0 || index >= length) {
-      return null;
-    }
-
-    return this[index];
-  }
-}
-
 class Parser {
   int _stackSize = 0;
 
@@ -85,88 +69,6 @@ class Parser {
   final ContextBaseWithMessage ctx;
 
   Parser(this.client, this.ctx);
-
-  Future<ParserResult> parse(String input, Tag tag, List<String> tagArgs) async {
-    try {
-      final result = await subParse(input, tag, tagArgs, initial: true);
-      return ParserResult(isSuccess: true, result: result);
-    } catch (e) {
-      return ParserResult(isSuccess: false, result: e.toString());
-    }
-  }
-
-  Future<String> subParse(String input, Tag tag, List<String> tagArgs, {bool initial = false}) async {
-    _stackSize++;
-    if (_stackSize > 1000) {
-      throw Exception('Stack size exceeded at: `$input`');
-    }
-
-    if (initial) {
-      input = await subParse(input, tag, tagArgs);
-
-      int tagStart, tagEnd;
-
-      for (int i = 0; i < input.length; i++) {
-        if (input[i] == '}' && (input.at(i + 1) != r'\' && input.at(i - 1) != '\x00')) {
-          tagEnd = i;
-
-          for (int e = tagEnd; e >= 0; e--) {
-            if (input[e] == '{' && (input[i - 1] != r'\' && input.at(e + 1) != '\x00')) {
-              tagStart = e + 1;
-
-              final toParse = input.substring(tagStart, tagEnd).trim();
-              final [tagName, ...split] = toParse.split(':');
-              final rawArgs = split.join(':').replaceAll(RegExp(r'\\\|'), '\x00|');
-              final args = <String>[];
-
-              String currentArg = '';
-              for (int j = 0; j < rawArgs.length; j++) {
-                if (rawArgs[j] == '|' && rawArgs[j - 1] != '\x00') {
-                  args.add(currentArg);
-                  currentArg = '';
-                } else {
-                  currentArg += rawArgs[j];
-                }
-              }
-
-              if (currentArg.isNotEmpty) {
-                args.add(currentArg);
-              }
-
-              final before = input.substring(0, tagStart - 1);
-              final after = input.substring(tagEnd + 1, input.length);
-
-              final tagResult = escapeTag((await getData(tagName, rawArgs, args, tagArgs, tag)).toString());
-              input = before + tagResult + after;
-              i = before.length + tagResult.length - 1;
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    if (initial) {
-      input = await subParse(input, tag, tagArgs);
-    }
-
-    return input;
-  }
-
-  Future<Member?> memberFromString(String input) async {
-    var member = await convertMember(StringView(input), ctx);
-    if (member != null) {
-      return member;
-    }
-
-    final snowflake = convertSnowflake(StringView(input), ctx);
-    if (snowflake == null) {
-      return null;
-    }
-
-    member = await snowflakeToMember(snowflake, ctx);
-    return member;
-  }
 
   Future<Object?> getData(String key, String rawArgs, List<String> split, List<String> args, Tag tag) async {
     key = key.trim();
@@ -419,6 +321,88 @@ class Parser {
     return null;
   }
 
+  Future<Member?> memberFromString(String input) async {
+    var member = await convertMember(StringView(input), ctx);
+    if (member != null) {
+      return member;
+    }
+
+    final snowflake = convertSnowflake(StringView(input), ctx);
+    if (snowflake == null) {
+      return null;
+    }
+
+    member = await snowflakeToMember(snowflake, ctx);
+    return member;
+  }
+
+  Future<ParserResult> parse(String input, Tag tag, List<String> tagArgs) async {
+    try {
+      final result = await subParse(input, tag, tagArgs, initial: true);
+      return ParserResult(isSuccess: true, result: result);
+    } catch (e) {
+      return ParserResult(isSuccess: false, result: e.toString());
+    }
+  }
+
+  Future<String> subParse(String input, Tag tag, List<String> tagArgs, {bool initial = false}) async {
+    _stackSize++;
+    if (_stackSize > 1000) {
+      throw Exception('Stack size exceeded at: `$input`');
+    }
+
+    if (initial) {
+      input = await subParse(input, tag, tagArgs);
+
+      int tagStart, tagEnd;
+
+      for (int i = 0; i < input.length; i++) {
+        if (input[i] == '}' && (input.at(i + 1) != r'\' && input.at(i - 1) != '\x00')) {
+          tagEnd = i;
+
+          for (int e = tagEnd; e >= 0; e--) {
+            if (input[e] == '{' && (input[i - 1] != r'\' && input.at(e + 1) != '\x00')) {
+              tagStart = e + 1;
+
+              final toParse = input.substring(tagStart, tagEnd).trim();
+              final [tagName, ...split] = toParse.split(':');
+              final rawArgs = split.join(':').replaceAll(RegExp(r'\\\|'), '\x00|');
+              final args = <String>[];
+
+              String currentArg = '';
+              for (int j = 0; j < rawArgs.length; j++) {
+                if (rawArgs[j] == '|' && rawArgs[j - 1] != '\x00') {
+                  args.add(currentArg);
+                  currentArg = '';
+                } else {
+                  currentArg += rawArgs[j];
+                }
+              }
+
+              if (currentArg.isNotEmpty) {
+                args.add(currentArg);
+              }
+
+              final before = input.substring(0, tagStart - 1);
+              final after = input.substring(tagEnd + 1, input.length);
+
+              final tagResult = escapeTag((await getData(tagName, rawArgs, args, tagArgs, tag)).toString());
+              input = before + tagResult + after;
+              i = before.length + tagResult.length - 1;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    if (initial) {
+      input = await subParse(input, tag, tagArgs);
+    }
+
+    return input;
+  }
+
   static String escapeTag(String tag) => tag.replaceAll('{', '{\x00').replaceAll('}', '\x00}').replaceAll(r'|', '\x00|');
 }
 
@@ -434,4 +418,20 @@ class ParserResult {
     // required this.attachments,
     required this.result,
   });
+}
+
+extension on String {
+  /// Like [operator.[]] but returns null if the index is out of bounds.
+  /// Also allows negative indices.
+  String? at(int index) {
+    if (index < 0) {
+      index = length + index;
+    }
+
+    if (index < 0 || index >= length) {
+      return null;
+    }
+
+    return this[index];
+  }
 }

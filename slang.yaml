@@ -1,0 +1,11 @@
+base_locale: en-GB
+fallback_strategy: base_locale
+input_directory: lib/i18n
+input_file_pattern: .i18n.yaml
+flutter_integration: false
+locale_handling: true
+key_case: camel
+param_case: camel
+output_file_name: translations.g.dart
+output_directory: lib/
+namespaces: true

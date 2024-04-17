@@ -1,8 +1,8 @@
-import 'package:kiwii/utils/regexes.dart';
-import 'package:nyxx/nyxx.dart';
-
 import 'package:http/http.dart' as http;
+import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
+
+import '../utils/regexes.dart';
 
 class GithubExpand extends NyxxPlugin<NyxxGateway> {
   @override
@@ -26,6 +26,10 @@ class GithubExpand extends NyxxPlugin<NyxxGateway> {
         final language = Uri.parse(fullUrl).path.split('.').lastOrNull ?? '';
 
         final response = await http.get(Uri.parse('https://raw.githubusercontent.com/$repo/$ref/$file'));
+
+        if (response.statusCode != 200) {
+          continue;
+        }
 
         final content = response.body.split('\n').sublist(start - 1, end ?? start).join('\n');
 
