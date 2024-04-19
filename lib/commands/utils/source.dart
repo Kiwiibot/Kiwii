@@ -27,5 +27,5 @@ final sourceCommand = ChatCommand(
 Iterable<CommandOptionChoiceBuilder<dynamic>> autocompleteCallback(AutocompleteContext ctx) {
   final current = ctx.currentValue;
   final filtered = ctx.commands.walkCommands().where((element) => element.name.contains(current)).toList();
-  return filtered.map((e) => CommandOptionChoiceBuilder(name: e.name, value: e.name));
+  return filtered.map((e) => CommandOptionChoiceBuilder(name: e is ChatCommand ? e.fullName : e.name, value: e is ChatCommand ? e.fullName : e.name));
 }

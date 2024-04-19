@@ -4,6 +4,7 @@ import 'package:dartx/dartx.dart' hide StringCapitalizeExtension;
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
+import 'package:overfast_api/heroes/heroes_data.dart';
 import 'package:overfast_api/overfast_api.dart';
 import 'package:overfast_api/players/player.dart';
 import 'package:overfast_api/utils/types.dart' as types;
@@ -14,6 +15,10 @@ import '../../translations.g.dart';
 import '../../utils/constants.dart';
 
 final client = Overfast();
+
+const overwatch2Year = 2077;
+
+String s(String v) => utf8.decode(utf8.encode(v));
 
 final linkedAccounts = <Snowflake, String>{Snowflake(253554702858452992): 'Rapougnac-2980', Snowflake(444074251079778314): 'RaskieL#2546'};
 
@@ -121,7 +126,8 @@ final overwatchCommand = ChatGroup(
               final t = ctx.guild.t;
               final heroes = await client.heroes.heroes(locale: appLocaleToBlizz(t.$meta.locale));
 
-              final selectedHero = heroes.firstOrNullWhere((element) => element.name.toLowerCase() == heroName.toLowerCase());
+              final selectedHero =
+                  heroes.firstOrNullWhere((element) => element.name.toLowerCase() == heroName.toLowerCase() || element.key.name == heroName.toLowerCase());
               if (selectedHero == null) {
                 return ctx.send(t.overwatch.notFount);
               }
@@ -133,7 +139,7 @@ final overwatchCommand = ChatGroup(
                   url: Uri.parse(hero.portrait!),
                 ),
                 title: hero.name,
-                description: utf8.decode(utf8.encode(hero.description)),
+                description: s(hero.description),
               );
 
               if (hero.hitpoints != null) {
@@ -147,9 +153,13 @@ final overwatchCommand = ChatGroup(
               }
 
               embed.addField(name: t.overwatch.role, value: hero.role.name.capitalize, isInline: true);
-              embed.addField(name: t.overwatch.location, value: hero.location, isInline: true);
-              // embed.addField(name: 'Age', value: hero.age.toString(), isInline: true);
-              // embed.addField(name: 'Birthday', value: hero.birthday ?? 'Unknown', isInline: true);
+              embed.addField(name: t.overwatch.location, value: s(hero.location), isInline: true);
+              embed.addField(name: t.overwatch.age, value: hero.age.toString(), isInline: true);
+              embed.addField(
+                name: t.overwatch.dateofBirth,
+                value: hero.birthday == null ? t.general.nonAvailable : '${s(hero.birthday.toString())} ${overwatch2Year - hero.age}',
+                isInline: true,
+              );
               embed.addBlankField(isInline: true);
 
               final abilities = <String>[];
@@ -157,8 +167,47 @@ final overwatchCommand = ChatGroup(
               for (final ability in hero.abilities) {
                 final staticName = ability.video.thumbnail.split('/').last.split('.').first;
                 final split = staticName.split('_');
-                final emoji = overwatchEmojisMappings[split.first]![split.skip(1).join('_')]!;
-                abilities.add('$emoji \u2014 ${ability.name} - ${ability.description}');
+                String hName = split.first;
+                String name = split.skip(1).join('_');
+                // Blizzard is inconsistent with their naming, so we have to do this :skull_emoji:
+                if (hName case 'PHARAH') {
+                  hName = 'Pharah';
+                }
+                if (ability.video.link.webm.contains('DVaSelfDestruct')) {
+                  name = 'SELFDESTRUCT';
+                } else if (staticName case 'Overrun' || 'Cardiac' || 'Berserker' || 'Cage_fight') {
+                  hName = 'Mauga';
+                  name = split.join('_');
+                } else if (staticName case 'Void_Accelerator' || 'Void_Barrier' || 'Pummel' || 'Ravenous_Vortex' || 'Annihilation') {
+                  hName = 'Ramattra';
+                  name = split.join('_');
+                } else if (hName case 'JUNKER') {
+                  hName = 'JUNKER_QUEEN';
+                  name = split.skip(2).join('_');
+                } else if (staticName case 'Pig_Pen_Poster') {
+                  hName = 'ROADHOG';
+                  name = 'PIGPEN';
+                } else if (hName case 'Sombra' when name == 'Virus') {
+                  hName = 'SOMBRA';
+                  name = 'VIRUS';
+                } else if (staticName case 'WRECKING_GRAPPLING_CLAW' when selectedHero.key == types.HeroKey.widowmaker) {
+                  hName = 'WIDOWMAKER';
+                  name = 'GRAPPLINGHOOK';
+                } else if (staticName case 'Primary_Fire' || 'Dash' || 'Burrow' || 'Ult') {
+                  hName = 'VENTURE';
+                  name = staticName;
+                } else if (staticName == 'WRECKING_GRAPPLING_CLAW') {
+                  hName = 'WRECKING_BALL';
+                  name = 'GRAPPLING_CLAW';
+                } else if (hName case 'WRECKING') {
+                  hName = 'WRECKING_BALL';
+                  name = split.skip(2).join('_');
+                } else if (staticName case 'WINSTON_PROJECTEDBARRIER' when selectedHero.key == types.HeroKey.zarya) {
+                  hName = 'ZARYA';
+                  name = 'PROJECTEDBARRIER';
+                }
+                final emoji = overwatchEmojisMappings[hName]?[name];
+                abilities.add('${emoji ?? ''} \u2014 ${s(ability.name)} - ${s(ability.description)}');
               }
 
               List<String>? abilities2;
@@ -192,6 +241,17 @@ final overwatchCommand = ChatGroup(
 
               final msg = await ctx.respond(MessageBuilder(embeds: [embed], components: [row]));
               final buttonCtx = await ctx.getButtonPress(msg);
+              String getCorrectUrl(String url, Ability ability) {
+                if (selectedHero.key == types.HeroKey.widowmaker &&
+                    ability.icon.split('/').last.split('.').first == '72fec7acac37ad840835839e72f368134498583686e91f7e30fe5d48aa44f7a1') {
+                  return 'https://cdn.kiwii.rapougnac.moe/WidowmakerGraplingHook.png';
+                } else if (selectedHero.key == types.HeroKey.zarya &&
+                    ability.icon.split('/').last.split('.').first == '6e42984ee8329a50e9c2460ae2df7670d7be9846a093c336e4576d1eea1fb2f1') {
+                  return 'https://cdn.kiwii.rapougnac.moe/ZaryaProjectedBarrier.png';
+                }
+                return url;
+              }
+
               if (buttonCtx.parsedComponentId == abilitiesId) {
                 final paginated = await pagination.generate(
                   (index) {
@@ -211,7 +271,9 @@ final overwatchCommand = ChatGroup(
                           ),
                           color: DiscordColor(0xffa500),
                           image: EmbedImageBuilder(
-                            url: Uri.parse(ability.video.thumbnail),
+                            url: Uri.parse(
+                              getCorrectUrl(ability.video.thumbnail, ability),
+                            ),
                           ),
                         ),
                       ],
@@ -254,7 +316,7 @@ final overwatchCommand = ChatGroup(
                         EmbedBuilder(
                           color: DiscordColor(0xffa500),
                           title: chapter.title,
-                          description: utf8.decode(utf8.encode(chapter.content)),
+                          description: s(chapter.content),
                           image: EmbedImageBuilder(
                             url: Uri.parse(chapter.picture),
                           ),

@@ -69,7 +69,7 @@ Future<void> _main() async {
   });
 
   final chatCommandConverter = Converter<ChatCommand>((view, ctx) {
-    return ctx.commands.getCommand(view);
+    return ctx.commands.getCommand(StringView(view.getQuotedWord()));
   });
 
   commands.addConverter(listConverter);

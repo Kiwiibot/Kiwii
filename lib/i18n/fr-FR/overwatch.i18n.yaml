@@ -5,7 +5,7 @@ role: Rôle
 location: Lieu
 age: Âge
 hitpoints: Points de vie
-birthday: Anniversaire
+dateofBirth: Date de naissance
 abilities: Capacités
 story: Histoire
 chapters: Chapitres

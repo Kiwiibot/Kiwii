@@ -5,7 +5,7 @@ role: Role
 location: Location
 hitpoints: Hitpoints
 age: Age
-birthday: Birthday
+dateofBirth: Date of Birth
 abilities: Abilities
 story: Story
 chapters: Chapters

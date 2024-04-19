@@ -29,8 +29,8 @@ class LocalizationPlugin extends NyxxPlugin<NyxxGateway> {
                 ..where((e) => e.guildId.equals(guild.id.value))
                 ..limit(1))
               .get())
-          .first;
-      final locale = convertLocale(data.locale);
+          .firstOrNull;
+      final locale = data?.locale != null ? convertLocale(data!.locale) : AppLocale.enGb;
       final appLocale = locale ?? AppLocale.enGb;
       guildLocales[guild.id] = appLocale;
     });
