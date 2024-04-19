@@ -303,7 +303,8 @@ const overwatchEmojisMappings = <String, Map<String, String>>{
     'ORBSOFDESTURUCTION': '<:ZenOrbOfDestruction:1230899334447370261>',
     'ORBOFDISCORD': '<:ZenDiscordOrb:1230899332899930212>',
     'ORBOFHARMONY': '<:ZenHarmonyOrb:1230899330815234089>',
-    'TRANSCENDENCE': '<:ZenTrans:1230899329754202173>',
+    // Help
+    'TRANSENDENCE': '<:ZenTrans:1230899329754202173>',
     'SNAPKICK': '<:ZenSnapKick:1230899328395120772>',
   }
 };
