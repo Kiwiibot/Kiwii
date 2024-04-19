@@ -267,9 +267,9 @@ const overwatchEmojisMappings = <String, Map<String, String>>{
     'PULSEBOMB': '<:TracerPulseBomb:1230885709515198464>',
   },
   'VENTURE': {
-    'Primary_Fire': '<:VentureBurrow:1230892063000625222>',
+    'Primary_Fire': '<:VentureSMARTExcavator1:1230892059989114995><:VentureSMARTExcavator2:1230892058651394079>',
     'Dash': '<:VentureDrillDash:1230892064364040343>',
-    'Burrow': '<:VentureSMARTExcavator1:1230892059989114995><:VentureSMARTExcavator2:1230892058651394079>',
+    'Burrow': '<:VentureBurrow:1230892063000625222>',
     'Ult': '<:VentureTectonicShock:1230892061658583040>',
   },
   'WIDOWMAKER': {
