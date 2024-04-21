@@ -122,7 +122,7 @@ class ChatPlugin extends NyxxPlugin<NyxxGateway> {
   Future<NyxxGateway> doConnect(ApiOptions apiOptions, ClientOptions clientOptions, Future<NyxxGateway> Function() connect) async {
     final client = await super.doConnect(apiOptions, clientOptions, connect);
 
-    OpenAI.apiKey = 'ghu_4gvRFZFl8qNUXN1KYpdSfcQxZIA8CE4fUYvH';
+    OpenAI.apiKey = 'what';
     OpenAI.baseUrl = 'http://localhost:8080';
 
     return client;
