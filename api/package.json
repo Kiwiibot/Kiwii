@@ -15,11 +15,16 @@
   "dependencies": {
     "@napi-rs/canvas": "^0.1.51",
     "@skyra/gifenc": "^1.0.1",
+    "@twemoji/parser": "^15.1.1",
     "canvas": "^2.11.2",
+    "emoji-regex": "^10.3.0",
     "fastify": "^4.26.2",
-    "font-finder": "^1.1.0"
+    "font-finder": "^1.1.0",
+    "luxon": "^3.4.4",
+    "twitter-openapi-typescript": "^0.0.32"
   },
   "devDependencies": {
+    "@types/luxon": "^3.4.2",
     "@types/node": "^20.11.30",
     "tsx": "^4.7.1",
     "typescript": "^5.4.3"

@@ -8,10 +8,10 @@ environment:
 
 dependencies:
   nyxx_commands: 
-    # git:
-    #   url: https://github.com/Rapougnac/nyxx_commands.git
-    #   ref: feat/lines
-    path: ../../../code/nyxx_commands
+    git:
+      url: https://github.com/Rapougnac/nyxx_commands.git
+      ref: feat/lines
+    # path: ../../../code/nyxx_commands
   postgres: ^2.6.3
   get_it: ^7.2.0
   dartx: ^1.2.0
@@ -22,8 +22,7 @@ dependencies:
   drift_postgres: ^0.1.0
   json_annotation: ^4.8.1
   http: ^1.1.0
-  nyxx_extensions: 
-    path: ../nyxx_extensions
+  nyxx_extensions: ^4.1.0
   dart_openai: 4.1.2
   darq: ^2.0.0
   stdlibc: ^0.1.4
@@ -32,9 +31,13 @@ dependencies:
   nyxx: ^6.2.1
   overfast_api:
     path: ../overfast_api
+  perspective_api:
+    path: ../perspective_api
 
   dotenv: any
   duration: ^3.0.13
+  sqlite3: ^2.4.2
+  universal_html: ^2.2.4
 dependency_overrides:
   postgres:
     git:
@@ -43,6 +46,10 @@ dependency_overrides:
     git:
       url: https://github.com/simolus3/drift.git
       path: extras/drift_postgres
+  nyxx:
+    git:
+      url: https://github.com/abitofevrything/nyxx.git
+      ref: patch/hang-status
 
 
 dev_dependencies:

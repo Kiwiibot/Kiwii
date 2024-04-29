@@ -1,11 +1,13 @@
-import 'package:drift_postgres/drift_postgres.dart';
+// import 'package:drift_postgres/drift_postgres.dart';
+import 'package:drift/isolate.dart';
+import 'package:drift/native.dart';
 import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
-import 'package:postgres/postgres.dart';
 
 import '../database.dart';
+import '../plugins/localization.dart';
 import '../utils/extensions.dart';
 
 final tag = ChatCommand(
@@ -24,39 +26,35 @@ final tag = ChatCommand(
           @Description('The contents of the tag.') List<String> contents,
         ) async {
           final commands = ctx.commands.walkCommands().whereType<ChatCommand>();
-          if (commands.any((command) => command.fullName.contains(name))) {
-            await ctx.respond(MessageBuilder(content: 'A command with that name already exists.'));
+          if (commands.any((command) => command.root.name == name)) {
+            await ctx.respond(MessageBuilder(content: ctx.guild.t.tag.command));
             return;
           }
 
           final db = GetIt.I.get<AppDatabase>();
           final tag = TagsCompanion.insert(
-            name: name,
-            content: contents.join(' '),
-            ownerId: ctx.user.id.value,
-            locationId: ctx.guild!.id.value,
-            createdAt: PgDateTime(DateTime.now()),
-          );
+              name: name, content: contents.join(' '), ownerId: ctx.user.id.value, locationId: ctx.guild!.id.value, createdAt: DateTime.now());
 
           try {
-            await db.transaction(() async {
-              return await db.into(db.tags).insert(tag);
+            await db.transaction(() {
+              return db.into(db.tags).insert(tag);
             });
           } catch (e) {
-            if (e is ServerException) {
-              if (e.message.contains('duplicate key value violates unique constraint')) {
-                await ctx.respond(MessageBuilder(content: 'A tag with that name already exists.'));
+            if (e is DriftRemoteException) {
+              final error = e.remoteCause as SqliteException;
+              if (error.message.contains('UNIQUE constraint failed')) {
+                await ctx.respond(MessageBuilder(content: ctx.guild.t.tag.tag));
                 return;
               }
 
-              await ctx.respond(MessageBuilder(content: 'An error occurred while creating the tag.\n${e.message}\n${e.hint}'));
+              await ctx.respond(MessageBuilder(content: ctx.guild.t.tag.error(message: error.message, explanation: error.explanation ?? '')));
               return;
             }
 
             rethrow;
           }
 
-          await ctx.respond(MessageBuilder(content: 'Tag `$name` created successfully.'));
+          await ctx.respond(MessageBuilder(content: ctx.guild.t.tag.created(tag: name)));
           return;
         },
       ),
@@ -143,6 +141,48 @@ final tag = ChatCommand(
           final builder = await pagination.split('${bold('🗒️Tags in this server')}\n\n$properTags');
           builder.allowedMentions = AllowedMentions.roles() & AllowedMentions.users();
           await ctx.respond(builder);
+        },
+      ),
+    ),
+    ChatCommand(
+      'info',
+      'Get information about a tag',
+      id(
+        'tag-info',
+        (MessageChatContext ctx, String name) async {
+          final db = GetIt.I.get<AppDatabase>();
+          final tag = await (db.select(db.tags)
+                ..where((tag) => tag.name.equals(name) & tag.locationId.equals(ctx.guild!.id.value))
+                ..limit(1))
+              .getSingleOrNull();
+
+          if (tag == null) {
+            await ctx.respond(MessageBuilder(content: 'Tag `$name` not found.'));
+            return;
+          }
+
+          final embed = EmbedBuilder(
+            title: tag.name,
+            author: EmbedAuthorBuilder(
+              name: ctx.user.username,
+              iconUrl: ctx.user.avatar.url,
+            ),
+            fields: [
+              EmbedFieldBuilder(
+                name: 'Owner',
+                value: userMention(tag.ownerId.snowflake),
+                isInline: true,
+              ),
+              EmbedFieldBuilder(
+                name: 'Uses',
+                value: tag.timesCalled.toString(),
+                isInline: true,
+              ),
+            ],
+            timestamp: tag.createdAt,
+          );
+
+          await ctx.respond(MessageBuilder(embeds: [embed]));
         },
       ),
     )

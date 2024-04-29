@@ -193,6 +193,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.3"
+  csslib:
+    dependency: transitive
+    description:
+      name: csslib
+      sha256: "706b5707578e0c1b4b7550f64078f0a0f19dec3f50a178ffae7006b0a9ca58fb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   csv:
     dependency: transitive
     description:
@@ -386,6 +394,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.1"
+  html:
+    dependency: transitive
+    description:
+      name: html
+      sha256: "3a7812d5bcd2894edf53dfaf8cd640876cf6cef50a8f238745c8b8120ea74d3a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.15.4"
   http:
     dependency: "direct main"
     description:
@@ -501,24 +517,28 @@ packages:
   nyxx:
     dependency: "direct main"
     description:
-      name: nyxx
-      sha256: "81c34dfbcc1a7c336a19b24cb2f73455b56bf42aaabb38e6469ec4c5d3fb327f"
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: "patch/hang-status"
+      resolved-ref: "4a54601fc89395cf5b3970cc6ed5156e14de4ea0"
+      url: "https://github.com/abitofevrything/nyxx.git"
+    source: git
     version: "6.2.1"
   nyxx_commands:
     dependency: "direct main"
     description:
-      path: "../../../code/nyxx_commands"
-      relative: true
-    source: path
+      path: "."
+      ref: "feat/lines"
+      resolved-ref: beaf9eca0434c49f75b7a4f5c087c9f8b595fb58
+      url: "https://github.com/Rapougnac/nyxx_commands.git"
+    source: git
     version: "6.0.2"
   nyxx_extensions:
     dependency: "direct main"
     description:
-      path: "../nyxx_extensions"
-      relative: true
-    source: path
+      name: nyxx_extensions
+      sha256: "8ba75eeb0a8034df1e549170e69d11961a93352d9b043db08014038c4ee938aa"
+      url: "https://pub.dev"
+    source: hosted
     version: "4.1.0"
   oauth2:
     dependency: transitive
@@ -559,6 +579,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.11.1"
+  perspective_api:
+    dependency: "direct main"
+    description:
+      path: "../perspective_api"
+      relative: true
+    source: path
+    version: "1.0.0"
   pool:
     dependency: transitive
     description:
@@ -713,7 +740,7 @@ packages:
     source: hosted
     version: "7.0.0"
   sqlite3:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: sqlite3
       sha256: "1abbeb84bf2b1a10e5e1138c913123c8aa9d83cd64e5f9a0dd847b3c83063202"
@@ -808,6 +835,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.2"
+  universal_html:
+    dependency: "direct main"
+    description:
+      name: universal_html
+      sha256: "56536254004e24d9d8cfdb7dbbf09b74cf8df96729f38a2f5c238163e3d58971"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.4"
+  universal_io:
+    dependency: transitive
+    description:
+      name: universal_io
+      sha256: "1722b2dcc462b4b2f3ee7d188dad008b6eb4c40bbd03a3de451d82c78bba9aad"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.2"
   unorm_dart:
     dependency: transitive
     description:

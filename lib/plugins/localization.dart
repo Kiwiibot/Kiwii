@@ -1,7 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart';
 
-import '../database.dart';
+import '../database.dart' hide Guild;
 import '../translations.g.dart' show AppLocale, Translations, LocaleSettings;
 import '../utils/constants.dart';
 
@@ -41,14 +41,16 @@ class LocalizationPlugin extends NyxxPlugin<NyxxGateway> {
   Future<void> setLocale(AppLocale locale, Snowflake guildId) {
     final db = GetIt.I.get<AppDatabase>();
     guildLocales[guildId] = locale;
-    return db.into(db.guildTable).insertOnConflictUpdate(
+    return db.into(db.guildTable).insert(
           GuildTableCompanion.insert(
-            guildId: guildId.value,
-            locale: '${locale.languageCode}-${locale.countryCode}',
+            guildId: Value(guildId.value),
+            locale: Value('${locale.languageCode}-${locale.countryCode}'),
           ),
+          mode: InsertMode.insertOrReplace,
         );
   }
 }
+
 extension LocaleGuild on Guild? {
   Translations get t => this != null ? LocaleSettings.instance.translationMap[guildLocales[this!.id]] ?? AppLocale.enGb.build() : AppLocale.enGb.build();
 }

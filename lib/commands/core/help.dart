@@ -9,8 +9,7 @@ final helpCommand = ChatCommand(
       final commands = ctx.commands.walkCommands().whereType<ChatCommand>();
       final embed = EmbedBuilder(fields: [])
         ..title = 'Help'
-        ..description =
-            'Use `${ctx is MessageChatContext ? ctx.prefix : '/'}help <command>` to get more information about a command.'
+        ..description = 'Use `${ctx is MessageChatContext ? ctx.prefix : '/'}help <command>` to get more information about a command.'
         ..color = DiscordColor(0x00ff00)
         ..footer = EmbedFooterBuilder(
           text: 'Kiwii',

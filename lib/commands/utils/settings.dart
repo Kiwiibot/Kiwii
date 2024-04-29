@@ -22,11 +22,26 @@ final settingsCommand = ChatGroup(
           if (appLocale == null) {
             return ctx.respond(MessageBuilder(content: 'Invalid locale'));
           }
-          
+
           await localization.setLocale(appLocale, ctx.guild!.id);
           await ctx.respond(MessageBuilder(content: 'Locale set to `$locale`'));
         },
       ),
     ),
+    ChatCommand(
+      'module',
+      'Toggle the specified module',
+      id(
+        'settings-module',
+        (ChatContext ctx, @Autocomplete(autocompleteModules) String module) async {},
+      ),
+    ),
   ],
 );
+
+Iterable<CommandOptionChoiceBuilder<String>> autocompleteModules(AutocompleteContext ctx) {
+  final current = ctx.currentValue;
+  final filtered = ctx.client.options.plugins.where((plugin) => plugin.name.contains(current));
+
+  return filtered.map((e) => CommandOptionChoiceBuilder(name: e.name, value: e.name));
+}

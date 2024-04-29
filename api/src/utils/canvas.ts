@@ -60,37 +60,59 @@ export default {
     return ctx;
   },
 
-  wrapText(ctx: SKRSContext2D, text: string, maxWidth: number) {
-    if (ctx.measureText(text).width < maxWidth) return [text];
-    if (ctx.measureText("W").width > maxWidth) return null;
-    const words = text.split(" ");
+  wrapText(
+    ctx: SKRSContext2D,
+    text: string,
+    maxWidth: number,
+    shouldChunk = false,
+  ) {
     const lines = [];
-    let line = "";
-
-    while (words.length > 0) {
-      let split = false;
-
-      while (ctx.measureText(words[0]).width >= maxWidth) {
-        const temp = words[0];
-        words[0] = temp.slice(0, -1);
-        if (split) {
-          words[1] = `${temp.slice(-1)}${words[1]}`;
+    const wordsAndBreaks = text.split("\n");
+    for (let i = 0; i < wordsAndBreaks.length; i++) {
+      const segment = wordsAndBreaks[i];
+      if (segment === "") {
+        lines.push("");
+        continue;
+      }
+      const words = segment.split(" ");
+      let currentLine = "";
+      for (let j = 0; j < words.length; j++) {
+        const word = words[j];
+        if (ctx.measureText(`${currentLine} ${word}`).width <= maxWidth) {
+          currentLine += `${currentLine === "" ? "" : " "}${word}`;
+        } else if (ctx.measureText(word).width > maxWidth && shouldChunk) {
+          const chunks = [];
+          let currentChunk = "";
+          for (let k = 0; k < word.length; k++) {
+            const char = word[k];
+            if (ctx.measureText(`${currentChunk}${char}`).width <= maxWidth) {
+              currentChunk += char;
+            } else {
+              chunks.push(currentChunk);
+              currentChunk = char;
+            }
+          }
+          if (currentChunk !== "") {
+            chunks.push(currentChunk);
+          }
+          for (let k = 0; k < chunks.length; k++) {
+            if (
+              ctx.measureText(`${currentLine} ${chunks[k]}`).width > maxWidth
+            ) {
+              lines.push(currentLine.trim());
+              currentLine = "";
+            }
+            currentLine += `${currentLine === "" ? "" : " "}${chunks[k]}`;
+          }
         } else {
-          split = true;
-          words.splice(1, 0, temp.slice(-1));
+          if (currentLine !== "") lines.push(currentLine.trim());
+          currentLine = word;
         }
       }
-
-      if (ctx.measureText(`${line}${words[0]}`).width < maxWidth) {
-        line += `${words.shift()} `;
-      } else {
-        lines.push(line.trim());
-        line = "";
+      if (currentLine !== "") {
+        lines.push(currentLine.trim());
       }
-
-      if (words.length === 0) lines.push(line.trim());
     }
-
     return lines;
   },
 

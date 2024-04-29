@@ -1,0 +1,5 @@
+alreadyExists: with that name already exists!
+tag: A tag @:tag.alreadyExists
+command: A command @:tag.alreadyExists
+error: An error occurred while creating the tag.\n$message\n$explanation
+created: Tag `$tag` created successfully!

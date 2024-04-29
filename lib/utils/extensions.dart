@@ -5,6 +5,20 @@ extension ContextExtension on ChatContext {
   Future<Message> send(String content) => respond(MessageBuilder(content: content));
 }
 
+extension ChatCommandExtension on ChatCommand {
+  ChatCommandComponent get root {
+    dynamic parent = this;
+    while (parent.parent != null) {
+      if (parent.parent is CommandsPlugin) {
+        break;
+      }
+
+      parent = parent.parent!;
+    }
+    return parent;
+  }
+}
+
 // extension ThreadExtension on Thread {
 //   // GuildTextChannel get parent => client.channels[p
 // }

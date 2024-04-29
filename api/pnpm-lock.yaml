@@ -11,17 +11,32 @@ dependencies:
   '@skyra/gifenc':
     specifier: ^1.0.1
     version: 1.0.1
+  '@twemoji/parser':
+    specifier: ^15.1.1
+    version: 15.1.1
   canvas:
     specifier: ^2.11.2
     version: 2.11.2
+  emoji-regex:
+    specifier: ^10.3.0
+    version: 10.3.0
   fastify:
     specifier: ^4.26.2
     version: 4.26.2
   font-finder:
     specifier: ^1.1.0
     version: 1.1.0
+  luxon:
+    specifier: ^3.4.4
+    version: 3.4.4
+  twitter-openapi-typescript:
+    specifier: ^0.0.32
+    version: 0.0.32
 
 devDependencies:
+  '@types/luxon':
+    specifier: ^3.4.2
+    version: 3.4.2
   '@types/node':
     specifier: ^20.11.30
     version: 20.11.30
@@ -386,6 +401,14 @@ packages:
       tslib: 2.6.2
     dev: false
 
+  /@twemoji/parser@15.1.1:
+    resolution: {integrity: sha512-CChRzIu6ngkCJOmURBlYEdX5DZSu+bBTtqR60XjBkFrmvplKW7OQsea+i8XwF4bLVlUXBO7ZmHhRPDzfQyLwwg==}
+    dev: false
+
+  /@types/luxon@3.4.2:
+    resolution: {integrity: sha512-TifLZlFudklWlMBfhubvgqTXRzLDI5pCbGa4P8a3wPyUQSW+1xQ5eDsreP9DWHX3tjq1ke96uYG/nwundroWcA==}
+    dev: true
+
   /@types/node@20.11.30:
     resolution: {integrity: sha512-dHM6ZxwlmuZaRmUPfv1p+KrdD1Dci04FbdEm/9wEMouFqxYoFl5aMkt0VMAUtYRQDyYvD41WJLukhq/ha3YuTw==}
     dependencies:
@@ -557,6 +580,10 @@ packages:
   /detect-libc@2.0.3:
     resolution: {integrity: sha512-bwy0MGW55bG41VqxxypOsdSdGqLwXPI/focwgTYCFMbdUiBAxLg9CFzG08sz2aqzknwiX7Hkl0bQENjg8iLByw==}
     engines: {node: '>=8'}
+    dev: false
+
+  /emoji-regex@10.3.0:
+    resolution: {integrity: sha512-QpLs9D9v9kArv4lfDEgg1X/gN5XLnf/A6l9cs8SPZLRZR3ZkY9+kwIQTxm+fsSej5UMYGE8fdoaZVIBlqG0XTw==}
     dev: false
 
   /emoji-regex@8.0.0:
@@ -812,6 +839,11 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       yallist: 4.0.0
+    dev: false
+
+  /luxon@3.4.4:
+    resolution: {integrity: sha512-zobTr7akeGHnv7eBOXcRgMeCP6+uyYsczwmeRCauvpvaAltgNyTbLH/+VaEAPUeWBT+1GuNmz4wC/6jtQzbbVA==}
+    engines: {node: '>=12'}
     dev: false
 
   /make-dir@3.1.0:
@@ -1160,6 +1192,16 @@ packages:
     optionalDependencies:
       fsevents: 2.3.3
     dev: true
+
+  /twitter-openapi-typescript-generated@0.0.20:
+    resolution: {integrity: sha512-pDiYV4DNSFzRxhha06t/KWn7iGAzdHxdlfdkdi+Fb5QVubXF5IHAGeXVXrFdd1ie7CY8nihNJDQjxXYoBEnb6Q==}
+    dev: false
+
+  /twitter-openapi-typescript@0.0.32:
+    resolution: {integrity: sha512-cbXH7YocoAmX54yxSAUnBYWh5iOHH1h76i57ZOfifU7YxTlmBozKGaKOx/P4ff340WP+7ImYYkxpuGWFfe8ndA==}
+    dependencies:
+      twitter-openapi-typescript-generated: 0.0.20
+    dev: false
 
   /typescript@5.4.3:
     resolution: {integrity: sha512-KrPd3PKaCLr78MalgiwJnA25Nm8HAmdwN3mYUYZgG/wizIo9EainNVQI9/yDavtVFRN2h3k8uf3GLHuhDMgEHg==}

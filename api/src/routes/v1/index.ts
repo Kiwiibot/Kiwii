@@ -17,6 +17,7 @@ import fusion from "./fusion.js";
 import burn from "./burn.js";
 import illegal from "./illegal.js";
 import sip from "./sip.js";
+import tweet from "./tweet.js";
 
 const routes = {
   spotifyNowPlaying: "/spotify-now-playing",
@@ -29,6 +30,7 @@ const routes = {
   burn: "/burn",
   illegal: "/illegal",
   sip: "/sip",
+  tweet: "/tweet",
 };
 
 export const __dirname = path.dirname(new URL(import.meta.url).pathname);
@@ -301,11 +303,11 @@ export default (async (app, opts) => {
         type: "object",
         properties: {
           imageUrl: { type: "string" },
-          direction: { 
+          direction: {
             // Enum, left or right
             type: "string",
             enum: ["left", "right"],
-          }
+          },
         },
         required: ["imageUrl", "direction"],
       },
@@ -317,6 +319,30 @@ export default (async (app, opts) => {
     };
 
     const buffer = await sip(images.sip, imageUrl, direction);
+
+    return reply.header("Content-Type", "image/png").status(200).send(buffer);
+  });
+
+  app.get(routes.tweet, {
+    schema: {
+      querystring: {
+        type: "object",
+        properties: {
+          imageUrl: { type: "string" },
+          user: { type: "string" },
+          text: { type: "string" },
+        },
+        required: ["user", "text"],
+      },
+    },
+  }, async (request, reply) => {
+    const { imageUrl, user, text } = request.query as {
+      imageUrl?: string;
+      user: string;
+      text: string;
+    };
+
+    const buffer = await tweet(user, text, imageUrl);
 
     return reply.header("Content-Type", "image/png").status(200).send(buffer);
   });

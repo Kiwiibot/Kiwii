@@ -40,3 +40,5 @@ api/node_modules/
 # Private
 .vscode/launch.json
 logs/*
+
+kiwii.sqlite

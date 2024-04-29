@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:get_it/get_it.dart';
 import '../../database.dart';
+import '../../kiwii.dart';
 import '../../utils/parser.dart';
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
@@ -26,31 +29,33 @@ class ContextBaseWithMessage extends ContextBase {
 }
 
 class TagPlugin extends NyxxPlugin<NyxxGateway> {
-  late final Stream<Map<String, Object?>?> onRawMessageCreate;
+  @override
+  String get name => 'Tag';
+  final StreamController<Map<String, Object?>?> _onRawMessageCreateController = StreamController.broadcast();
+  Stream<Map<String, Object?>?> get onRawMessageCreate => _onRawMessageCreateController.stream;
   late final NyxxGateway client;
   final db = GetIt.I.get<AppDatabase>();
   @override
   Future<void> afterConnect(NyxxGateway client) async {
     this.client = client;
 
-    onRawMessageCreate = client.gateway.messages.map((message) {
-      if (message is! EventReceived) {
-        return null;
-      }
-
-      final event = message.event;
-      if (event is! RawDispatchEvent) {
-        return null;
-      }
-
-      if (event.name == 'MESSAGE_CREATE') {
-        return event.payload;
-      } else {
-        return null;
-      }
-    }).where((event) => event != null);
-
     onRawMessageCreate.listen(processTag);
+  }
+
+  @override
+  Stream<ShardMessage> interceptShardMessages(Shard shard, Stream<ShardMessage> messages) {
+    final stream = super.interceptShardMessages(shard, messages);
+    return stream.map((message) {
+      if (message is EventReceived) {
+        final event = message.event;
+
+        if (event is RawDispatchEvent && event.name == 'MESSAGE_CREATE') {
+          _onRawMessageCreateController.add(event.payload);
+        }
+      }
+
+      return message;
+    });
   }
 
   Future<void> processTag(Map<String, Object?>? rawMessage) async {
@@ -67,7 +72,7 @@ class TagPlugin extends NyxxPlugin<NyxxGateway> {
     final message = event.message;
 
     final [rawTag, ...args] = message.content.substring(settings.prefix.length).split(RegExp(r'\s+'));
-    if (allCommands.any((cmd) => cmd.fullName.contains(rawTag))) {
+    if (allCommands.any((cmd) => cmd.root.name == rawTag)) {
       return;
     }
     final user = event.message.author as User;
@@ -90,7 +95,10 @@ class TagPlugin extends NyxxPlugin<NyxxGateway> {
 
     final parser = Parser(client, ctx);
 
-    final tags = await (db.select(db.tags)..where((tags) => tags.name.equals(rawTag) & tags.locationId.equals(guild.id.value))).get();
+    final tags = await (db.select(db.tags)
+          ..where((tags) => tags.name.equals(rawTag) & tags.locationId.equals(guild.id.value))
+          ..limit(1))
+        .get();
 
     if (tags.isEmpty) {
       return;
@@ -99,6 +107,14 @@ class TagPlugin extends NyxxPlugin<NyxxGateway> {
     final tag = tags.first;
     // Render tag.
     final renderedTag = await parser.parse(tag.content, tag, args);
-    await message.channel.sendMessage(MessageBuilder(content: renderedTag.result, allowedMentions: AllowedMentions.roles() & AllowedMentions.users()));
+    // Increment usage count.
+    await db.into(db.tags).insert(tag.copyWith(timesCalled: tag.timesCalled + 1), mode: InsertMode.replace);
+    await message.channel.sendMessage(
+      MessageBuilder(
+        content: renderedTag.result,
+        allowedMentions: AllowedMentions.roles() & AllowedMentions.users(),
+        replyId: message.id,
+      ),
+    );
   }
 }

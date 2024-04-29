@@ -46,3 +46,15 @@ final chatbotChannels = fromEnvironment('CHATBOT_CHANNELS', '912636659504414731'
 final dsn = fromEnvironment('SENTRY_DSN');
 
 final ownerId = Snowflake.parse(fromEnvironment('OWNER_ID', '253554702858452992'));
+
+/// The statuses of the bot.
+const statuses = [
+  "DM me if you've found the meaning of life..",
+  "I know; I'm cute ✨",
+  'A life? For what?',
+  'I just want to be loved..',
+  'Do you really need me?',
+  '"Bot", "Bot", always "Bot".. Am I just that to you?',
+  'Humans are weird..',
+  'Despite everything, it\'s still you..',
+];
