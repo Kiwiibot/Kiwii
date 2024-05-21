@@ -30,9 +30,8 @@ class LocalizationPlugin extends NyxxPlugin<NyxxGateway> {
                 ..limit(1))
               .get())
           .firstOrNull;
-      final locale = data?.locale != null ? convertLocale(data!.locale) : AppLocale.enGb;
-      final appLocale = locale ?? AppLocale.enGb;
-      guildLocales[guild.id] = appLocale;
+      final locale = data?.locale != null ? data!.locale : AppLocale.enGb;
+      guildLocales[guild.id] = locale;
     });
 
     return client;
@@ -43,10 +42,14 @@ class LocalizationPlugin extends NyxxPlugin<NyxxGateway> {
     guildLocales[guildId] = locale;
     return db.into(db.guildTable).insert(
           GuildTableCompanion.insert(
-            guildId: Value(guildId.value),
-            locale: Value('${locale.languageCode}-${locale.countryCode}'),
+            guildId: Value(guildId),
+            locale: Value(locale),
           ),
-          mode: InsertMode.insertOrReplace,
+          onConflict: DoUpdate(
+            (tbl) => GuildTableCompanion(
+              locale: Value(locale),
+            ),
+          ),
         );
   }
 }

@@ -1,4 +1,6 @@
-# kiwii
+# Kiwii
+
+![Time spent on this project](https://wakapi.rapougnac.moe/api/badge/Rapougnac/interval:today/project:Kiwii?color=D0BCFF&label=Kiwii)
 
 A Discord bot made with [nyxx](https://pub.dev/packages/nyxx) and [nyxx_commands](https://pub.dev/packages/nyxx_commands)!
 

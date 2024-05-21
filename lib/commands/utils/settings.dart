@@ -1,6 +1,9 @@
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
+import 'package:nyxx_extensions/nyxx_extensions.dart';
 
+import '../../database.dart';
+import '../../kiwii.dart';
 import '../../plugins/localization.dart';
 import '../../utils/constants.dart';
 
@@ -9,6 +12,10 @@ final settingsCommand = ChatGroup(
   'Manage the settings of the bot for this guild',
   checks: [
     GuildCheck.all(),
+    PermissionsCheck(
+      Permissions.manageGuild,
+      allowsOverrides: false,
+    ),
   ],
   children: [
     ChatCommand(
@@ -29,11 +36,53 @@ final settingsCommand = ChatGroup(
       ),
     ),
     ChatCommand(
-      'module',
-      'Toggle the specified module',
+      'modchannel',
+      'Set the mod channel',
       id(
-        'settings-module',
-        (ChatContext ctx, @Autocomplete(autocompleteModules) String module) async {},
+        'settings-modchannel',
+        (ChatContext ctx, GuildTextChannel channel) async {
+          await ctx.client.db.into(ctx.client.db.guildTable).insert(
+                GuildTableCompanion.insert(
+                  guildId: Value(ctx.guild!.id),
+                  modLogChannelId: Value(channel.id),
+                ),
+                onConflict: DoUpdate(
+                  (tbl) => GuildTableCompanion(
+                    modLogChannelId: Value(channel.id),
+                  ),
+                ),
+              );
+
+          await ctx.respond(MessageBuilder(content: 'Mod channel set to ${channel.mention}'));
+        },
+      ),
+      checks: [
+        PermissionsCheck(
+          Permissions.manageChannels,
+          allowsOverrides: false,
+        ),
+      ],
+    ),
+    ChatCommand(
+      'appealschannel',
+      'Sets the appeals channeé',
+      id(
+        'settings-appealschannel',
+        (ChatContext ctx, GuildTextChannel channel) async {
+          await ctx.client.db.into(ctx.client.db.guildTable).insert(
+                GuildTableCompanion.insert(
+                  guildId: Value(ctx.guild!.id),
+                  appealChannelId: Value(channel.id),
+                ),
+                onConflict: DoUpdate(
+                  (tbl) => GuildTableCompanion(
+                    appealChannelId: Value(channel.id),
+                  ),
+                ),
+              );
+
+          await ctx.respond(MessageBuilder(content: 'Appeals channel set to ${channel.mention}'));
+        },
       ),
     ),
   ],

@@ -4,13 +4,13 @@ version: 0.1.0
 publish_to: none
 
 environment:
-  sdk: '>=3.0.5 <4.0.0'
+  sdk: ">=3.0.5 <4.0.0"
 
 dependencies:
-  nyxx_commands: 
+  nyxx_commands:
     git:
       url: https://github.com/Rapougnac/nyxx_commands.git
-      ref: feat/lines
+      ref: dev
     # path: ../../../code/nyxx_commands
   postgres: ^2.6.3
   get_it: ^7.2.0
@@ -30,14 +30,21 @@ dependencies:
   dart_eval: ^0.6.0
   nyxx: ^6.2.1
   overfast_api:
-    path: ../overfast_api
+    # path: ../overfast_api
+    git:
+      url: https://git.rapougnac.moe/Rapougnac/overfast_api.git
   perspective_api:
-    path: ../perspective_api
+    # path: ../perspective_api
+    git:
+      url: https://git.rapougnac.moe/Rapougnac/perspective_api.git
 
   dotenv: any
   duration: ^3.0.13
   sqlite3: ^2.4.2
   universal_html: ^2.2.4
+  string_similarity: ^2.0.0
+  style_cron_job: ^1.0.4+2
+  neat_cache: ^2.0.4
 dependency_overrides:
   postgres:
     git:
@@ -46,11 +53,16 @@ dependency_overrides:
     git:
       url: https://github.com/simolus3/drift.git
       path: extras/drift_postgres
+      ref: develop
   nyxx:
     git:
-      url: https://github.com/abitofevrything/nyxx.git
-      ref: patch/hang-status
-
+      url: https://github.com/Rapougnac/nyxx.git
+      ref: feat/priv-utils
+    # path: ../nyxx
+  nyxx_extensions:
+    git:
+      url: https://github.com/nyxx-discord/nyxx_extensions.git
+      ref: dev
 
 dev_dependencies:
   build_runner: ^2.4.9

@@ -5,6 +5,7 @@ import 'package:duration/locale.dart' as duration;
 import 'package:nyxx/nyxx.dart';
 
 import '../translations.g.dart';
+import 'constants.dart';
 
 export 'extensions.dart';
 export 'io/stderr.dart';
@@ -99,4 +100,50 @@ String snakeToCamel(String input) {
   return words[0].toLowerCase() + words.skip(1).map((e) => e[0].toUpperCase() + e.substring(1)).join();
 }
 
-// AppLocale discordLocaleToAppLocale(Locale locale) => discord
+EmbedBuilder mergeEmbeds(EmbedBuilder embedBuilder1, EmbedBuilder embedBuilder2) {
+  final embed = EmbedBuilder(
+    title: embedBuilder1.title ?? embedBuilder2.title,
+    description: embedBuilder1.description ?? embedBuilder2.description,
+    url: embedBuilder1.url ?? embedBuilder2.url,
+    timestamp: embedBuilder1.timestamp ?? embedBuilder2.timestamp,
+    color: embedBuilder1.color ?? embedBuilder2.color,
+    footer: embedBuilder1.footer ?? embedBuilder2.footer,
+    image: embedBuilder1.image ?? embedBuilder2.image,
+    thumbnail: embedBuilder1.thumbnail ?? embedBuilder2.thumbnail,
+    author: embedBuilder1.author ?? embedBuilder2.author,
+    fields: [...?embedBuilder1.fields, ...?embedBuilder2.fields],
+  );
+
+  return embed;
+}
+
+EmbedBuilder cutEmbed(EmbedBuilder embed) => EmbedBuilder(
+      author: embed.author != null
+          ? EmbedAuthorBuilder(
+              name: cutText(embed.author!.name, embedAuthorNameLimit),
+              iconUrl: embed.author?.iconUrl,
+            )
+          : null,
+      title: embed.title != null ? cutText(embed.title!, embedTitleLimit) : null,
+      description: embed.description != null ? cutText(embed.description!, embedDescriptionLimit) : null,
+      url: embed.url,
+      timestamp: embed.timestamp,
+      color: embed.color,
+      footer: embed.footer != null
+          ? EmbedFooterBuilder(
+              text: cutText(embed.footer!.text, embedFooterLimit),
+              iconUrl: embed.footer?.iconUrl,
+            )
+          : null,
+      image: embed.image,
+      thumbnail: embed.thumbnail,
+      fields: embed.fields
+          ?.map((field) => EmbedFieldBuilder(
+                name: cutText(field.name, embedFieldNameLimit),
+                value: cutText(field.value, embedFieldValueLimit),
+                isInline: field.isInline,
+              ))
+          .toList(),
+    );
+
+String messageLink(Snowflake messageId, Snowflake channelId, Snowflake guildId) => 'https://discord.com/channels/$guildId/$channelId/$messageId';

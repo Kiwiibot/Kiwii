@@ -1,58 +1,265 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
+import 'package:drift_postgres/drift_postgres.dart';
+import 'package:nyxx/nyxx.dart' hide Guild;
+import 'package:postgres/postgres.dart' as pg;
 
+import 'plugins/localization.dart';
+import 'src/moderation/appeal/create_appeal.dart';
+import 'src/moderation/case/create_case.dart';
+import 'src/moderation/reports/create_report.dart';
 import 'src/settings.dart';
+import 'translations.g.dart';
 
 export 'package:drift/drift.dart';
 
 part 'database.g.dart';
 
 QueryExecutor _openConnection() {
-  return NativeDatabase.createInBackground(File('kiwii.sqlite'));
+  // return NativeDatabase.createInBackground(File('kiwii.sqlite'));
+  return PgDatabase(
+    endpoint: pg.Endpoint(
+      database: postgresDb,
+      host: 'localhost',
+      username: postgresUser,
+      password: postgresPassword,
+    ),
+    settings: pg.ConnectionSettings(
+      sslMode: pg.SslMode.disable,
+    ),
+  );
 }
 
-@DriftDatabase(tables: [Tags, GuildTable])
+@DriftDatabase(tables: [Tags, GuildTable, Cases, Appeals, Reports])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) async {
-          await m.createAll();
-        },
-        onUpgrade: (m, from, to) async {
-          if (from == 1) {
-            await m.addColumn(tags, tags.timesCalled as GeneratedColumn<Object>);
-          }
-          if (from == 2) {
-            await m.addColumn(guildTable, guildTable.autoModThreshold as GeneratedColumn<Object>);
-          }
-        },
-      );
+    onCreate: (m) async {
+      await m.createAll();
+    },
+    onUpgrade: (m, from, to) async {
+      if (to == 2) {
+        await m.addColumn(appeals, appeals.logPostId);
+      }
+    }
+  );
+
+  Future<Case> createCase(Case case_) => into(cases).insertReturning(case_);
+  Future<Case> updateCase(Case case_) async {
+    await update(cases).replace(case_);
+    return case_;
+  }
+
+  Future<Case> getCase(int caseId, Snowflake guildId) async {
+    return (select(cases)..where((c) => c.caseId.equals(caseId) & c.guildId.equalsValue(guildId))).getSingle();
+  }
+
+  Future<Case?> getCaseOrNull(int caseId, Snowflake guildId) async {
+    return (select(cases)..where((c) => c.caseId.equals(caseId) & c.guildId.equalsValue(guildId))).getSingleOrNull();
+  }
+
+  Future<Case> getLastCase(Snowflake guildId) async {
+    return (select(cases)
+          ..where((c) => c.guildId.equalsValue(guildId))
+          ..orderBy([(u) => OrderingTerm(expression: u.caseId, mode: OrderingMode.desc)]))
+        .getSingle();
+  }
+
+  Future<List<Case>> insertOrUpdateCases(List<Case> cases) async {
+    await batch((batch) {
+      batch.insertAllOnConflictUpdate(this.cases, cases);
+    });
+
+    return (select(this.cases)..where((tbl) => tbl.caseId.isIn(cases.map((c) => c.caseId)))).get();
+  }
+
+  Future<Report> createReport(Report report) => into(reports).insertReturning(report);
+  Future<Report> updateReport(Report report) async {
+    await update(reports).replace(
+      report.copyWith(updatedAt: Value(PgDateTime(DateTime.now()))),
+    );
+    return report;
+  }
+
+  Future<Report> getReport(int reportId, Snowflake guildId) async {
+    return (select(reports)..where((r) => r.reportId.equals(reportId) & r.guildId.equalsValue(guildId))).getSingle();
+  }
+
+  Future<Appeal> createAppeal(Appeal appeal) => into(appeals).insertReturning(appeal);
+
+  Future<Appeal> updateAppeal(Appeal appeal) async {
+    await update(appeals).replace(
+      appeal.copyWith(updatedAt: Value(PgDateTime(DateTime.now()))),
+    );
+    return appeal;
+  }
+
+  Future<Appeal> getAppeal(int appealId, Snowflake guildId) async {
+    return (select(appeals)..where((a) => a.appealId.equals(appealId) & a.guildId.equalsValue(guildId))).getSingle();
+  }
+
+  Future<Appeal?> pendingAppeal(Snowflake userId) async {
+    return (select(appeals)
+          ..where((a) => a.targetId.equalsValue(userId) & a.status.equalsValue(AppealStatus.pending) & a.reason.isNull())
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  // Future<Report> updateReport(Report report) async {
+  //   await update(reports).replace(
+  //     report.copyWith(updatedAt: Value(DateTime.now())),
+  //   );
+  //   return report;
+  // }
+
+  Future<Guild> getGuild(Snowflake guildId) async {
+    return (select(guildTable)..where((g) => g.guildId.equalsValue(guildId))).getSingle();
+  }
+
+  Future<Guild?> getGuildOrNull(Snowflake guildId) async {
+    return (select(guildTable)..where((g) => g.guildId.equalsValue(guildId))).getSingleOrNull();
+  }
+
+  // Future<List<
 }
+
+class SnowflakeConverter extends TypeConverter<Snowflake, int> {
+  const SnowflakeConverter();
+  @override
+  Snowflake fromSql(int fromDb) {
+    return Snowflake.parse(fromDb);
+  }
+
+  @override
+  int toSql(Snowflake value) {
+    return value.value;
+  }
+}
+
+class SnowflakeArray extends TypeConverter<List<Snowflake>, List<int>> {
+  const SnowflakeArray();
+  @override
+  List<Snowflake> fromSql(List<int> fromDb) {
+    return fromDb.map((e) => Snowflake.parse(e)).toList();
+  }
+
+  @override
+  List<int> toSql(List<Snowflake> value) {
+    return value.map((e) => e.value).toList();
+  }
+}
+
+class LocaleConverter extends TypeConverter<AppLocale, String> {
+  const LocaleConverter();
+  @override
+  AppLocale fromSql(String fromDb) => convertLocale(fromDb)!;
+  @override
+  String toSql(AppLocale value) {
+    return '${value.languageCode}-${value.countryCode}';
+  }
+}
+
+// dynamic def = DriftAny('{}');
 
 @DataClassName('Guild')
 class GuildTable extends Table {
-  IntColumn get guildId => integer()();
-  TextColumn get locale => text().withDefault(const Constant('en-GB'))();
+  IntColumn get guildId => integer().map(const SnowflakeConverter())();
+  TextColumn get locale => text().map(const LocaleConverter()).withDefault(const Constant('en-GB'))();
   RealColumn get autoModThreshold => real().withDefault(const Constant(0.8))();
+  Column<List<int>> get reportTypeTags => customType(PgTypes.bigIntArray).map(const SnowflakeArray()).withDefault(const Constant([], PgTypes.bigIntArray))();
+  Column<List<int>> get reportStatusTags => customType(PgTypes.bigIntArray).map(const SnowflakeArray()).withDefault(const Constant([], PgTypes.bigIntArray))();
+  IntColumn get appealChannelId => integer().map(const SnowflakeConverter()).nullable()();
+  IntColumn get modLogChannelId => integer().map(const SnowflakeConverter()).nullable()();
+  IntColumn get reportChannelId => integer().map(const SnowflakeConverter()).nullable()();
+  Column<List<int>> get logIgnoreChannels => customType(PgTypes.bigIntArray).map(const SnowflakeArray()).withDefault(const Constant([], PgTypes.bigIntArray))();
 
   @override
   Set<Column> get primaryKey => {guildId};
+
+  @override
+  List<String> get customConstraints => ['UNIQUE(guild_id)'];
+}
+
+const postgresCurrentDateAndTime = CustomExpression<PgDateTime>('NOW()');
+
+class Cases extends Table {
+  IntColumn get guildId => integer().map(const SnowflakeConverter())();
+  IntColumn get logMessageId => integer().map(const SnowflakeConverter()).nullable()();
+  IntColumn get caseId => integer()();
+  IntColumn get refId => integer().nullable()();
+  IntColumn get targetId => integer().map(const SnowflakeConverter())();
+  TextColumn get targetTag => text()();
+  IntColumn get modId => integer().map(const SnowflakeConverter()).nullable()();
+  TextColumn get modTag => text().nullable()();
+  IntColumn get action => intEnum<CaseAction>()();
+  TextColumn get reason => text().nullable()();
+  DateTimeColumn get actionExpiration => dateTime().nullable()();
+  BoolColumn get actionProcessed => boolean().nullable().withDefault(const Constant(true))();
+  Column<PgDateTime> get createdAt => customType(PgTypes.timestampWithTimezone).withDefault(postgresCurrentDateAndTime)();
+  IntColumn get contextMessageId => integer().map(const SnowflakeConverter()).nullable()();
+  IntColumn get roleId => integer().map(const SnowflakeConverter()).nullable()();
+  BoolColumn get multi => boolean().nullable().withDefault(const Constant(false))();
+  IntColumn get reportRefId => integer().nullable()();
+  IntColumn get appealRefId => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {guildId, caseId};
+}
+
+class Appeals extends Table {
+  IntColumn get guildId => integer().map(const SnowflakeConverter())();
+  IntColumn get appealId => integer()();
+  IntColumn get status => intEnum<AppealStatus>().withDefault(Variable(AppealStatus.pending.index)).nullable()();
+  IntColumn get targetId => integer().map(const SnowflakeConverter()).nullable()();
+  TextColumn get targetTag => text().nullable()();
+  IntColumn get modId => integer().map(const SnowflakeConverter()).nullable()();
+  TextColumn get modTag => text().nullable()();
+  TextColumn get reason => text().nullable()();
+  IntColumn get refId => integer().nullable()();
+  Column<PgDateTime> get updatedAt => customType(PgTypes.timestampWithTimezone).nullable()();
+  Column<PgDateTime> get createdAt => customType(PgTypes.timestampWithTimezone).withDefault(postgresCurrentDateAndTime)();
+  IntColumn get logPostId => integer().map(const SnowflakeConverter()).nullable()();
+
+  @override
+  Set<Column> get primaryKey => {guildId, appealId};
+}
+
+class Reports extends Table {
+  IntColumn get guildId => integer().map(const SnowflakeConverter())();
+  IntColumn get reportId => integer()();
+  IntColumn get type => intEnum<ReportType>().nullable()();
+  IntColumn get status => intEnum<ReportStatus>().nullable()();
+  IntColumn get messageId => integer().map(const SnowflakeConverter()).nullable()();
+  IntColumn get channelId => integer().map(const SnowflakeConverter()).nullable()();
+  IntColumn get targetId => integer().map(const SnowflakeConverter()).nullable()();
+  TextColumn get targetTag => text().nullable()();
+  IntColumn get authorId => integer().map(const SnowflakeConverter()).nullable()();
+  TextColumn get authorTag => text().nullable()();
+  IntColumn get modId => integer().map(const SnowflakeConverter()).nullable()();
+  TextColumn get modTag => text().nullable()();
+  TextColumn get reason => text().nullable()();
+  TextColumn get attachmentUrl => text().nullable()();
+  IntColumn get logPostId => integer().map(const SnowflakeConverter()).nullable()();
+  IntColumn get refId => integer().nullable()();
+  Column<PgDateTime> get updatedAt => customType(PgTypes.timestampWithTimezone).nullable()();
+  Column<PgDateTime> get createdAt => customType(PgTypes.timestampWithTimezone).withDefault(postgresCurrentDateAndTime)();
+  Column<List<int>> get contextMessagesIds => customType(PgTypes.bigIntArray).map(const SnowflakeArray()).nullable()();
+
+  @override
+  Set<Column> get primaryKey => {guildId, reportId};
 }
 
 class Tags extends Table {
   TextColumn get content => text()();
-  DateTimeColumn get createdAt => dateTime()();
+  Column<PgDateTime> get createdAt => customType(PgTypes.timestampWithTimezone).withDefault(postgresCurrentDateAndTime)();
   IntColumn get id => integer().autoIncrement()();
   IntColumn get locationId => integer()();
   TextColumn get name => text()();
-  IntColumn get ownerId => integer()();
+  IntColumn get ownerId => integer().map(const SnowflakeConverter())();
   IntColumn get timesCalled => integer().withDefault(const Constant(0))();
 
   @override

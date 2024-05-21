@@ -1,0 +1,163 @@
+buttons:
+  warn: Avertir
+  timeout: Timeout
+  reason: Définir la raison
+  appeal_approve: Approuver
+  appeal_reject: Rejeter
+  ban: Bannir
+
+warn:
+  pending: Voulez-vous vraiment avertir $user?
+  cancel: Avertissement annulé pour $user.
+  success: $user a été averti·e avec succès.
+
+timeout:
+  already_timed_out: Ce membre est déjà en timeout.
+  pending: Voulez-vous vraiment mettre $user en timeout?
+  cancel: Timeout annulé pour $user.
+  success: $user a été mis·e  en timeout avec succès.
+
+reason:
+  pending_multiple: Voulez-vous vraiment définir en masse la raison pour ces cas $lower à $upper? (`$n` cas)
+  canceled: Annulation de la définition de la raison.
+  success: Raison définie pour le cas $caseId.
+  success_multiple: Raison définie pour les cas $lower à $upper (`$succeded/$n` cas).
+
+ban:
+  already_banned: $user est déjà banni·e.
+  cannot_ban: Je ne peux pas bannir ce·tte $user en raison d'autorisations insuffisantes ou de la hiérarchie des rôles.
+  dm: |-
+    Vous avez été banni·e de $guildName.
+    Cas #$caseId
+    Raison: $reason
+  dm_appeal: Si vous pensez que ce bannissement est injuste, vous pouvez le contester en répondant à ce message.
+  pending: Voulez-vous vraiment bannir $user?
+  success: $user a été banni·e avec succès.
+  cancel: Bannissement annulé pour $user.
+
+appeal:
+  pending: Votre contestation a été correctement soumise et est en attente d'approbation.
+  accepted: Votre contestation a été acceptée. Assurez-vous de respecter les règles à l'avenir !
+  rejected: Votre contestation a été rejetée.
+  mod_accepted: Contestation approuvée avec succès.
+  mod_rejected: Contestation rejetée avec succès.
+  unbanned: Débanni·e après contestation.
+
+common:
+  reasons:
+    - Troll
+    - Spam
+    - Insulte
+    - Harcèlement
+    - Selfbot
+    - NSFW
+    - Compte suspect ou spam
+    - Publicité par MP
+  no_reason: Aucune raison fournie
+  errors:
+    no_history: Aucun historique trouvé pour cet utilisateur.
+    case_range: Plage de cas invalide; `#$lower` à `#$upper` n'est pas une plage valide.
+    case_not_found: Cas `#$caseId` non trouvé.
+    no_appeal_channel: Il semble malheureusement qu'il n'y ait pas de salon de contestation configuré pour le serveur dans lequel vous essayez de contester un bannissement. Veuillez directement contacter le staff du serveur.
+    appeal_not_found: La contestation que vous essayez d'accepter ou de rejeter n'a pas pu être trouvée.
+  durations:
+    - 1 minute
+    - 5 minutes
+    - 10 minutes
+    - 1 heure
+    - 3 heures
+    - 6 heures
+    - 12 heures
+    - 1 jour
+    - 2 jours
+    - 3 jours
+    - 1 semaine
+
+history:
+  common:
+    user_details:
+      title: Détails de l'utilisateur
+      description: |-
+        • Nom d'utilisateur: $mention — $tag ($id)
+        • Créé: $created ($createdSince) `$createdAtTimestamp`
+    member_details:
+      title: Détails du membre
+      description:
+        nickname: "• Surnom: `$nickname`"
+        joined: "• Rejoint: $joined ($joinedSince) `$joinedAtTimestamp`"
+        roles:
+          one: "• Rôle ($n): $roles"
+          other: "• Rôles ($n): $roles"
+
+  cases:
+    title: Historique des cas
+    summary:
+      warning:
+        one: $n avertissement
+        other: $n avertissements
+      restriction:
+        one: $n restriction
+        other: $n restrictions
+      timeout:
+        one: $n timeout
+        other: $n timeouts
+      kick:
+        one: $n kick
+        other: $n kicks
+      softban:
+        one: $n softban
+        other: $n softbans
+      ban:
+        one: $n bannissement
+        other: $n bannissements
+      unban:
+        one: $n débannissement
+        other: $n débannissements
+    show_history: Afficher l'historique pour l'utilisateur $user
+    goto: Aller au cas $ccase
+  action_label:
+    restriction: Restreindre
+    restriction_case: Rôle
+    unrestriction: Lever la restriction
+    unrestriction_case: Enlèvement du rôle
+    warn: Avertissement
+    kick: Kick
+    softban: Softban
+    ban: Bannissement
+    unban: Débannissement
+    timeout: Timeout
+    timeout_end: Fin du timeout
+    unknown: Inconnu
+
+logs:
+  cases:
+    description: |-
+      **Membre**: `$targetTag` ($targetID)
+      **Action**: $action
+    expiration: "\n**Expiration**: $time"
+    context: "\n**Contexte**: $link"
+    context_link: "Aller au message"
+    reason: "\n**Raison**: $reason"
+    reason_fallback: "\n**Raison**: Utilisez `${prefix}raison $caseId <raison>` pour définir une raison pour ce cas"
+    case_reference: "\n**Référence du cas**: $ref ($action)"
+    report_reference: "\n**Référence du rapport**: $reportRef"
+    footer: "Cas $caseId"
+    unrole_delete_manual: Enlèvement manuel du rôle
+    unrole_delete_auto: Enlèvement automatique du rôle après expiration
+    timeout_delete_manual: Fin du timeout fait manuellement
+    timeout_delete_auto: Fin du timeout après expiration
+  auto_mod:
+    keyword: Le message contenait un mot-clé interdit.
+    keyword_preset: Le message a été signalé par le système de modération automatique.
+    harmful_link: Le message contenait un lien dangereux.
+    spam: Le message a été signalé comme spam.
+    mention_spam: Le message contenait trop de mentions.
+  appeals:
+    title: Contestation de bannissement
+    description: |-
+      **Membre**: $user `$userTag` ($userID)
+      **Raison**: $reason
+      **Cas**: $caseId
+    footer: Si vous voulez approuver ou rejeter cette contestation, utilisez les réactions ci-dessous.
+    footer_accepted: Contestation approuvée par $moderator
+    footer_rejected: Contestation rejetée par $moderator

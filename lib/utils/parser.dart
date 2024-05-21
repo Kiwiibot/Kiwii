@@ -123,7 +123,7 @@ class Parser {
       case 'tagname':
         return tag.name;
       case 'tagowner':
-        final owner = await client.users.get(Snowflake(tag.ownerId));
+        final owner = await client.users.get(tag.ownerId);
         return owner.username;
       case 'dm':
         return ctx.guild != null ? false : true;

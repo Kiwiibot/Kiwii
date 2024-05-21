@@ -19,6 +19,11 @@ final markov = ChatCommand(
     'markov',
     (ChatContext ctx, [GuildTextChannel? channel]) async {
       final markov = await retrieveMarkov(ctx.user, channel ?? ctx.channel);
+      if (markov == null) {
+        await ctx.send('No messages found.');
+        return;
+      }
+
       final embed = EmbedBuilder(
         description: cutText(markov.process().toString(), 2000),
       );
@@ -57,7 +62,7 @@ Future<Map<Snowflake, Message>> fetchMessages(TextChannel channel, [User? user])
   return user != null ? messageCache.filterValues((message) => message.author.id != user.id) : messageCache;
 }
 
-Future<Markov> retrieveMarkov(User? user, TextChannel channel) async {
+Future<Markov?> retrieveMarkov(User? user, TextChannel channel) async {
   final entry = user != null ? _internalUserCache['${channel.id.value}.${user.id.value}'] : _internalCache[channel];
   if (entry != null) {
     return entry;
@@ -65,8 +70,7 @@ Future<Markov> retrieveMarkov(User? user, TextChannel channel) async {
 
   final messages = await fetchMessages(channel, user);
   if (messages.isEmpty) {
-    // TODO: Error??
-    print('Uh???');
+    return null;
   }
 
   final contents = messages.values.map(getAllContent).join(' ');

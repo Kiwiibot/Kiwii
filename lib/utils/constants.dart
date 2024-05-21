@@ -308,3 +308,58 @@ const overwatchEmojisMappings = <String, Map<String, String>>{
     'SNAPKICK': '<:ZenSnapKick:1230899328395120772>',
   }
 };
+
+const timeoutLocalizations = [
+  {
+    Locale.fr: '1 minute',
+    Locale.de: '1 Minute',
+  },
+  {
+    Locale.fr: '5 minutes',
+    Locale.de: '5 Minuten',
+  },
+  {
+    Locale.fr: '10 minutes',
+    Locale.de: '10 Minuten',
+  },
+  {
+    Locale.fr: '1 heure',
+    Locale.de: '1 Stunde',
+  },
+  {
+    Locale.fr: '3 heures',
+    Locale.de: '3 Stunden',
+  },
+  {
+    Locale.fr: '6 heures',
+    Locale.de: '6 Stunden',
+  },
+  {
+    Locale.fr: '12 heures',
+    Locale.de: '12 Stunden',
+  },
+  {
+    Locale.fr: '1 jour',
+    Locale.de: '1 Tag',
+  },
+  {
+    Locale.fr: '2 jours',
+    Locale.de: '2 Tage',
+  },
+  {
+    Locale.fr: '3 jours',
+    Locale.de: '3 Tage',
+  },
+  {
+    Locale.fr: '1 semaine',
+    Locale.de: '1 Woche',
+  }
+];
+
+const embedTitleLimit = 256;
+const embedDescriptionLimit = 4096;
+const embedFooterLimit = 2048;
+const embedAuthorNameLimit = 256;
+const embedFieldsLimit = 25;
+const embedFieldNameLimit = 256;
+const embedFieldValueLimit = 1024;

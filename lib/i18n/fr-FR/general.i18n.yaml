@@ -1,2 +1,8 @@
-nonAvailable: "Non disponible"
-thousandsSeparator: ' '
+non_available: Non disponible
+thousands_separator: " "
+errors:
+  no_mod_channel: Aucun salon de modération n'a été configuré pour ce serveur.
+  target_not_found: L'utilisateur ciblé n'a pas pu être trouvé.
+  max_length_reason: La raison doit comporter moins de $maxLength caractères.
+buttons:
+  cancel: Annuler

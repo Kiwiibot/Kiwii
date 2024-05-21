@@ -4,19 +4,21 @@ services:
   kiwii:
     build: 
       context: .
+      dockerfile: Dockerfile
       target: kiwii
     restart: always
     env_file: .env
     container_name: kiwii
 
-    links: [database, lavalink]
-    depends_on: [database, lavalink]
+    links: [database]
+    depends_on: [database]
     ports:
       - "4242:4242"
 
   api:
     build:
-      context: .
+      context: ./api
+      dockerfile: Dockerfile.api
       target: api
     restart: always
     env_file: .env
@@ -27,15 +29,15 @@ services:
   database:
     image: postgres
     restart: always
-    # volumes:
-    #   - data:/var/lib/postgresql/data
+    volumes:
+      - data:/var/lib/postgresql/data
     env_file: .env
 
-  lavalink:
-    image: fredboat/lavalink:master
-    restart: always
-    volumes:
-      - ./lavalink.yml:/opt/Lavalink/application.yml
+  # lavalink:
+  #   image: fredboat/lavalink:master
+  #   restart: always
+  #   volumes:
+  #     - ./lavalink.yml:/opt/Lavalink/application.yml
 
   prometheus:
     image: prom/prometheus:latest
@@ -67,5 +69,5 @@ volumes:
     driver: local
   grafana-data:
     driver: local
-  # data:
-  #   driver: local
+  data:
+    driver: local
