@@ -2,8 +2,8 @@
 
 Kiwii is a simple and stupid discord bot made to make your life easier. 
 This includes a lot of features like:
-    - Moderation
-    - ??? That's fucking it
+- Moderation
+- ??? That's fucking it
 She's still in early development, even if it's been 6 years I'm working on it (yes, fr).
 
 There's also a website (showcased below) that's written with [Astro](https://astro.build) and tailwind that supports oauth2 and other stupid things.
