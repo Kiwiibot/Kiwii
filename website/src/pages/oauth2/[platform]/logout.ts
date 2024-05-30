@@ -11,6 +11,7 @@ export const GET = async (ctx: APIContext) => {
 
   ctx.cookies.delete("access_token", { path: "/" });
   ctx.cookies.delete("refresh_token", { path: "/" });
+  ctx.cookies.delete("state", { path: "/" });
 
   return ctx.redirect("/");
 };
