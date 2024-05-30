@@ -1,0 +1,136 @@
+---
+import Button from "~/components/Button.astro";
+import Layout from "~/layouts/Layout.astro";
+import { Image } from "astro:assets";
+import { cache } from "~/utils";
+import { generateRandomString } from "~/utils";
+
+const scopes = ["identify", "guilds.members.read", "guilds"];
+
+const accessToken = Astro.cookies.get("access_token");
+const refreshToken = Astro.cookies.get("refresh_token");
+
+let user: any;
+
+if (accessToken) {
+  const userData = await fetch("https://discord.com/api/v10/users/@me", {
+    headers: {
+      Authorization: `Bearer ${accessToken.value}`,
+    },
+  });
+
+  user = await userData.json();
+  cache.set("user", user);
+}
+
+if (!accessToken && refreshToken) {
+  return Astro.redirect("/oauth2/discord/callback?refresh=true");
+}
+
+let state: string | undefined;
+
+if (!accessToken && !refreshToken) {
+  state = generateRandomString();
+  Astro.cookies.set("state", state);
+}
+---
+
+<Layout title="Kiwii">
+  <main>
+    <h1>Welcome to Kiwii's site :3</h1>
+    <picture class="flex justify-center object-center">
+      <Image
+        class="h-[256px] w-[256px] rounded-full shadow-md"
+        src="/kiwii.svg"
+        width={512}
+        height={512}
+        alt="Kiwii's Logo"
+      />
+    </picture>
+
+    {
+      user && (
+        <p>
+          Welcome back, <strong>{user.global_name}</strong>!
+        </p>
+      )
+    }
+    {
+      !accessToken && (
+        <Button
+          href={`https://discord.com/api/oauth2/authorize?client_id=${
+            import.meta.env.DISCORD_CLIENT_ID
+          }&redirect_uri=${encodeURIComponent(
+            import.meta.env.DISCORD_REDIRECT_URI
+          )}&response_type=code&scope=${scopes.join("%20")}&state=${btoa(
+            state!
+          )}`}
+        >
+          Login with discord
+        </Button>
+      )
+    }
+  </main>
+</Layout>
+
+<style>
+  main {
+    margin: auto;
+    padding: 1rem;
+    width: 800px;
+    max-width: calc(100% - 2rem);
+    color: white;
+    font-size: 20px;
+    line-height: 1.6;
+  }
+  .astro-a {
+    position: absolute;
+    top: -32px;
+    left: 50%;
+    transform: translatex(-50%);
+    width: 220px;
+    height: auto;
+    z-index: -1;
+  }
+  h1 {
+    font-size: 4rem;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    margin-bottom: 1em;
+  }
+  .text-gradient {
+    background-image: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 400%;
+    background-position: 0%;
+  }
+  .instructions {
+    margin-bottom: 2rem;
+    border: 1px solid rgba(var(--accent-light), 25%);
+    background: linear-gradient(
+      rgba(var(--accent-dark), 66%),
+      rgba(var(--accent-dark), 33%)
+    );
+    padding: 1.5rem;
+    border-radius: 8px;
+  }
+  .instructions code {
+    font-size: 0.8em;
+    font-weight: bold;
+    background: rgba(var(--accent-light), 12%);
+    color: rgb(var(--accent-light));
+    border-radius: 4px;
+    padding: 0.3em 0.4em;
+  }
+  .instructions strong {
+    color: rgb(var(--accent-light));
+  }
+  .link-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(24ch, 1fr));
+    gap: 2rem;
+    padding: 0;
+  }
+</style>

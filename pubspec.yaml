@@ -45,6 +45,9 @@ dependencies:
   string_similarity: ^2.0.0
   style_cron_job: ^1.0.4+2
   neat_cache: ^2.0.4
+  shelf: ^1.4.1
+  shelf_router: ^1.1.4
+  shelf_helmet: ^2.3.0
 dependency_overrides:
   postgres:
     git:
@@ -69,3 +72,4 @@ dev_dependencies:
   drift_dev: ^2.13.1
   json_serializable: ^6.7.1
   lints: ^3.0.0
+  shelf_router_generator: ^1.1.0

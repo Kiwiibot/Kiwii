@@ -4,7 +4,6 @@ import 'package:nyxx/nyxx.dart';
 
 import '../../../database.dart' hide Guild;
 import '../../../kiwii.dart';
-import '../../../plugins/localization.dart';
 import '../../models/appeal.dart';
 import '../../models/case.dart';
 import '../appeal/create_appeal.dart';
@@ -60,15 +59,6 @@ Future<Case> createCase(Guild guild, CreateCase ccase, {bool skip = false, Membe
             ccase.targetId,
             deleteMessages: Duration(days: deleteMessageDays ?? 0),
             auditLogReason: reason,
-          );
-          await target!.sendMessage(
-            MessageBuilder(
-                content: guild.t.moderation.ban.dm(
-                      caseId: nextCaseId,
-                      guildName: guild.name,
-                      reason: ccase.reason ?? guild.t.moderation.common.noReason,
-                    ) +
-                    (guildSettings.appealChannelId == null ? '' : guild.t.moderation.ban.dmAppeal)),
           );
 
           if (guildSettings.appealChannelId != null) {

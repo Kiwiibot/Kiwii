@@ -17,6 +17,7 @@ import 'package:kiwii/commands/moderation/timeout.dart';
 import 'package:kiwii/commands/moderation/warn.dart';
 import 'package:kiwii/commands/ping.dart';
 import 'package:kiwii/commands/tag.dart';
+import 'package:kiwii/commands/utils/info.dart';
 import 'package:kiwii/commands/utils/settings.dart';
 import 'package:kiwii/commands/utils/source.dart';
 import 'package:kiwii/database.dart';
@@ -109,6 +110,7 @@ Future<void> _main() async {
   commands.addCommand(lookupCommand);
   commands.addCommand(userLookupCommand);
   commands.addCommand(caseCommand);
+  commands.addCommand(infoCommand);
 
   final listConverter = Converter<List<String>>((view, ctx) {
     final args = <String>[];

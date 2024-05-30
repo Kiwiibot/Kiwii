@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:nyxx/nyxx.dart';
+import 'package:shelf/shelf_io.dart' as io;
 
+import '../services/api.dart';
 import '../utils/jobs.dart';
 import '../src/settings.dart' as settings;
 
@@ -24,4 +26,8 @@ Future<void> readyEvent(ReadyEvent event) async {
       ),
     );
   });
+
+  final apiServer = await api();
+
+  await io.serve(apiServer, 'localhost', 8080);
 }

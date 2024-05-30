@@ -1,0 +1,24 @@
+---
+import type { APIGuild } from "discord-api-types/v10";
+import Layout from "~/layouts/Layout.astro";
+import { cache } from "~/utils";
+
+const { guild } = Astro.locals;
+const guildName = (cache.get(`guild-${Astro.params.guildId}`) as APIGuild)
+  ?.name;
+---
+
+<Layout title={`Guild ${guild?.name ?? guildName}`}>
+  {
+    "error" in (guild ?? {}) ? (
+      <div>
+        <p class="text-red-500">Invite me, you coward!</p>
+      </div>
+    ) : (
+      <div>
+        <h1>{guild?.name}</h1>
+        <p>{guild?.description}</p>
+      </div>
+    )
+  }
+</Layout>

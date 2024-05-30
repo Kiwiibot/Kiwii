@@ -34,19 +34,23 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (m) async {
-      await m.createAll();
-    },
-    onUpgrade: (m, from, to) async {
-      if (to == 2) {
-        await m.addColumn(appeals, appeals.logPostId);
-      }
-    }
-  );
+        onCreate: (m) async {
+          await m.createAll();
+        },
+        onUpgrade: (m, from, to) async {
+          if (to == 2) {
+            await m.addColumn(appeals, appeals.logPostId);
+          }
+
+          if (to == 3) {
+            await m.addColumn(cases, cases.logDmMessageId);
+          }
+        },
+      );
 
   Future<Case> createCase(Case case_) => into(cases).insertReturning(case_);
   Future<Case> updateCase(Case case_) async {
@@ -163,8 +167,6 @@ class LocaleConverter extends TypeConverter<AppLocale, String> {
   }
 }
 
-// dynamic def = DriftAny('{}');
-
 @DataClassName('Guild')
 class GuildTable extends Table {
   IntColumn get guildId => integer().map(const SnowflakeConverter())();
@@ -205,6 +207,7 @@ class Cases extends Table {
   BoolColumn get multi => boolean().nullable().withDefault(const Constant(false))();
   IntColumn get reportRefId => integer().nullable()();
   IntColumn get appealRefId => integer().nullable()();
+  IntColumn get logDmMessageId => integer().map(const SnowflakeConverter()).nullable()();
 
   @override
   Set<Column> get primaryKey => {guildId, caseId};
@@ -272,4 +275,53 @@ class Starboard extends Table {
   IntColumn get threshold => integer().withDefault(const Constant(3))();
   TextColumn get emojis => text().withDefault(Constant(starboardEmojis.join(',')))();
   IntColumn get channelId => integer()();
+}
+
+class JsonSerializerDb extends ValueSerializer {
+  final bool serializeDateTimeValuesAsString;
+
+  const JsonSerializerDb({this.serializeDateTimeValuesAsString = false});
+
+  @override
+  T fromJson<T>(dynamic json) {
+    if (json == null) {
+      return null as T;
+    }
+
+    final typeList = <T>[];
+
+    if (typeList is List<DateTime?>) {
+      if (json is int) {
+        return DateTime.fromMillisecondsSinceEpoch(json) as T;
+      } else {
+        return DateTime.parse(json.toString()) as T;
+      }
+    }
+
+    if (typeList is List<double?> && json is int) {
+      return json.toDouble() as T;
+    }
+
+    // blobs are encoded as a regular json array, so we manually convert that to
+    // a Uint8List
+    if (typeList is List<Uint8List?> && json is! Uint8List) {
+      final asList = (json as List).cast<int>();
+      return Uint8List.fromList(asList) as T;
+    }
+
+    return json as T;
+  }
+
+  @override
+  dynamic toJson<T>(T value) {
+    if (value is DateTime) {
+      return serializeDateTimeValuesAsString ? value.toIso8601String() : value.millisecondsSinceEpoch;
+    }
+
+    return switch (value) {
+      Snowflake(:final value) => value.toString(),
+      PgDateTime(:final dateTime) => toJson(dateTime),
+      _ => value,
+    };
+  }
 }

@@ -1,0 +1,101 @@
+---
+import Card from "./Card.astro";
+
+import { DateTime } from "luxon";
+
+interface Props {
+  case: any;
+}
+
+enum CaseAction {
+  Role,
+  Unrole,
+  Warn,
+  Kick,
+  Softban,
+  Ban,
+  Unban,
+  Timeout,
+  TimeoutEnd,
+}
+
+function caseActionLabel(key: CaseAction) {
+  switch (key) {
+    case CaseAction.Role:
+      return "Role";
+    case CaseAction.Unrole:
+      return "Unrole";
+    case CaseAction.Warn:
+      return "Warn";
+    case CaseAction.Kick:
+      return "Kick";
+    case CaseAction.Softban:
+      return "Softban";
+    case CaseAction.Ban:
+      return "Ban";
+    case CaseAction.Unban:
+      return "Unban";
+    case CaseAction.Timeout:
+      return "Timeout";
+    case CaseAction.TimeoutEnd:
+      return "TimeoutEnd";
+    default:
+      return "Unknown";
+  }
+}
+
+function generateCaseColor(key: CaseAction) {
+  switch (key) {
+    case CaseAction.Role:
+    case CaseAction.Warn:
+    case CaseAction.Timeout:
+      return 16_767_836;
+    case CaseAction.Kick:
+    case CaseAction.Softban:
+      return 16_225_364;
+    case CaseAction.Ban:
+      return 16_735_324;
+    case CaseAction.Unban:
+      return 6_094_749;
+    default:
+      return 3_092_790;
+  }
+}
+
+const { case: ccase } = Astro.props;
+
+const createdAt = DateTime.fromISO(ccase.createdAt, { locale: "en-GB" });
+---
+
+<Card>
+  <div class="flex">
+    <div
+      class="rounded-l-lg border-4"
+      style={{
+        borderColor: `#${generateCaseColor(ccase.action).toString(16)}`,
+      }}
+    >
+    </div>
+    <div class="flex flex-col p-4">
+      <div>
+        <span class="font-semibold">Action:</span>
+        {caseActionLabel(ccase.action)}
+      </div>
+      <div role="separator" class="my-2 h-[1px] bg-gradient-to-r"></div>
+      <div>
+        <span class="font-semibold">Moderator:</span>
+        {ccase.modTag}
+      </div>
+      <div role="separator" class="my-2 h-[1px] bg-gradient-to-r"></div>
+      <div>
+        <span class="font-semibold">Reason:</span>
+        {ccase.reason}
+      </div>
+      <div role="separator" class="my-2 h-[1px] bg-gradient-to-r"></div>
+      <div>
+        <span class="font-semibold">Date:</span>
+        {createdAt.toLocaleString()} ({createdAt.toRelative()})
+      </div>
+    </div>
+  </div>
+</Card>

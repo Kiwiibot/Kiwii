@@ -1,0 +1,67 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import { Image } from "astro:assets";
+import { cache } from "~/utils";
+
+import { type APIGuild, PermissionFlagsBits } from "discord-api-types/v10";
+
+let guilds: APIGuild[] = [];
+
+const keys = Array.from(cache.keys());
+
+if (keys.some((k) => k.startsWith("guild-"))) {
+  guilds = keys
+    .filter((k) => k.startsWith("guild-"))
+    .map((k) => cache.get(k)! as APIGuild);
+} else {
+  const accessToken = Astro.cookies.get("access_token");
+
+  const guildData = await fetch(
+    "https://discord.com/api/v10/users/@me/guilds",
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken?.value}`,
+      },
+    }
+  );
+
+  const allGuilds: APIGuild[] = await guildData.json();
+
+  // Filter out guilds that the user can't manage
+  guilds = allGuilds.filter((guild) => {
+    const filterValue =
+      BigInt(guild?.permissions ?? 0) & PermissionFlagsBits.ManageGuild;
+    if (filterValue) {
+      cache.set(`guild-${guild.id}`, guild);
+    }
+    return filterValue;
+  });
+}
+---
+
+<Layout title="Dashboard">
+  <div class="container mx-auto">
+    <h1 class="text-4xl font-bold">Dashboard</h1>
+    <div class="grid grid-cols-3 gap-4">
+      {
+        guilds.map((guild) => (
+          <div class="bg-gray-800 p-4 rounded-lg">
+            <h2 class="text-2xl font-bold">{guild.name}</h2>
+            <a
+              href={`/guilds/${guild.id}`}
+              class="text-gray-400 decoration-blue-400 underline"
+            >
+              {guild.id}
+            </a>
+            <Image
+              src={`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`}
+              alt={guild.name}
+              class="rounded-full"
+              inferSize
+            />
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</Layout>

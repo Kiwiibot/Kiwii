@@ -1,0 +1,29 @@
+{
+  "name": "website",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.7.0",
+    "@astrojs/node": "^8.2.5",
+    "@astrojs/solid-js": "^4.2.0",
+    "@astrojs/tailwind": "^5.1.0",
+    "@tanstack/solid-table": "^8.17.3",
+    "astro": "^4.8.6",
+    "lru-cache": "^10.2.2",
+    "luxon": "^3.4.4",
+    "solid-js": "^1.8.17",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.4.2",
+    "discord-api-types": "^0.37.84"
+  }
+}
