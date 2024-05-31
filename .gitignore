@@ -43,3 +43,4 @@ logs/*
 
 kiwii.sqlite
 kiwii.*.sqlite
+*.log
