@@ -1,3 +1,21 @@
+/*
+ * Kiwii, a stupid Discord bot.
+ * Copyright (C) 2019-2024 Rapougnac
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 import 'package:nyxx/nyxx.dart';
 
 import '../translations.g.dart';
@@ -308,3 +326,58 @@ const overwatchEmojisMappings = <String, Map<String, String>>{
     'SNAPKICK': '<:ZenSnapKick:1230899328395120772>',
   }
 };
+
+const timeoutLocalizations = [
+  {
+    Locale.fr: '1 minute',
+    Locale.de: '1 Minute',
+  },
+  {
+    Locale.fr: '5 minutes',
+    Locale.de: '5 Minuten',
+  },
+  {
+    Locale.fr: '10 minutes',
+    Locale.de: '10 Minuten',
+  },
+  {
+    Locale.fr: '1 heure',
+    Locale.de: '1 Stunde',
+  },
+  {
+    Locale.fr: '3 heures',
+    Locale.de: '3 Stunden',
+  },
+  {
+    Locale.fr: '6 heures',
+    Locale.de: '6 Stunden',
+  },
+  {
+    Locale.fr: '12 heures',
+    Locale.de: '12 Stunden',
+  },
+  {
+    Locale.fr: '1 jour',
+    Locale.de: '1 Tag',
+  },
+  {
+    Locale.fr: '2 jours',
+    Locale.de: '2 Tage',
+  },
+  {
+    Locale.fr: '3 jours',
+    Locale.de: '3 Tage',
+  },
+  {
+    Locale.fr: '1 semaine',
+    Locale.de: '1 Woche',
+  }
+];
+
+const embedTitleLimit = 256;
+const embedDescriptionLimit = 4096;
+const embedFooterLimit = 2048;
+const embedAuthorNameLimit = 256;
+const embedFieldsLimit = 25;
+const embedFieldNameLimit = 256;
+const embedFieldValueLimit = 1024;

@@ -1,0 +1,47 @@
+---
+import { columns } from "~/components/CaseColum";
+import { Table } from "~/components/Table";
+import Layout from "~/layouts/Layout.astro";
+
+if (!Astro.cookies.has("access_token")) {
+  return Astro.redirect("/");
+}
+
+const caseData = await fetch(
+  `${import.meta.env.API_URL}/cases/${Astro.params.guildId}`
+);
+
+if (!caseData.ok) {
+  return Astro.redirect("/");
+}
+const { cases } = await caseData.json();
+---
+
+<Layout title="Cases">
+  <div class="flex flex-col gap-8">
+    <h1
+      class="mb-4 pt-12 text-center text-4xl font-extrabold leading-none tracking-tight md:mb-8 md:text-5xl"
+    >
+      Latest <span class="underline decoration-8">cases</span>
+    </h1>
+    <div
+      class="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 pb-8 md:max-w-4xl md:flex-row md:gap-8"
+    >
+      <div class="flex w-full flex-col gap-4">
+        <div class="flex flex-col gap-4">
+          {
+            cases.length ? (
+              <Table
+                client:visible
+                columns={columns(Astro.params.guildId!)}
+                data={cases}
+              />
+            ) : (
+              <h2 class="pt-4 text-center text-lg font-semibold">No cases</h2>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

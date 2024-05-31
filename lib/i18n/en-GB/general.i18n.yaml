@@ -1,2 +1,8 @@
-nonAvailable: "Not available"
-thousandsSeparator: ','
+non_available: Not available
+thousands_separator: ","
+errors:
+  no_mod_channel: No mod channel has been set up for this server.
+  target_not_found: The targeted user could not be found.
+  max_length_reason: The reason must be less than $maxLength characters.
+buttons:
+  cancel: Cancel

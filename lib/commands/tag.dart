@@ -1,6 +1,25 @@
+/*
+ * Kiwii, a stupid Discord bot.
+ * Copyright (C) 2019-2024 Rapougnac
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 // import 'package:drift_postgres/drift_postgres.dart';
 import 'package:drift/isolate.dart';
 import 'package:drift/native.dart';
+import 'package:drift_postgres/drift_postgres.dart';
 import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
@@ -33,7 +52,16 @@ final tag = ChatCommand(
 
           final db = GetIt.I.get<AppDatabase>();
           final tag = TagsCompanion.insert(
-              name: name, content: contents.join(' '), ownerId: ctx.user.id.value, locationId: ctx.guild!.id.value, createdAt: DateTime.now());
+            name: name,
+            content: contents.join(' '),
+            ownerId: ctx.user.id,
+            locationId: ctx.guild!.id.value,
+            createdAt: Value(
+              PgDateTime(
+                DateTime.now(),
+              ),
+            ),
+          );
 
           try {
             await db.transaction(() {
@@ -136,7 +164,7 @@ final tag = ChatCommand(
             return;
           }
 
-          final properTags = tags.indexed.map((data) => '${data.$1}. ${data.$2.name} (${userMention(data.$2.ownerId.snowflake)})').join('\n');
+          final properTags = tags.indexed.map((data) => '${data.$1}. ${data.$2.name} (${userMention(data.$2.ownerId)})').join('\n');
 
           final builder = await pagination.split('${bold('🗒️Tags in this server')}\n\n$properTags');
           builder.allowedMentions = AllowedMentions.roles() & AllowedMentions.users();
@@ -170,7 +198,7 @@ final tag = ChatCommand(
             fields: [
               EmbedFieldBuilder(
                 name: 'Owner',
-                value: userMention(tag.ownerId.snowflake),
+                value: userMention(tag.ownerId),
                 isInline: true,
               ),
               EmbedFieldBuilder(
@@ -179,7 +207,7 @@ final tag = ChatCommand(
                 isInline: true,
               ),
             ],
-            timestamp: tag.createdAt,
+            timestamp: tag.createdAt.dateTime,
           );
 
           await ctx.respond(MessageBuilder(embeds: [embed]));

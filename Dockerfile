@@ -16,18 +16,22 @@ RUN dart compile exe -o kiwii kiwii.g.dart
 
 CMD [ "./kiwii" ]
 
-FROM node:20-alpine AS kiwii_api
+# FROM node:20-alpine AS kiwii_api
 
-WORKDIR /api
+# # Copy code
+# COPY ./api /api/
+# WORKDIR /api
 
-# Install dependencies
-COPY package.json /api/
-RUN corepack use pnpm@latest
-RUN pnpm i
+# COPY ./api/package.json /api/
 
-# Copy code
-COPY . /api/
+# RUN npm i -g npm@latest
 
-RUN pnpm build
+# # Install python
+# RUN apk add --no-cache build-base cairo-dev pango-dev jpeg-dev giflib-dev librsvg-dev
 
-CMD [ "node", "dist/index.js" ]
+# # Install dependencies
+# RUN npm i
+
+# RUN npm run build
+
+# CMD [ "node", "dist/index.js" ]

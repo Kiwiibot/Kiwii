@@ -1,0 +1,84 @@
+---
+import { Image } from "astro:assets";
+interface Props {
+  user: {
+    accent_color?: number | null;
+    avatar?: string | null;
+    banner?: string | null;
+    id: string;
+    username: string;
+    global_name?: string | null;
+  };
+  className?: string;
+}
+
+const { user, className } = Astro.props;
+
+const isAvatarAnimated = user.avatar?.startsWith("a_");
+const isBannerAnimated = user.banner?.startsWith("a_");
+---
+
+<div class={`flex w-[340px] max-w-[340px] flex-col ${className ?? ""}`}>
+  <div class="relative">
+    <div class="h-[120px] max-h-[120px]">
+      {
+        user.banner ? (
+          <picture>
+            <Image
+              inferSize
+              src={`https://cdn.discordapp.com/banners/${user.id}/${user.banner}.${
+                isBannerAnimated ? "gif" : "png"
+              }?size=480`}
+              alt="Banner"
+            />
+          </picture>
+        ) : user.accent_color ? (
+          <picture>
+            <div
+              class="h-full w-full rounded-lg shadow-md"
+              style={{ background: user.accent_color.toString(16) }}
+            />
+          </picture>
+        ) : (
+          <div class="flex h-full w-full place-content-center items-center rounded-lg shadow-md">
+            <span>Lmao get rekt.</span>
+          </div>
+        )
+      }
+    </div>
+
+    {
+      user.avatar ? (
+        <div class="absolute left-[22px] top-[76px] rounded-full border-4">
+          <picture>
+            <Image
+              width={128}
+              height={128}
+              alt="Avatar"
+              class="h-[80px] w-[80px] rounded-full shadow-md"
+              src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}${
+                isAvatarAnimated ? ".gif" : ".png"
+              }`}
+              style={{ backgroundColor: "#2E2E2E"}}
+            />
+          </picture>
+        </div>
+      ) : (
+        <div class="absolute left-[22px] top-[76px] rounded-full border-4">
+          <picture>
+            <Image
+              width={128}
+              height={128}
+              alt="Avatar"
+              class="h-[80px] w-[80px] rounded-full shadow-md"
+              src={`https://cdn.discordapp.com/embed/avatars/${(BigInt(user.id) >> 22n) % 6n}.png`}
+            />
+          </picture>
+        </div>
+      )
+    }
+  </div>
+  <div class="flex place-content-end truncate py-3 pl-28 pr-[22px]">
+    <span class="truncate font-semibold">{user.global_name ?? user.username}</span>
+  </div>
+</div>

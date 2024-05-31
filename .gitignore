@@ -42,3 +42,4 @@ api/node_modules/
 logs/*
 
 kiwii.sqlite
+kiwii.*.sqlite

@@ -5,26 +5,26 @@ packages:
     dependency: transitive
     description:
       name: _fe_analyzer_shared
-      sha256: ae92f5d747aee634b87f89d9946000c2de774be1d6ac3e58268224348cd0101a
+      sha256: "0b2f2bd91ba804e53a61d757b986f89f1f9eaed5b11e4b2f5a2468d86d6c9fc7"
       url: "https://pub.dev"
     source: hosted
-    version: "61.0.0"
+    version: "67.0.0"
   analyzer:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
       name: analyzer
-      sha256: ea3d8652bda62982addfd92fdc2d0214e5f82e43325104990d4f4c4a2a313562
+      sha256: "37577842a27e4338429a1cbc32679d508836510b056f1eedf0c8d20e39c1383d"
       url: "https://pub.dev"
     source: hosted
-    version: "5.13.0"
+    version: "6.4.1"
   analyzer_plugin:
     dependency: transitive
     description:
       name: analyzer_plugin
-      sha256: c1d5f167683de03d5ab6c3b53fc9aeefc5d59476e7810ba7bbddff50c6f4392d
+      sha256: "9661b30b13a685efaee9f02e5d01ed9f2b423bd889d28a304d02d704aee69161"
       url: "https://pub.dev"
     source: hosted
-    version: "0.11.2"
+    version: "0.11.3"
   args:
     dependency: transitive
     description:
@@ -145,6 +145,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.3"
+  ci:
+    dependency: transitive
+    description:
+      name: ci
+      sha256: "145d095ce05cddac4d797a158bc4cf3b6016d1fe63d8c3d2fbd7212590adca13"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0"
   cli_util:
     dependency: transitive
     description:
@@ -209,6 +217,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.0.0"
+  custom_lint:
+    dependency: "direct dev"
+    description:
+      name: custom_lint
+      sha256: "7c0aec12df22f9082146c354692056677f1e70bc43471644d1fdb36c6fdda799"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.4"
+  custom_lint_builder:
+    dependency: transitive
+    description:
+      name: custom_lint_builder
+      sha256: d7dc41e709dde223806660268678be7993559e523eb3164e2a1425fd6f7615a9
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.4"
+  custom_lint_core:
+    dependency: transitive
+    description:
+      name: custom_lint_core
+      sha256: a85e8f78f4c52f6c63cdaf8c872eb573db0231dcdf3c3a5906d493c1f8bc20e6
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.3"
   darq:
     dependency: "direct main"
     description:
@@ -285,11 +317,11 @@ packages:
     dependency: "direct main"
     description:
       path: "extras/drift_postgres"
-      ref: HEAD
-      resolved-ref: ac4947f26684ffe2cf2cbbff20fa8ac3da158efc
+      ref: develop
+      resolved-ref: "4e12606ed89d1a02b4fd610c9341be4b0334b8a9"
       url: "https://github.com/simolus3/drift.git"
     source: git
-    version: "1.2.0"
+    version: "1.3.0-dev"
   duration:
     dependency: "direct main"
     description:
@@ -354,6 +386,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
+  freezed_annotation:
+    dependency: transitive
+    description:
+      name: freezed_annotation
+      sha256: c3fd9336eb55a38cc1bbd79ab17573113a8deccd0ecbbf926cca3c62803b5c2d
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.1"
   frontend_server_client:
     dependency: transitive
     description:
@@ -394,6 +434,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.1"
+  hotreloader:
+    dependency: transitive
+    description:
+      name: hotreloader
+      sha256: ed56fdc1f3a8ac924e717257621d09e9ec20e308ab6352a73a50a1d7a4d9158e
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.2.0"
   html:
     dependency: transitive
     description:
@@ -410,6 +458,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.1"
+  http_methods:
+    dependency: transitive
+    description:
+      name: http_methods
+      sha256: "6bccce8f1ec7b5d701e7921dca35e202d425b57e317ba1a37f2638590e29e566"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
   http_multi_server:
     dependency: transitive
     description:
@@ -514,31 +570,49 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.5"
+  mio:
+    dependency: "direct dev"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "937bebc45eb43cd127079a2426708b1196dc86b3"
+      url: "https://github.com/Rapougnac/mio_lints.git"
+    source: git
+    version: "1.0.0"
+  neat_cache:
+    dependency: "direct main"
+    description:
+      name: neat_cache
+      sha256: "72bebca0bb1a443c0c8e76ddae55ef9059b8bc591edb88168d19f5e9a55a4dba"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.4"
   nyxx:
     dependency: "direct main"
     description:
       path: "."
-      ref: "patch/hang-status"
-      resolved-ref: "4a54601fc89395cf5b3970cc6ed5156e14de4ea0"
-      url: "https://github.com/abitofevrything/nyxx.git"
+      ref: "feat/priv-utils"
+      resolved-ref: "50c01cf1322f2997337d1711169f59794846209e"
+      url: "https://github.com/Rapougnac/nyxx.git"
     source: git
     version: "6.2.1"
   nyxx_commands:
     dependency: "direct main"
     description:
       path: "."
-      ref: "feat/lines"
-      resolved-ref: beaf9eca0434c49f75b7a4f5c087c9f8b595fb58
+      ref: dev
+      resolved-ref: "96a6da303264a565451c4ff8ff62e2bb4e7be748"
       url: "https://github.com/Rapougnac/nyxx_commands.git"
     source: git
     version: "6.0.2"
   nyxx_extensions:
     dependency: "direct main"
     description:
-      name: nyxx_extensions
-      sha256: "8ba75eeb0a8034df1e549170e69d11961a93352d9b043db08014038c4ee938aa"
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: dev
+      resolved-ref: d560a924bc0dd6d9e050dd5dae2f0e359bb1cfdd
+      url: "https://github.com/nyxx-discord/nyxx_extensions.git"
+    source: git
     version: "4.1.0"
   oauth2:
     dependency: transitive
@@ -551,9 +625,11 @@ packages:
   overfast_api:
     dependency: "direct main"
     description:
-      path: "../overfast_api"
-      relative: true
-    source: path
+      path: "."
+      ref: HEAD
+      resolved-ref: "5010af7384502ab338760324a617f97725a62938"
+      url: "https://git.rapougnac.moe/Rapougnac/overfast_api.git"
+    source: git
     version: "0.0.1"
   package_config:
     dependency: transitive
@@ -582,9 +658,11 @@ packages:
   perspective_api:
     dependency: "direct main"
     description:
-      path: "../perspective_api"
-      relative: true
-    source: path
+      path: "."
+      ref: HEAD
+      resolved-ref: bc7700635250e2aa915a7f6bb830b1882fc3c8a1
+      url: "https://git.rapougnac.moe/Rapougnac/perspective_api.git"
+    source: git
     version: "1.0.0"
   pool:
     dependency: transitive
@@ -659,6 +737,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
+  rxdart:
+    dependency: transitive
+    description:
+      name: rxdart
+      sha256: "0c7c0cedd93788d996e33041ffecda924cc54389199cde4e6a34b440f50044cb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.27.7"
   sasl_scram:
     dependency: transitive
     description:
@@ -684,13 +770,37 @@ packages:
     source: hosted
     version: "7.19.0"
   shelf:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: shelf
       sha256: ad29c505aee705f41a4d8963641f91ac4cee3c8fad5947e033390a7bd8180fa4
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
+  shelf_helmet:
+    dependency: "direct main"
+    description:
+      name: shelf_helmet
+      sha256: c6f2f936fcd4b91256e98f71071c500a0b7879d5f7cc9803fa2ccf75f4a09343
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.0"
+  shelf_router:
+    dependency: "direct main"
+    description:
+      name: shelf_router
+      sha256: f5e5d492440a7fb165fe1e2e1a623f31f734d3370900070b2b1e0d0428d59864
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.4"
+  shelf_router_generator:
+    dependency: "direct dev"
+    description:
+      name: shelf_router_generator
+      sha256: dce5ad77c5db0271ffcc282ced6b106145c8f953e83f5074a13a07811c818793
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   shelf_web_socket:
     dependency: transitive
     description:
@@ -795,6 +905,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.0"
+  string_similarity:
+    dependency: "direct main"
+    description:
+      name: string_similarity
+      sha256: "5219d2ca048f6d3b8954747644b99b103244b5f84ef62b2577d29eb6bdeb61bb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
+  style_cron_job:
+    dependency: "direct main"
+    description:
+      name: style_cron_job
+      sha256: "71d6982d715489fcbf4440d07f2bed826d3c84d2020c6f65eb4873e2381a4b7b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.4+2"
   term_glyph:
     dependency: transitive
     description:
@@ -875,6 +1001,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  vm_service:
+    dependency: transitive
+    description:
+      name: vm_service
+      sha256: "360c4271613beb44db559547d02f8b0dc044741d0eeb9aa6ccdb47e8ec54c63a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "14.2.3"
   watcher:
     dependency: transitive
     description:

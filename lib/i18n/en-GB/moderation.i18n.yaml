@@ -1,0 +1,163 @@
+buttons:
+  warn: Warn
+  timeout: Timeout
+  reason: Set reason
+  appeal_approve: Approve
+  appeal_reject: Reject
+  ban: Ban
+
+warn:
+  pending: Do you really want to warn $user?
+  cancel: Warning cancelled for $user.
+  success: $user has successfully been warned.
+
+timeout:
+  already_timed_out: This member is already timed out.
+  pending: Do you really want to timeout $user?
+  cancel: Timeout cancelled for $user.
+  success: $user has successfully been timed out.
+
+reason:
+  pending_multiple: Do you really want to bulk set the reason for these cases $lower to $upper? (`$n` cases)
+  canceled: Canceled setting the reason.
+  success: Reason set for case $caseId.
+  success_multiple: Reason set for cases $lower to $upper (`$succeded/$n` cases).
+
+ban:
+  already_banned: $user is already banned.
+  cannot_ban: I cannot ban this $user due to insufficient permissions or role hierarchy.
+  dm: |-
+    You have been banned from $guildName.
+    Case #$caseId
+    Reason: $reason
+  dm_appeal: If you believe this ban is unjust, you can appeal it by replying to this message.
+  pending: Do you really want to ban $user?
+  success: $user has successfully been banned.
+  cancel: Ban cancelled for $user.
+
+appeal:
+  pending: Your appeal has successfully been submitted and is pending approval.
+  accepted: Your appeal has been accepted. Be sure to follow the rules from now on!
+  rejected: Your appeal has been rejected.
+  mod_accepted: Successfully accepted the appeal.
+  mod_rejected: Successfully rejected the appeal.
+  unbanned: Unbanned after appeal.
+
+common:
+  reasons:
+    - Troll
+    - Spam
+    - Insult
+    - Harassment
+    - Selfbot
+    - NSFW
+    - Suspicious or spam account
+    - DM advertising
+  no_reason: No reason provided
+  errors:
+    no_history: No history found for this user.
+    case_range: Invalid case range; `#$lower` to `#$upper` is not a valid range.
+    case_not_found: Case `#$caseId` not found.
+    no_appeal_channel: It unfortunately seems that there is no appeal channel set up for the server you're trying to appeal a ban in. Please contact the server staff directly.
+    appeal_not_found: The appeal you're trying to accept or reject could not be found.
+  durations:
+    - 1 minute
+    - 5 minutes
+    - 10 minutes
+    - 1 hour
+    - 3 hours
+    - 6 hours
+    - 12 hours
+    - 1 day
+    - 2 days
+    - 3 days
+    - 1 week
+
+history:
+  common:
+    user_details:
+      title: User Details
+      description: |-
+        • Username: $mention — $tag ($id)
+        • Created: $created ($createdSince) `$createdAtTimestamp`
+    member_details:
+      title: Member Details
+      description:
+        nickname: "• Nickname: `$nickname`"
+        joined: "• Joined: $joined ($joinedSince) `$joinedAtTimestamp`"
+        roles:
+          one: "• Role ($n): $roles"
+          other: "• Roles ($n): $roles"
+  cases:
+    title: Case History
+    summary:
+      warning:
+        one: $n warning
+        other: $n warnings
+      restriction:
+        one: $n restriction
+        other: $n restrictions
+      timeout:
+        one: $n timeout
+        other: $n timeouts
+      kick:
+        one: $n kick
+        other: $n kicks
+      softban:
+        one: $n softban
+        other: $n softbans
+      ban:
+        one: $n ban
+        other: $n bans
+      unban:
+        one: $n unban
+        other: $n unbans
+    show_history: Show history for user $user
+    goto: Go to case $ccase
+  action_label:
+    restriction: Restrict
+    restriction_case: Role
+    unrestriction: Unrestrict
+    unrestriction_case: Unrole
+    warn: Warn
+    kick: Kick
+    softban: Softban
+    ban: Ban
+    unban: Unban
+    timeout: Timeout
+    timeout_end: Timeout end
+    unknown: Unknown
+
+logs:
+  cases:
+    description: |-
+      **Member**: `$targetTag` ($targetID)
+      **Action**: $action
+    expiration: '\n**Expiration**: $time'
+    context: '\n**Context**: $link'
+    context_link: "Jump to"
+    reason: '\n**Reason**: $reason'
+    reason_fallback: '\n**Reason**: Use `${prefix}reason $caseId <reason>` to set a reason for this case'
+    case_reference: '\n**Case Reference**: $ref ($action)'
+    report_reference: '\n**Report Reference**: $reportRef'
+    footer: "Case $caseId"
+    unrole_delete_manual: Manual unrole
+    unrole_delete_auto: Automatic unrole based on duration
+    timeout_delete_manual: Manually ended timeout
+    timeout_delete_auto: Timeout expired based on duration
+  auto_mod:
+    keyword: Message contained a keyword defined in an auto-mod rule.
+    keyword_preset: The message was flagged by the auto-mod system.
+    harmful_link: Message contained a harmful link.
+    spam: Message was flagged as spam.
+    mention_spam: Message contained too many mentions.
+  appeals:
+    title: Ban Appeal
+    description: |-
+      **Member**: $user `$userTag` ($userID)
+      **Reason**: $reason
+      **Case**: $caseId
+    footer: If you want to accept or reject this appeal, use the buttons below.
+    footer_accepted: Appeal accepted by $moderator
+    footer_rejected: Appeal rejected by $moderator
+

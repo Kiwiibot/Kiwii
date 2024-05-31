@@ -1,0 +1,18 @@
+---
+import Layout from "~/layouts/Layout.astro";
+
+Astro.response.status = 401;
+
+const error =
+  Astro.cookies.get("error")?.value ||
+  "You are not authorized to view this page.";
+---
+
+<Layout title="Unauthorized">
+  <h1
+    class="flex justify-center text-4xl underline-offset-3 underline decoration-8"
+  >
+    Unauthorized
+  </h1>
+  <p class="flex justify-center mt-4">{error}</p>
+</Layout>

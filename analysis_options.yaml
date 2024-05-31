@@ -8,7 +8,17 @@ analyzer:
     strict-raw-types: true
     strict-casts: false
     strict-inference: true
+  plugins:
+    - custom_lint
 
 linter:
   rules:
     - prefer_relative_imports
+
+custom_lint:
+  debug: false
+  rules:
+    - mio_header:
+      file: ./header.txt
+      templates:
+        author: [.*, Rapougnac]
