@@ -20,7 +20,7 @@ import 'dart:io';
 import 'package:dotenv/dotenv.dart';
 import 'package:nyxx/nyxx.dart';
 
-final dotenv = DotEnv()..load();
+final dotenv = DotEnv()..load(const ['.env']);
 
 String? getEnv(String key) => Platform.environment[key] ?? dotenv[key] ?? (!bool.hasEnvironment(key) ? null : String.fromEnvironment(key));
 
@@ -70,6 +70,7 @@ final testGuildId = Snowflake.parse(fromEnvironment('TEST_GUILD_ID', '9117366665
 final postgresPassword = fromEnvironment('POSTGRES_PASSWORD');
 final postgresUser = fromEnvironment('POSTGRES_USER');
 final postgresDb = fromEnvironment('POSTGRES_DB');
+final postgresHost = fromEnvironment('POSTGRES_HOST', 'localhost');
 
 /// The status url to periodically update the status of the bot.
 final statusUrl = fromEnvironment('STATUS_URL');

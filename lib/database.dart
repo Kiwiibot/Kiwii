@@ -36,7 +36,7 @@ QueryExecutor _openConnection() {
   return PgDatabase(
     endpoint: pg.Endpoint(
       database: postgresDb,
-      host: 'database',
+      host: postgresHost,
       username: postgresUser,
       password: postgresPassword,
     ),
