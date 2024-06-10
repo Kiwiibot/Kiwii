@@ -27,10 +27,11 @@ import '../utils/jobs.dart';
 import '../src/settings.dart' as settings;
 
 Future<void> readyEvent(ReadyEvent event) async {
+  final client = event.gateway.client;
   await registerJobs();
   Timer.periodic(const Duration(seconds: 15), (timer) {
     final status = '${settings.prefix}help ─ ${settings.statuses[Random().nextInt(settings.statuses.length)]}';
-    event.gateway.client.updatePresence(
+    client.updatePresence(
       PresenceBuilder(
         isAfk: false,
         status: CurrentUserStatus.idle,
@@ -43,6 +44,10 @@ Future<void> readyEvent(ReadyEvent event) async {
         ],
       ),
     );
+  });
+
+  Timer.periodic(const Duration(seconds: 60), (timer) async {
+    await client.httpHandler.httpClient.head(Uri.parse(settings.statusUrl));
   });
 
   final apiServer = await api();

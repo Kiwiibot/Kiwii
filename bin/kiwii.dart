@@ -22,6 +22,7 @@ import 'dart:io' as io;
 
 import 'package:dart_openai/dart_openai.dart';
 import 'package:get_it/get_it.dart';
+import 'package:kiwii/commands/admin/eval.dart';
 import 'package:kiwii/commands/admin/run_as.dart';
 import 'package:kiwii/commands/core/help.dart';
 import 'package:kiwii/commands/fun/markov.dart';
@@ -129,6 +130,7 @@ Future<void> _main() async {
   commands.addCommand(userLookupCommand);
   commands.addCommand(caseCommand);
   commands.addCommand(infoCommand);
+  // commands.addCommand(evalCommand);
 
   final listConverter = Converter<List<String>>((view, ctx) {
     final args = <String>[];
@@ -244,7 +246,7 @@ Future<void> _main() async {
       }
 
       commands.logger.shout(
-        'Uncaught exception in command',
+        'Uncaught exception in command\n${error.message}',
         error,
         error.stackTrace,
       );

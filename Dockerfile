@@ -10,8 +10,11 @@ RUN dart pub get
 COPY . /bot/
 RUN dart pub get --offline
 
+# Generate the files
+RUN dart run build_runner build --delete-conflicting-outputs
+
 # Compile bot into executable
-RUN dart run nyxx_commands:compile --compile -o kiwii.g.dart --no-compile bin/kiwii.dart
+RUN dart run nyxx_commands:compile --no-compile -o kiwii.g.dart bin/kiwii.dart
 RUN dart compile exe -o kiwii kiwii.g.dart
 
 CMD [ "./kiwii" ]

@@ -71,6 +71,9 @@ final postgresPassword = fromEnvironment('POSTGRES_PASSWORD');
 final postgresUser = fromEnvironment('POSTGRES_USER');
 final postgresDb = fromEnvironment('POSTGRES_DB');
 
+/// The status url to periodically update the status of the bot.
+final statusUrl = fromEnvironment('STATUS_URL');
+
 /// The statuses of the bot.
 const statuses = [
   "DM me if you've found the meaning of life..",

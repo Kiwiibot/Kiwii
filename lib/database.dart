@@ -33,11 +33,10 @@ export 'package:drift/drift.dart';
 part 'database.g.dart';
 
 QueryExecutor _openConnection() {
-  // return NativeDatabase.createInBackground(File('kiwii.sqlite'));
   return PgDatabase(
     endpoint: pg.Endpoint(
       database: postgresDb,
-      host: 'localhost',
+      host: 'database',
       username: postgresUser,
       password: postgresPassword,
     ),

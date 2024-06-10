@@ -7,10 +7,7 @@ environment:
   sdk: ">=3.0.5 <4.0.0"
 
 dependencies:
-  nyxx_commands:
-    git:
-      url: https://github.com/Rapougnac/nyxx_commands.git
-      ref: dev
+  nyxx_commands: any
     # path: ../../../code/nyxx_commands
   postgres: ^2.6.3
   get_it: ^7.2.0
@@ -27,7 +24,7 @@ dependencies:
   darq: ^2.0.0
   stdlibc: ^0.1.4
   sentry: ^7.18.0
-  dart_eval: ^0.6.0
+  dart_eval: ^0.7.9
   nyxx: ^6.2.1
   overfast_api:
     # path: ../overfast_api
@@ -65,6 +62,10 @@ dependency_overrides:
   nyxx_extensions:
     git:
       url: https://github.com/nyxx-discord/nyxx_extensions.git
+      ref: dev
+  nyxx_commands:
+    git:
+      url: https://github.com/Rapougnac/nyxx_commands.git
       ref: dev
   analyzer: ^6.4.1
 
