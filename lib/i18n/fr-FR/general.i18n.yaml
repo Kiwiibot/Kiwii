@@ -6,3 +6,58 @@ errors:
   max_length_reason: La raison doit comporter moins de $maxLength caractères.
 buttons:
   cancel: Annuler
+
+permissions:
+  add_reactions: Ajouter Des Réactions
+  adminstrator: Administrateur
+  attach_files: Joindre Des Fichiers
+  ban_members: Bannir Des Membres
+  change_nickname: Changer Le Pseudo
+  connect: Se Connecter
+  create_events: Créer Des Événements
+  create_guild_expressions: Créer Des Expressions
+  create_instant_invite: Créer Une Invitation
+  create_private_threads: Créer Des Fils Privés
+  create_public_threads: Créer Des Fils Publics
+  deafen_members: Rendre Membres Sourd
+  embed_links: Intégrer Des Liens
+  kick_members: Expulser Des Membres
+  manage_channels: Gérer Les Salons
+  manage_events: Gérer Les Événements
+  manage_guild: Gérer Le Serveur
+  manage_guild_expressions: Gérer Les Expressions
+  manage_messages: Gérer Les Messages
+  manage_nicknames: Gérer Les Pseudos
+  manage_roles: Gérer Les Rôles
+  manage_threads: Gérer Les Fils
+  mention_everyone: Mentionner @everyone
+  moderate_members: Modérer Les Membres
+  move_members: Déplacer Les Membres
+  mute_members: Rendre Les Membres Muet
+  priority_speaker: Voix Prioritaire
+  read_message_history: Lire L'Historique Des Messages
+  request_to_speak: Demander À Parler
+  send_messages: Envoyer Des Messages
+  send_messages_in_threads: Envoyer Des Messages Dans Les Fils
+  send_polls: Envoyer Des Sondages
+  send_tts_messages: Envoyer Des Messages De Synthèse Vocale
+  send_voice_messages: Envoyer Des Messages Vocaux
+  speak: Parler
+  stream: Vidéo
+  use_application_commands: Utiliser Des Commandes D'Application
+  use_embedded_activities: Utiliser Des Activités Intégrées
+  use_external_apps: Utiliser Des Applications Externes
+  use_external_emojis: Utiliser Des Émojis Externes
+  use_external_sounds: Utiliser Des Sons Externes
+  use_external_stickers: Utiliser Des Stickers Externes
+  use_vad: Utiliser La Détection D'Activité Vocale
+  view_audit_log: Voir Les Logs Du Serveur
+  view_channel: Voir Le Salon
+  view_creator_monetization_analytics: Voir Les Analyses De Monétisation Du Créateur
+  view_guild_insights: Voir Les Analyses De Serveur
+
+categories:
+  moderation: Modération
+  utility: Utilitaire
+  nsfw: NSFW
+  unknown: Inconnu

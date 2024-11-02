@@ -4,5 +4,64 @@ errors:
   no_mod_channel: No mod channel has been set up for this server.
   target_not_found: The targeted user could not be found.
   max_length_reason: The reason must be less than $maxLength characters.
+  command_not_found: Command not found.
 buttons:
   cancel: Cancel
+
+permissions:
+  add_reactions: Add Reactions
+  adminstrator: Administrator
+  attach_files: Attach Files
+  ban_members: Ban Members
+  change_nickname: Change Nickname
+  connect: Connect
+  create_events: Create Events
+  create_guild_expressions: Create Expressions
+  create_instant_invite: Create Invite
+  create_private_threads: Create Private Threads
+  create_public_threads: Create Public Threads
+  deafen_members: Deafen Members
+  embed_links: Embed Links
+  kick_members: Kick Members
+  manage_channels: Manage Channels
+  manage_events: Manage Events
+  manage_guild: Manage Server
+  manage_guild_expressions: Manage Expressions
+  manage_messages: Manage Messages
+  manage_nicknames: Manage Nicknames
+  manage_roles: Manage Roles
+  manage_threads: Manage Threads
+  mention_everyone: Mention Everyone
+  moderate_members: Moderate Members
+  move_members: Move Members
+  mute_members: Mute Members
+  priority_speaker: Priority Speaker
+  read_message_history: Read Message History
+  request_to_speak: Request to Speak
+  send_messages: Send Messages
+  send_messages_in_threads: Send Messages in Threads
+  send_polls: Send Polls
+  send_tts_messages: Send Text-To-Speech Messages
+  send_voice_messages: Send Voice Messages
+  speak: Speak
+  stream: Stream
+  use_application_commands: Use Application Commands
+  use_embedded_activities: Use Embedded Activities
+  use_external_apps: Use External Apps
+  use_external_emojis: Use External Emojis
+  use_external_sounds: Use External Sounds
+  use_external_stickers: Use External Stickers
+  use_vad: Use Voice Activity Detection
+  view_audit_log: View Audit Log
+  view_channel: View Channel
+  view_creator_monetization_analytics: View Creator Monetization Analytics
+  view_guild_insights: View Server Insights
+
+categories:
+  moderation: Moderation
+  utility: Utility
+  nsfw: NSFW
+  unknown: Unknown
+
+settings:
+  webhook_create_reason: Webhook created to logs members and messages.

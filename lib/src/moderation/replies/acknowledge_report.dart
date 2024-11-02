@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,12 +72,10 @@ Future<Thread> acknowledgeReport(Guild guild, Report report, [Message? message, 
   final shouldUpdateTags = [statusTag, typeTag].any((re) => !reportPost!.appliedTags!.contains(re));
 
   if (reportPost.isArchived || shouldUpdateTags) {
-    await reportPost.update(
-      ThreadUpdateBuilder(
-        isArchived: false,
-        appliedTags: [typeTag, statusTag],
-      )
-    );
+    await reportPost.update(ThreadUpdateBuilder(
+      isArchived: false,
+      appliedTags: [typeTag, statusTag],
+    ));
   }
 
   final start = await reportPost.messages.fetch(reportPost.id);

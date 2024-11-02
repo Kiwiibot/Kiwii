@@ -1,0 +1,12 @@
+ban:
+  description: Bannir un utilisateur du serveur.
+  usage: "[utilisateur] <raison> <cas-de-référence>"
+  examples:
+    usages:
+      - "@utilisateur"
+      - 123456789012345678 "Il était méchant"
+      - "@utilisateur spamming 1234"
+    descriptions:
+      - Bannir l'utilisateur @utilisateur du serveur.
+      - Bannir l'utilisateur 123456789012345678 du serveur pour avoir été méchant.
+      - Bannir l'@utilisateur du serveur pour spam avec référence au cas 1234.

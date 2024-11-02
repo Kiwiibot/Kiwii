@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,14 +20,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as io;
 
-import 'package:dart_openai/dart_openai.dart';
+// import 'package:dart_openai/dart_openai.dart';
+import 'package:kiwii/events/member_log.dart';
+import 'package:kiwii/plugins/base.dart';
+import 'package:kiwii/plugins/load_modules.dart';
+import 'package:nyxx_utils/nyxx_utils.dart';
+import 'package:openai_dart/openai_dart.dart';
 import 'package:get_it/get_it.dart';
-import 'package:kiwii/commands/admin/eval.dart';
-import 'package:kiwii/commands/admin/run_as.dart';
-import 'package:kiwii/commands/core/help.dart';
-import 'package:kiwii/commands/fun/markov.dart';
-import 'package:kiwii/commands/fun/overwatch.dart';
-import 'package:kiwii/commands/fun/uwurandom.dart';
 import 'package:kiwii/commands/moderation/ban.dart';
 import 'package:kiwii/commands/moderation/case.dart';
 import 'package:kiwii/commands/moderation/lookup.dart';
@@ -42,8 +41,12 @@ import 'package:kiwii/commands/utils/source.dart';
 import 'package:kiwii/database.dart';
 import 'package:kiwii/events/appeal.dart';
 import 'package:kiwii/events/bans.dart';
+import 'package:kiwii/events/message_create.dart';
+import 'package:kiwii/events/message_log.dart';
 import 'package:kiwii/events/ready.dart';
 import 'package:kiwii/events/timeouts.dart';
+import 'package:kiwii/kiwii.dart';
+import 'package:kiwii/plugins/chat.dart';
 import 'package:kiwii/plugins/github_expand.dart';
 import 'package:kiwii/plugins/localization.dart';
 import 'package:kiwii/plugins/tag/tag.dart';
@@ -82,15 +85,18 @@ Future<void> _main() async {
   // client.
 
   final db = AppDatabase();
-  OpenAI.showLogs = false;
+  // OpenAI.showLogs = true;
+  final openai = OpenAIClient(apiKey: settings.chatbotToken, baseUrl: settings.chatbotUrl);
   final errFile = io.File('logs/log.err');
   final logFile = io.File('logs/log.log');
   final stderr = settings.isDev ? io.stderr : ioutils.Stderr(errFile, io.stderr);
   final stdout = settings.isDev ? io.stdout : ioutils.Stdout(logFile, io.stdout);
   final logging = Logging(
-    stderr: stderr,
-    stdout: stdout,
-    logLevel: Level.INFO,
+    stderr: UwUiferStringSink(stderr),
+    stdout: UwUiferStringSink(stdout),
+    logLevel: Level.FINE,
+    censorToken: true,
+    truncateLogsAt: 10000,
   );
 
   final commands = CommandsPlugin(
@@ -119,7 +125,7 @@ Future<void> _main() async {
   commands.addCommand(tag);
   commands.addCommand(helpCommand);
   commands.addCommand(sourceCommand);
-  commands.addCommand(overwatchCommand);
+  // commands.addCommand(overwatchCommand);
   commands.addCommand(settingsCommand);
   commands.addCommand(runAsCommand);
   commands.addCommand(warnCommand);
@@ -145,32 +151,53 @@ Future<void> _main() async {
     return ctx.commands.getCommand(StringView(view.getQuotedWord()));
   });
 
+  final basePluginConverter = Converter<BasePlugin>((view, ctx) {
+    final guild = ctx.guild;
+
+    if (guild == null) {
+      return null;
+    }
+
+    final mod = guild.modules[view.getQuotedWord()] ?? modules[view.getQuotedWord()];
+
+    if (mod == null) {
+      return null;
+    }
+
+    return mod;
+  });
+
   commands.addConverter(listConverter);
   commands.addConverter(chatCommandConverter);
+  commands.addConverter(basePluginConverter);
 
   GetIt.I.registerSingleton(commands);
   GetIt.I.registerSingleton(db);
   GetIt.I.registerSingleton(logger);
   GetIt.I.registerSingleton(kiwiiCache);
+  GetIt.I.registerSingleton(openai);
 
   final client = await Nyxx.connectGatewayWithOptions(
     GatewayApiOptions(
       token: settings.token,
       intents: GatewayIntents.all,
       payloadFormat: GatewayPayloadFormat.etf,
+      browser: 'Discord Android',
     ),
     GatewayClientOptions(
       plugins: [
         logging,
         TagPlugin(),
-        // ChatPlugin(),
+        ChatPlugin(),
         GithubExpand(),
+        ModulesPlugin(),
         cliIntegration,
         commands,
         pagination,
         localization,
         ignoreExceptions,
         traceExceptions,
+        guildJoins,
       ],
     ),
   );
@@ -201,15 +228,16 @@ Future<void> _main() async {
     return true;
   }).listen(waitForAppeals);
 
-  client.onMessageComponentInteraction.where((e) {
-    if (!e.interaction.data.customId.startsWith('appeal-')) {
-      return false;
-    }
-    return true;
-  }).listen(onButtonAppeal);
+  client.onMessageCreate.listen(onMessageCreate);
+
+  client.onMessageComponentInteraction.where((e) => e.interaction.data.customId.startsWith('appeal-')).listen(onButtonAppeal);
 
   client.onGuildBanAdd.listen(onGuildBanAdd);
   client.onGuildBanRemove.listen(onGuildBanRemove);
+  client.onMessageDelete.listen(onMessageDelete);
+  client.onMessageUpdate.listen(onMessageUpdate);
+  client.onGuildMemberAdd.listen(onGuildMemberAdd);
+  client.onGuildMemberRemove.listen(onGuildMemberRemove);
 
   commands.onCommandError.listen(
     (error) async {
@@ -240,9 +268,27 @@ Future<void> _main() async {
         return;
       }
 
-      if (error case CheckFailedException(:final context)) {
-        await context.respond(MessageBuilder(content: 'You do not have the required permissions to run this command'));
-        return;
+      if (error case CheckFailedException(:final context, :final failed)) {
+        if (failed is SelfPermissionsCheck) {
+          final permissions = await failed.requiredPermissions as Flags<Permissions>;
+          await context.respond(
+            MessageBuilder(
+              content: 'I do not have the required permissions to execute this command\nMissing: ${translatePermissions(permissions, context.guild.t).map(
+                (p) => '`$p`',
+              )}',
+            ),
+          );
+
+          return;
+        }
+      }
+
+      if (error case ConverterFailedException(:final context)) {
+        if (context case InteractiveContext context) {
+          await context.respond(
+            MessageBuilder(content: 'Failed to convert argument\n${error.input.remaining}'),
+          );
+        }
       }
 
       commands.logger.shout(

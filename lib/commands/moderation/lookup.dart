@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,16 +20,21 @@ import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
 
 import '../../plugins/localization.dart';
+import '../../src/checks/checks.dart';
+import '../../src/command.dart';
 import '../../src/moderation/utils/generate.dart';
 import '../../utils/utils.dart';
 
-Future<void> lookupCommandFunc(ContextData ctx, Member member, User user) async {
+Future<void> lookupCommandFunc(CommandContext ctx, Member member, User user) async {
   final embed = cutEmbed(
     await generateHistory((member: member, user: user), ctx.guild!.id, ctx.guild.t, HistoryType.case_),
   );
 
-  await (ctx as dynamic).respond(MessageBuilder(embeds: [embed]), level: ResponseLevel.hint);
+  await ctx.respond(MessageBuilder(embeds: [embed]), level: ResponseLevel.hint);
 }
+
+final _permissions = Permissions.manageMessages | Permissions.viewChannel | Permissions.sendMessages;
+final _clientPermissions = Permissions.manageMessages | Permissions.viewChannel | Permissions.sendMessages;
 
 final lookupCommand = ChatCommand(
   'lookup',
@@ -42,12 +47,18 @@ final lookupCommand = ChatCommand(
   ),
   checks: [
     GuildCheck.all(),
-    PermissionsCheck(
-      Permissions.manageMessages,
-      allowsDm: false,
-      allowsOverrides: false,
-    )
+    BasePermissionsCheck(_permissions),
+    SelfPermissionsCheck(_clientPermissions),
   ],
+  options: KiwiiCommandOptions(
+    category: 'moderation',
+    usage: 'lookup [member]',
+    examples: [
+      (command: 'lookup @user', description: 'Lookup the moderation history of @user.'),
+    ],
+    permissions: _permissions,
+    clientPermissions: _clientPermissions
+  )
 );
 
 final userLookupCommand = UserCommand(
@@ -62,10 +73,7 @@ final userLookupCommand = UserCommand(
   ),
   checks: [
     GuildCheck.all(),
-    PermissionsCheck(
-      Permissions.manageMessages,
-      allowsDm: false,
-      allowsOverrides: false,
-    )
+    BasePermissionsCheck(_permissions),
+    SelfPermissionsCheck(_clientPermissions),
   ],
 );

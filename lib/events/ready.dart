@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import 'dart:math';
 import 'package:nyxx/nyxx.dart';
 import 'package:shelf/shelf_io.dart' as io;
 
+import '../kiwii.dart';
 import '../services/api.dart';
 import '../utils/jobs.dart';
 import '../src/settings.dart' as settings;
@@ -46,9 +47,11 @@ Future<void> readyEvent(ReadyEvent event) async {
     );
   });
 
-  Timer.periodic(const Duration(seconds: 60), (timer) async {
+  Timer.periodic(const Duration(seconds: 30), (timer) async {
     await client.httpHandler.httpClient.head(Uri.parse(settings.statusUrl));
   });
+
+  client.logger.info('Connected as ${(await client.user.get()).tag}');
 
   final apiServer = await api();
 

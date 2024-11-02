@@ -11,19 +11,42 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.7.0",
-    "@astrojs/node": "^8.2.5",
-    "@astrojs/solid-js": "^4.2.0",
+    "@astrojs/lit": "^4.3.0",
+    "@astrojs/node": "^8.2.6",
+    "@astrojs/react": "^3.6.0",
+    "@astrojs/solid-js": "^4.4.0",
     "@astrojs/tailwind": "^5.1.0",
+    "@napi-rs/canvas": "^0.1.53",
+    "@skyra/discord-components-core": "^4.0.0-alpha.31",
+    "@skyra/discord-components-react": "^3.6.1",
+    "@skyra/gifenc": "^1.0.1",
     "@tanstack/solid-table": "^8.17.3",
-    "astro": "^4.8.6",
+    "@twemoji/parser": "^15.1.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@webcomponents/template-shadowroot": "^0.2.1",
+    "astro": "^4.14.3",
+    "emoji-regex": "^10.3.0",
+    "font-finder": "^1.1.0",
+    "lit": "^3.1.4",
     "lru-cache": "^10.2.2",
     "luxon": "^3.4.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "solid-js": "^1.8.17",
     "tailwindcss": "^3.4.3",
+    "twitter-openapi-typescript": "^0.0.34",
     "typescript": "^5.4.5"
   },
   "devDependencies": {
     "@types/luxon": "^3.4.2",
+    "@types/node": "^20.14.5",
     "discord-api-types": "^0.37.84"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@astrojs/solid-js@4.4.0": "patches/@astrojs__solid-js@4.4.0.patch",
+      "astro@4.14.3": "patches/astro@4.14.3.patch"
+    }
   }
 }

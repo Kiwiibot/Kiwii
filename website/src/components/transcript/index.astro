@@ -1,0 +1,68 @@
+---
+import type { APIChannel, APIMessage, APIGuild } from "discord-api-types/v10";
+import DiscordMessages from "~/solid/components/transcript";
+import type { Language } from "./localization/types";
+
+export const prerender = false;
+
+interface Props {
+  messages: APIMessage[];
+  channel: APIChannel;
+  guild?: APIGuild;
+  saveImages?: boolean;
+  locale?: Language;
+  favicon?: string;
+}
+
+const {
+  messages,
+  channel,
+  guild,
+  locale = "en-GB",
+  favicon,
+} = Astro.props;
+
+
+// const t = new Lang(locale);
+---
+
+<html lang={'en-GB'}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link
+      rel="icon"
+      type="image/png"
+      href={guild?.icon
+        ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`
+        : favicon}
+    />
+
+    <script>
+      import '@skyra/discord-components-core';
+    </script>
+
+    <title>
+      {
+        // guild
+        //   ? `${guild.name} #${channel.name}`
+        //   : t.format(
+        //       "title.dm",
+        //       (channel as APIDMChannel).recipients
+        //         ?.map((user) => user.username)
+        //         .join(", ")
+        //     )$
+        'Plonk #general'
+      }
+    </title>
+
+    <!-- <script is:inline set:html={scrollToMessage} />
+    <script is:inline defer set:html={revealSpoiler} /> -->
+  </head>
+
+  <body>
+    <!-- TODO -->
+     <DiscordMessages messages={messages} channel={channel} guild={guild}/>
+  </body>
+</html>

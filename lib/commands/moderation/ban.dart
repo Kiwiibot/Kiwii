@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,9 @@ import '../../src/models/case.dart';
 import '../../src/moderation/case/create_case.dart';
 import '../../src/moderation/replies/acknowledge_case.dart';
 import '../../src/moderation/utils/generate.dart';
+
+final _clientPermissions = Permissions.banMembers | Permissions.sendMessages | Permissions.viewChannel;
+final _permissions = Permissions.banMembers | Permissions.sendMessages | Permissions.viewChannel;
 
 final banCommand = ChatCommand(
   'ban',
@@ -142,10 +145,18 @@ final banCommand = ChatCommand(
   ),
   checks: [
     GuildCheck.all(),
-    PermissionsCheck(
-      Permissions.banMembers,
-      allowsOverrides: false,
-      allowsDm: false,
-    ),
+    BasePermissionsCheck(_permissions),
+    BaseSelfPermissionsCheck(_clientPermissions),
   ],
+  options: KiwiiCommandOptions(
+    category: 'moderation',
+    usage: '[member] <reason> <reference-case>',
+    examples: [
+      (command: '@user', description: 'Banned for no reason'),
+      (command: '123456789012345678 "They were mean"', description: 'Banned for being mean'),
+      (command: '@user Spamming 42', description: 'Banned for spamming with the reference case 42'),
+    ],
+    permissions: _permissions,
+    clientPermissions: _clientPermissions,
+  ),
 );

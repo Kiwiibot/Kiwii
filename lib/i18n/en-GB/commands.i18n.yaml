@@ -1,0 +1,13 @@
+ban:
+  description: Ban a user from the server.
+  usage: "[user] <reason> <reference-case>"
+  examples:
+    usages:
+      - "@user"
+      - 123456789012345678 "They were mean"
+      - "@user Spamming 1234"
+    descriptions:
+      - Ban the user @user from the server.
+      - Ban the user 123456789012345678 from the server for being mean.
+      - Ban the @user from the server for spamming with reference to case 1234.
+    

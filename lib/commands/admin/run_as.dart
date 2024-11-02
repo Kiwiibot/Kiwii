@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,15 +49,12 @@ final runAsCommand = ChatCommand(
       await command.invoke(newCtx);
     },
   ),
-  options: CommandOptions(
+  options: KiwiiCommandOptions(
     type: CommandType.textOnly,
+    category: 'admin',
+    usage: '{prefix}runas <user> <command> [arguments]',
   ),
   checks: [
-    PermissionsCheck(
-      Permissions.administrator,
-      allowsDm: false,
-      allowsOverrides: false,
-      requiresAll: true,
-    )
+    BasePermissionsCheck(Permissions.administrator),
   ],
 );

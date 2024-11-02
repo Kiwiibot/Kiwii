@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,12 @@ import 'package:get_it/get_it.dart';
 import 'package:neat_cache/neat_cache.dart';
 import 'package:nyxx/nyxx.dart' hide Cache;
 import 'package:nyxx_commands/nyxx_commands.dart' hide id;
+import 'package:nyxx_extensions/nyxx_extensions.dart';
 
 import '../database.dart' hide Guild;
+import '../plugins/base.dart';
+
+final _guildModules = <Snowflake, Map<String, BasePlugin>>{};
 
 extension ContextExtension on ChatContext {
   Future<Message> send(String content) => respond(MessageBuilder(content: content));
@@ -38,6 +42,10 @@ extension GuildExtensions on Guild {
   Map<Snowflake, GuildChannel> get channels => manager.client.channels.cache.entries
       .where((e) => e.value is GuildChannel && (e.value as GuildChannel).guildId == id)
       .toMap((e) => e as MapEntry<Snowflake, GuildChannel>);
+
+  Map<String, BasePlugin> get modules => _guildModules[id] ??= {};
+
+  Map<String, bool> get enabledModules => {};
 
   Map<String, Object?> toJson() => {
         'id': id.toString(),
@@ -221,7 +229,7 @@ extension MemberExtensions on Member {
 
   Future<bool> get isUnbannable async => !await isBannable;
 
-  Future<List<Role>> get resolvedRoles async => Future.wait(roles.map((e) => guild!.roles.get(e.id)));
+  Future<List<Role>> get resolvedRoles => roles.get();
 
   Future<Message> sendMessage(MessageBuilder builder) async => (user ?? await manager.client.users.get(id)).sendMessage(builder);
 }
@@ -233,7 +241,7 @@ extension HighestRoleExtension on Member {
   }
 }
 
-extension ChatCommandExtension on ChatCommand {
+extension ChatCommandExtension on CommandRegisterable<ChatContext> {
   ChatCommandComponent get root {
     dynamic parent = this;
     while (parent.parent != null) {
@@ -282,6 +290,10 @@ extension FutureErrorNullable<T> on Future<T> {
   }
 }
 
+extension MapEntriesRecord<K, V> on Iterable<MapEntry<K, V>> {
+  Iterable<(K, V)> get $ => [for (final MapEntry(:key, :value) in this) (key, value)];
+}
+
 // extension ThreadExtension on Thread {
 //   // GuildTextChannel get parent => client.channels[p
 // }
@@ -319,6 +331,8 @@ extension ListExtension<E> on List<E> {
     }
     return buffer.toString();
   }
+
+  E? at(int index) => index >= 0 ? (index < length ? this[index] : null) : (length + index >= 0 ? this[length + index] : null);
 }
 
 extension SnowflakeExtension on Snowflake {
@@ -342,5 +356,9 @@ extension StringExtension on String {
 
 extension ClientExtensions on NyxxRest {
   AppDatabase get db => GetIt.I.get<AppDatabase>();
-  Cache<String> get cache => GetIt.I.get<Cache<String>>();
+  Cache<String> get selfCache => GetIt.I.get<Cache<String>>();
+}
+
+extension AttachmentExtension on Attachment {
+  Future<AttachmentBuilder> toAttachmentBuilder() async => AttachmentBuilder(fileName: fileName, description: description, data: await fetch());
 }

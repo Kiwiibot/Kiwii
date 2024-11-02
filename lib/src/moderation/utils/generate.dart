@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -334,4 +334,54 @@ Future<List<ActionRowBuilder>> generateAppealComponents(Appeal appeal, User user
   };
 
   return components;
+}
+
+EmbedBuilder generateMemberLog(Member member, User user, Translations t, {bool isJoin = false}) {
+  var description = '${t.logs.guildLogs.memberLog.description(
+    user: user.mention,
+    userTag: user.tag,
+    userId: user.id,
+    createdAt: user.id.timestamp.format(TimestampStyle.shortDateTime),
+    createdSince: user.id.timestamp.format(TimestampStyle.relativeTime),
+  )}\n';
+
+  description += t.logs.guildLogs.memberLog.joinedAt(
+    joinedAt: member.joinedAt.format(TimestampStyle.shortDateTime),
+    joinedSince: member.joinedAt.format(TimestampStyle.relativeTime),
+  );
+
+  if (!isJoin) {
+    description += '\n${t.logs.guildLogs.memberLog.leftAt(
+      leftAt: DateTime.now().format(TimestampStyle.shortDateTime),
+      leftSince: DateTime.now().format(TimestampStyle.relativeTime),
+    )}';
+  }
+
+  return EmbedBuilder(
+    author: EmbedAuthorBuilder(name: '${user.tag} (${user.id})', iconUrl: user.avatar.url),
+    description: description,
+    color: colourFromDuration(DateTime.now().difference(user.id.timestamp)),
+    footer: EmbedFooterBuilder(text: isJoin ? t.logs.guildLogs.memberLog.footer.joined : t.logs.guildLogs.memberLog.footer.left),
+  );
+}
+
+DiscordColor colourFromDuration(Duration duration) {
+  final per = min(duration.inMilliseconds ~/ (Duration(days: 7 * 4).inMilliseconds ~/ 100), 100);
+
+  int r, g, b = 0;
+
+  if (per < 50) {
+    r = 255;
+    g = (5.1 * per).round();
+  } else {
+    g = 255;
+    r = (5.1 * (100 - per)).round();
+  }
+
+  final tintFactor = .3;
+  r += ((255 - r) * tintFactor).round();
+  g += ((255 - g) * tintFactor).round();
+  b += ((255 - b) * tintFactor).round();
+
+  return DiscordColor.fromRgb(r, g, b);
 }

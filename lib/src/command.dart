@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,14 +16,47 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import 'package:nyxx_commands/nyxx_commands.dart' as nyxx_commands;
+import 'package:nyxx/nyxx.dart';
+// ignore: implementation_imports
+import 'package:nyxx/src/utils/to_string_helper/to_string_helper.dart';
+import 'package:nyxx_commands/nyxx_commands.dart';
 
-class CommandOptions extends nyxx_commands.CommandOptions {
+typedef Example = ({String command, String description});
+
+class KiwiiCommandOptions extends CommandOptions with ToStringHelper {
   /// An URL representing the image of the command.
   final String? img;
 
-  const CommandOptions({
+  /// The category of the command.
+  final String? category;
+
+  /// An string on how to use the command.
+  final String? usage;
+
+  /// A list of examples on how to use the command.
+  final List<Example> examples;
+
+  /// Whether the command is hidden from the help command.
+  final bool isHidden;
+
+  /// Whether the command is classified as a NSFW command.
+  final bool isNsfw;
+
+  /// Set of required permissions (only for the help command, logic is handled by the checks).
+  final Flags<Permissions>? permissions;
+
+  /// Set of required permissions for the bot (only for the help command, logic is handled by the checks).
+  final Flags<Permissions>? clientPermissions;
+
+  const KiwiiCommandOptions({
     this.img,
+    this.category,
+    this.usage,
+    this.examples = const [],
+    this.isHidden = false,
+    this.isNsfw = false,
+    this.permissions,
+    this.clientPermissions,
     super.acceptBotCommands,
     super.type,
     super.acceptSelfCommands,

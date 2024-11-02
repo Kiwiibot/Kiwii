@@ -15,13 +15,9 @@ let _cache: LRUCache<string, object> | null = null;
 
 const cache =
   _cache ??
-  (() => {
-    if (!_cache) {
-      _cache = new LRUCache<string, object>({
-        max: 500,
-      });
-    }
-    return _cache;
-  })();
+  (() =>
+    (_cache ??= new LRUCache<string, object>({
+      max: 500,
+    })))();
 
 export { generateRandomString, cache };

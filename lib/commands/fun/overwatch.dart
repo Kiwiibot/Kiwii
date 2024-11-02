@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,27 +77,30 @@ final overwatchCommand = ChatGroup(
 
               // ignore: strict_raw_type
               void formatMap(Map source) {
-                for (var MapEntry(:key, :value) in source.entries) {
-                  if (key == 'time_played') {
-                    value = prettyDuration(Duration(seconds: value), t.$meta.locale);
+                for (var (k, v) in source.entries.$) {
+                  if (k == 'time_played') {
+                    v = prettyDuration(Duration(seconds: v), t.$meta.locale);
                   }
 
-                  if (value is Map) {
-                    value = [for (final MapEntry(key: k, value: v) in value.entries) '${formatKey(k, t)}: **$v**'].join('\n');
+                  if (v is Map) {
+                    v = [for (final (key, value) in v.entries.$) '${formatKey(key, t)}: **$value**'].join('\n');
                   }
 
                   embed.addField(
-                      name: formatKey(key, t, onlyCapital: true), value: separateThousands(value.toString(), t.general.thousandsSeparator), isInline: true);
+                    name: formatKey(k, t, onlyCapital: true),
+                    value: separateThousands(v.toString(), t.general.thousandsSeparator),
+                    isInline: true,
+                  );
                 }
               }
 
               void getMostPlayedHero(Map<String, StatsRecap> source) {
                 String name = t.general.nonAvailable;
                 Duration timePlayed = Duration.zero;
-                for (final MapEntry(:key, :value) in source.entries) {
-                  if (value.timePlayed > timePlayed) {
-                    name = key;
-                    timePlayed = value.timePlayed;
+                for (final (k, v) in source.entries.$) {
+                  if (v.timePlayed > timePlayed) {
+                    name = k;
+                    timePlayed = v.timePlayed;
                   }
                 }
 
@@ -161,13 +164,32 @@ final overwatchCommand = ChatGroup(
               );
 
               if (hero.hitpoints != null) {
+                final healthEmoji = '<:Health:1298260216848056381>';
+                final armourEmoji = '<:Armour:1298260720147759155>';
+                final shieldsEmoji = '<:Shields:1298260692712816723>';
+
+                // Every 25 HP is 1 health point, so we calculate how many repetitions of the health emoji we need
+                final (health, armour, shields) = calculateHealthPoints(hero.hitpoints!.cast<String, int>());
+
+                final healthBar = StringBuffer(healthEmoji * health);
+
+                if (armour > 0) {
+                  healthBar.write(armourEmoji * armour);
+                }
+
+                if (shields > 0) {
+                  healthBar.write(shieldsEmoji * shields);
+                }
+
                 embed.addField(
                   name: t.overwatch.hitpoints,
                   value: [
-                    for (final MapEntry(:key, :value) in hero.hitpoints!.entries) '${formatKey(key, t)}: **$value**',
+                    for (final (k, v) in hero.hitpoints!.entries.$) '${formatKey(k, t)}: **$v**',
                   ].join('\n'),
                   isInline: true,
                 );
+
+                embed.addField(name: '\u200b', value: healthBar.toString());
               }
 
               embed.addField(name: t.overwatch.role, value: hero.role.name.capitalize, isInline: true);
@@ -365,6 +387,14 @@ final overwatchCommand = ChatGroup(
   ],
 );
 
+(int, int, int) calculateHealthPoints(Map<String, int> hitpoints) {
+  final health = hitpoints['health']! ~/ 25;
+  final armour = hitpoints['armor']! ~/ 25;
+  final shields = hitpoints['shields']! ~/ 25;
+
+  return (health, armour, shields);
+}
+
 types.Locale appLocaleToBlizz(AppLocale locale) => switch (locale) {
       AppLocale.enGb => types.Locale.enGb,
       AppLocale.frFr => types.Locale.frFr,
@@ -379,7 +409,12 @@ String formatKey(String key, Translations t, {bool onlyCapital = false}) => swit
 // String translateKey(String key) {}
 
 Future<Iterable<CommandOptionChoiceBuilder<dynamic>>> heroesAutocomplete(AutocompleteContext ctx) async {
-  final heroes = await client.heroes.heroes(locale: types.Locale.frFr);
+  final loc = switch (ctx.guild.t.$meta.locale) {
+    AppLocale.enGb => types.Locale.enGb,
+    AppLocale.frFr => types.Locale.frFr,
+  };
+
+  final heroes = await client.heroes.heroes(locale: loc);
   final current = ctx.currentValue.toLowerCase();
   final filtered = heroes.where((element) => element.name.toLowerCase().contains(current) || element.key.name.contains(current)).take(25).toList();
   return filtered.map((e) => CommandOptionChoiceBuilder(name: e.name, value: e.name));

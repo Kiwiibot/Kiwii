@@ -2,13 +2,9 @@ import { type APIContext } from "astro";
 
 export const allowedPlatforms = ["discord"] as const;
 
-interface APIContextParams extends APIContext {
-  params: {
-    platform: (typeof allowedPlatforms)[number];
-  };
-}
-
-export const GET = async (ctx: APIContextParams) => {
+export const GET = async (
+  ctx: APIContext<any, { platform: (typeof allowedPlatforms)[number] }>
+) => {
   if (!allowedPlatforms.includes(ctx.params.platform)) {
     return new Response("Invalid platform", {
       status: 400,

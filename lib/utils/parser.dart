@@ -2,7 +2,7 @@
 
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,54 +31,7 @@ import 'package:nyxx_commands/src/converters/built_in/snowflake.dart';
 import '../database.dart';
 import '../plugins/tag/tag.dart';
 import 'node.dart';
-
-const permissions = {
-  'CREATE_INSTANT_INVITE': Permissions.createInstantInvite,
-  'KICK_MEMBERS': Permissions.kickMembers,
-  'BAN_MEMBERS': Permissions.banMembers,
-  'ADMINISTRATOR': Permissions.administrator,
-  'MANAGE_CHANNELS': Permissions.manageChannels,
-  'MANAGE_GUILD': Permissions.manageGuild,
-  'ADD_REACTIONS': Permissions.addReactions,
-  'VIEW_AUDIT_LOG': Permissions.viewAuditLog,
-  'PRIORITY_SPEAKER': Permissions.prioritySpeaker,
-  'STREAM': Permissions.stream,
-  'VIEW_CHANNEL': Permissions.viewChannel,
-  'SEND_MESSAGES': Permissions.sendMessages,
-  'SEND_TTS_MESSAGES': Permissions.sendTtsMessages,
-  'MANAGE_MESSAGES': Permissions.manageMessages,
-  'EMBED_LINKS': Permissions.embedLinks,
-  'ATTACH_FILES': Permissions.attachFiles,
-  'READ_MESSAGE_HISTORY': Permissions.readMessageHistory,
-  'MENTION_EVERYONE': Permissions.mentionEveryone,
-  'USE_EXTERNAL_EMOJIS': Permissions.useExternalEmojis,
-  'VIEW_GUILD_INSIGHTS': Permissions.viewGuildInsights,
-  'CONNECT': Permissions.connect,
-  'SPEAK': Permissions.speak,
-  'MUTE_MEMBERS': Permissions.muteMembers,
-  'DEAFEN_MEMBERS': Permissions.deafenMembers,
-  'MOVE_MEMBERS': Permissions.moveMembers,
-  'USE_VAD': Permissions.useVad,
-  'CHANGE_NICKNAME': Permissions.changeNickname,
-  'MANAGE_NICKNAMES': Permissions.manageNicknames,
-  'MANAGE_ROLES': Permissions.manageRoles,
-  'MANAGE_WEBHOOKS': Permissions.manageWebhooks,
-  'MANAGE_GUILD_EXPRESSIONS': Permissions.manageEmojisAndStickers,
-  'USE_APPLICATION_COMMANDS': Permissions.useApplicationCommands,
-  'REQUEST_TO_SPEAK': Permissions.requestToSpeak,
-  'MANAGE_THREADS': Permissions.manageThreads,
-  'MANAGE_EVENTS': Permissions.manageEvents,
-  'CREATE_PUBLIC_THREADS': Permissions.createPublicThreads,
-  'CREATE_PRIVATE_THREADS': Permissions.createPrivateThreads,
-  'USE_EXTERNAL_STICKERS': Permissions.useExternalStickers,
-  'SEND_MESSAGES_IN_THREADS': Permissions.sendMessagesInThreads,
-  'USE_EMDEDDED_ACTIVITIES': Permissions.useEmbeddedActivities,
-  'MODERATE_MEMBERS': Permissions.moderateMembers,
-  'USE_SOUNDBOARD': Permissions.useSoundboard,
-  'VIEW_CREATOR_MONETIZATION_ANALYTICS': Permissions.viewCreatorMonetizationAnalytics,
-  // 'USE_EXTERNAL_SOUNDS': Permissions.useExternalSounds,
-  // 'SEND_VOICE_MESSAGES': Permissions.sendVoiceMessages,
-};
+import 'utils.dart';
 
 class Parser {
   int _stackSize = 0;

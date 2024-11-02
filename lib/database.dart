@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ QueryExecutor _openConnection() {
       host: postgresHost,
       username: postgresUser,
       password: postgresPassword,
+      port: postgresPort,
     ),
     settings: pg.ConnectionSettings(
       sslMode: pg.SslMode.disable,
@@ -51,7 +52,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -65,6 +66,14 @@ class AppDatabase extends _$AppDatabase {
 
           if (to == 3) {
             await m.addColumn(cases, cases.logDmMessageId);
+          }
+
+          if (to == 4) {
+            await m.addColumn(guildTable, guildTable.guildLogWebhookId);
+          }
+
+          if (to == 5) {
+            await m.addColumn(guildTable, guildTable.enabledModules);
           }
         },
       );
@@ -86,7 +95,8 @@ class AppDatabase extends _$AppDatabase {
   Future<Case> getLastCase(Snowflake guildId) async {
     return (select(cases)
           ..where((c) => c.guildId.equalsValue(guildId))
-          ..orderBy([(u) => OrderingTerm(expression: u.caseId, mode: OrderingMode.desc)]))
+          ..orderBy([(u) => OrderingTerm(expression: u.caseId, mode: OrderingMode.desc)])
+          ..limit(1))
         .getSingle();
   }
 
@@ -145,6 +155,16 @@ class AppDatabase extends _$AppDatabase {
     return (select(guildTable)..where((g) => g.guildId.equalsValue(guildId))).getSingleOrNull();
   }
 
+  // Future<Guild> getOrCreateGuild(Snowflake guildId) async {
+  //   var guild = await getGuildOrNull(guildId);
+  //   if (guild == null) {
+  //     guild = Guild(guildId: guildId);
+  //     await into(guildTable).insert(guild);
+  //   }
+
+  //   return guild;
+  // }
+
   // Future<List<
 }
 
@@ -195,6 +215,8 @@ class GuildTable extends Table {
   IntColumn get modLogChannelId => integer().map(const SnowflakeConverter()).nullable()();
   IntColumn get reportChannelId => integer().map(const SnowflakeConverter()).nullable()();
   Column<List<int>> get logIgnoreChannels => customType(PgTypes.bigIntArray).map(const SnowflakeArray()).withDefault(const Constant([], PgTypes.bigIntArray))();
+  IntColumn get guildLogWebhookId => integer().map(const SnowflakeConverter()).nullable()();
+  Column<List<String>> get enabledModules => customType(PgTypes.textArray).withDefault(const Constant([], PgTypes.textArray))();
 
   @override
   Set<Column> get primaryKey => {guildId};

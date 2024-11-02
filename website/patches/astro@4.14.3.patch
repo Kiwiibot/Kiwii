@@ -1,0 +1,75 @@
+diff --git a/dist/core/cookies/cookies.js b/dist/core/cookies/cookies.js
+index 0c9c6b5f7d5c952d48384cce6c7303508fee9c62..fcc1e7b06558f4a82abc5486957d13bbc07e65bb 100644
+--- a/dist/core/cookies/cookies.js
++++ b/dist/core/cookies/cookies.js
+@@ -25,12 +25,12 @@ class AstroCookie {
+ class AstroCookies {
+   #request;
+   #requestValues;
+-  #outgoing;
++  outgoing;
+   #consumed;
+   constructor(request) {
+     this.#request = request;
+     this.#requestValues = null;
+-    this.#outgoing = null;
++    this.outgoing = null;
+     this.#consumed = false;
+   }
+   /**
+@@ -65,8 +65,8 @@ class AstroCookies {
+    * @returns An object containing the cookie value as well as convenience methods for converting its value.
+    */
+   get(key, options = void 0) {
+-    if (this.#outgoing?.has(key)) {
+-      let [serializedValue, , isSetValue] = this.#outgoing.get(key);
++    if (this.outgoing?.has(key)) {
++      let [serializedValue, , isSetValue] = this.outgoing.get(key);
+       if (isSetValue) {
+         return new AstroCookie(serializedValue);
+       } else {
+@@ -86,8 +86,8 @@ class AstroCookies {
+    * @returns
+    */
+   has(key, options = void 0) {
+-    if (this.#outgoing?.has(key)) {
+-      let [, , isSetValue] = this.#outgoing.get(key);
++    if (this.outgoing?.has(key)) {
++      let [, , isSetValue] = this.outgoing.get(key);
+       return isSetValue;
+     }
+     const values = this.#ensureParsed(options);
+@@ -141,7 +141,7 @@ class AstroCookies {
+    * will be added to the current instance, overwriting any existing cookies with the same name.
+    */
+   merge(cookies) {
+-    const outgoing = cookies.#outgoing;
++    const outgoing = cookies.outgoing;
+     if (outgoing) {
+       for (const [key, value] of outgoing) {
+         this.#ensureOutgoingMap().set(key, value);
+@@ -155,8 +155,8 @@ class AstroCookies {
+    * @returns
+    */
+   *headers() {
+-    if (this.#outgoing == null) return;
+-    for (const [, value] of this.#outgoing) {
++    if (this.outgoing == null) return;
++    for (const [, value] of this.outgoing) {
+       yield value[1];
+     }
+   }
+@@ -178,10 +178,10 @@ class AstroCookies {
+     return this.#requestValues;
+   }
+   #ensureOutgoingMap() {
+-    if (!this.#outgoing) {
+-      this.#outgoing = /* @__PURE__ */ new Map();
++    if (!this.outgoing) {
++      this.outgoing = /* @__PURE__ */ new Map();
+     }
+-    return this.#outgoing;
++    return this.outgoing;
+   }
+   #parse(options = void 0) {
+     const raw = this.#request.headers.get("cookie");

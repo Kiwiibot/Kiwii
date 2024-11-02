@@ -21,4 +21,4 @@ custom_lint:
     - mio_header:
       file: ./header.txt
       templates:
-        author: [.*, Rapougnac]
+        author: [.*, Lexedia]

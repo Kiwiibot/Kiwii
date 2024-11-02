@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,3 +21,10 @@ library kiwii;
 export 'utils/extensions.dart';
 export 'utils/markov.dart';
 export 'utils/utils.dart';
+export 'src/command.dart' show KiwiiCommandOptions;
+export 'src/checks/checks.dart';
+export 'commands/admin/run_as.dart';
+export 'commands/core/help.dart';
+export 'commands/fun/markov.dart';
+export 'commands/fun/overwatch.dart';
+export 'commands/fun/uwurandom.dart';

@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,10 +44,9 @@ class LocalizationPlugin extends NyxxPlugin<NyxxGateway> {
     client.on<GuildCreateEvent>((event) async {
       final guild = event.guild;
       final data = (await (db.select(db.guildTable)
-                ..where((e) => e.guildId.equals(guild.id.value))
-                ..limit(1))
-              .get())
-          .firstOrNull;
+            ..where((e) => e.guildId.equals(guild.id.value))
+            ..limit(1))
+          .getSingleOrNull());
       final locale = data?.locale != null ? data!.locale : AppLocale.enGb;
       guildLocales[guild.id] = locale;
     });

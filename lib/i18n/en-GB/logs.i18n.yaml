@@ -1,0 +1,22 @@
+guild_logs:
+  message_deleted:
+    title: Message Deleted
+    channel: "• Channel: $channel"
+    embeds: "• Embeds: $embeds"
+    jump: "[Jump to Message]($link)"
+    attachments:
+      title: "• Attachments:"
+      value: $attachments
+    stickers:
+      title: "• Stickers:"
+      value: $stickers
+    reply_to: "• Replying to [$messageId]($messageUrl) by `$userTag` ($userId)"
+  member_log:
+    description: |-
+      • Member: $user - `$userTag` ($userId)
+      • Created: $createdAt ($createdSince)
+    joined_at: "• Joined: $joinedAt ($joinedSince)"
+    left_at: "• Left: $leftAt ($leftSince)"
+    footer:
+      joined: User joined
+      left: User left

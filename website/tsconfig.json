@@ -6,7 +6,15 @@
         "./src/*"
       ]
     },
-    "jsx": "preserve",
-    "jsxImportSource": "solid-js"
-  }
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "resolveJsonModule": true,
+    "lib": [
+      "DOM",
+      "DOM.Iterable"
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ]
 }

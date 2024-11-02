@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,13 +40,14 @@ Future<void> onAutoModerationActionExecutionTimeout(AutoModerationActionExecutio
 
     final user = await event.user.get();
 
-    await client.cache['guild${guild.id}:user:${user.id}:automodtimeout'].set('', const Duration(seconds: 15));
+    await client.selfCache['guild${guild.id}:user:${user.id}:automodtimeout'].set('', const Duration(seconds: 15));
 
     final reason = switch (event.triggerType) {
       TriggerType.keyword => guild.t.moderation.logs.autoMod.keyword,
       TriggerType.keywordPreset => guild.t.moderation.logs.autoMod.keywordPreset,
       TriggerType.mentionSpam => guild.t.moderation.logs.autoMod.mentionSpam,
       TriggerType.spam => guild.t.moderation.logs.autoMod.spam,
+      TriggerType() => throw UnimplementedError(),
     };
 
     final ccase = await createCase(
@@ -89,22 +90,22 @@ Future<void> onGuildMemberUpdateTimeout(GuildMemberUpdateEvent event) async {
       return;
     }
 
-    final deleted = await client.cache['guild:${event.guildId}:user:${newMember.id}:timeout'].get();
+    final deleted = await client.selfCache['guild:${event.guildId}:user:${newMember.id}:timeout'].get();
 
     // If null, either the user was never timed out or the TTL expired.
     if (deleted != null) {
-      await client.cache['guild:${event.guildId}:user:${newMember.id}:timeout'].purge();
+      await client.selfCache['guild:${event.guildId}:user:${newMember.id}:timeout'].purge();
       return;
     }
 
     // Wait to prevent collisions.
     await Future<void>.delayed(const Duration(seconds: 2, milliseconds: 500));
 
-    final autoMod = await client.cache['guild:${event.guildId}:user:${newMember.id}:automodtimeout'].get();
+    final autoMod = await client.selfCache['guild:${event.guildId}:user:${newMember.id}:automodtimeout'].get();
 
     // Same as above.
     if (autoMod != null) {
-      await client.cache['guild:${event.guildId}:user:${newMember.id}:automodtimeout'].purge();
+      await client.selfCache['guild:${event.guildId}:user:${newMember.id}:automodtimeout'].purge();
       return;
     }
 
@@ -126,7 +127,7 @@ Future<void> onGuildMemberUpdateTimeout(GuildMemberUpdateEvent event) async {
     final oldVal = timeoutChanges.oldValue as String?;
     final newVal = timeoutChanges.newValue as String?;
 
-    final hasTimeoutEnded = (oldVal != null && oldVal.isNotEmpty) && (newVal == null || newVal.isEmpty); 
+    final hasTimeoutEnded = (oldVal != null && oldVal.isNotEmpty) && (newVal == null || newVal.isEmpty);
 
     final user = await logs.user?.get();
     User? target;

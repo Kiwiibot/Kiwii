@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,9 @@ import '../../kiwii.dart';
 import '../../plugins/localization.dart';
 import '../../src/autocomplete/case.dart';
 import '../../src/moderation/utils/generate.dart';
+
+final _permissions = Permissions.manageMessages | Permissions.viewChannel | Permissions.sendMessages;
+final _clientPermissions = Permissions.manageMessages | Permissions.viewChannel | Permissions.sendMessages;
 
 final caseCommand = ChatCommand(
   'case',
@@ -128,11 +131,17 @@ final caseCommand = ChatCommand(
     },
   ),
   checks: [
-    PermissionsCheck(
-      Permissions.manageMessages,
-      allowsOverrides: false,
-      allowsDm: false,
-    ),
+    BasePermissionsCheck(_permissions),
+    SelfPermissionsCheck(_clientPermissions),
     GuildCheck.all(),
   ],
+  options: KiwiiCommandOptions(
+    category: 'moderation',
+    usage: '[case number] <hide reply>',
+    examples: [
+      (command: '123', description: 'Lookup case 123'),
+    ],
+    permissions: _permissions,
+    clientPermissions: _clientPermissions,
+  ),
 );

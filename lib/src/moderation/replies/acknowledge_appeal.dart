@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ Future<void> acknowledgeAppeal(Appeal appeal, Guild guild, User user, Snowflake 
 
   if (appeal.status == AppealStatus.accepted) {
     final reason = guild.t.moderation.appeal.unbanned;
-    final ccase= await createCase(
+    final ccase = await createCase(
       guild,
       CreateCase(
         guildId: guild.id,

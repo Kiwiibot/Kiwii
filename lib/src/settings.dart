@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ import 'dart:io';
 import 'package:dotenv/dotenv.dart';
 import 'package:nyxx/nyxx.dart';
 
-final dotenv = DotEnv()..load(const ['.env']);
+final dotenv = DotEnv()..load(['.env${Platform.environment['DEV'] == 'true' ? '.dev' : ''}']);
 
 String? getEnv(String key) => Platform.environment[key] ?? dotenv[key] ?? (!bool.hasEnvironment(key) ? null : String.fromEnvironment(key));
 
@@ -28,8 +28,13 @@ const version = '0.1.0';
 
 String fromEnvironment(String key, [String? defaultValue]) => getEnv(key) ?? defaultValue ?? (throw Exception('Missing `$key` environment variable'));
 
+String? fromEnvironmentNullable(String key, [String? defaultValue]) => getEnv(key) ?? defaultValue;
+
 bool fromEnvironmentBool(String key, [bool? defaultValue]) =>
     switch (fromEnvironment(key, defaultValue?.toString()).toLowerCase()) { 'true' || '1' => true, _ => false };
+
+bool? fromEnvironmentBoolNullable(String key, [bool? defaultValue]) =>
+    switch (fromEnvironmentNullable(key, defaultValue?.toString())?.toLowerCase()) { 'true' || '1' => true, null => null, _ => false };
 
 /// The token of the bot
 final prodToken = fromEnvironment('TOKEN');
@@ -59,7 +64,13 @@ final token = isDev ? testToken : prodToken;
 final prefix = isDev ? testPrefix : prodPrefix;
 
 /// The channels where the chatbot is enabled
-final chatbotChannels = fromEnvironment('CHATBOT_CHANNELS', '912636659504414731').split(',').map(Snowflake.parse).toList();
+final chatbotChannels = fromEnvironment('CHATBOT_CHANNELS', '1258050765596135455').split(',').map(Snowflake.parse).toList();
+
+final chatbotToken = fromEnvironment('CHATBOT_TOKEN');
+
+final chatbotUrl = fromEnvironment('CHATBOT_URL');
+
+final initialPrompt = fromEnvironmentNullable('INITIAL_PROMPT');
 
 final dsn = fromEnvironment('SENTRY_DSN');
 
@@ -71,6 +82,7 @@ final postgresPassword = fromEnvironment('POSTGRES_PASSWORD');
 final postgresUser = fromEnvironment('POSTGRES_USER');
 final postgresDb = fromEnvironment('POSTGRES_DB');
 final postgresHost = fromEnvironment('POSTGRES_HOST', 'localhost');
+final postgresPort = int.parse(fromEnvironment('POSTGRES_PORT', '5432'));
 
 /// The status url to periodically update the status of the bot.
 final statusUrl = fromEnvironment('STATUS_URL');

@@ -1,0 +1,22 @@
+diff --git a/dist/index.js b/dist/index.js
+index 24af82f26fbd713c45b6ba71e0acf1460454f0e3..b81e95831e9a769d6e9a20b91159115640166635 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -52,14 +52,14 @@ async function getViteConfiguration(isDev, { include, exclude }, devtoolsPlugin)
+ function getRenderer() {
+   return {
+     name: "@astrojs/solid-js",
+-    clientEntrypoint: "@astrojs/solid-js/client.js",
+-    serverEntrypoint: "@astrojs/solid-js/server.js"
++    clientEntrypoint: "@astrojs/solid-js/dist/client.js",
++    serverEntrypoint: "@astrojs/solid-js/dist/server.js"
+   };
+ }
+ function getContainerRenderer() {
+   return {
+     name: "@astrojs/solid",
+-    serverEntrypoint: "@astrojs/solid-js/server.js"
++    serverEntrypoint: "@astrojs/solid-js/dist/server.js"
+   };
+ }
+ function src_default(options = {}) {

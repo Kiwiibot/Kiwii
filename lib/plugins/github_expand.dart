@@ -1,6 +1,6 @@
 /*
  * Kiwii, a stupid Discord bot.
- * Copyright (C) 2019-2024 Rapougnac
+ * Copyright (C) 2019-2024 Lexedia
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,17 +16,31 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
 
+import '../database.dart';
 import '../utils/regexes.dart';
 
 class GithubExpand extends NyxxPlugin<NyxxGateway> {
   @override
+  String get name => 'GithubExpand';
+
+  @override
   Future<void> afterConnect(client) async {
+    final db = GetIt.I.get<AppDatabase>();
     client.on<MessageCreateEvent>((event) async {
       final message = event.message;
+      final guild = event.guild;
+
+      final guildData = guild == null ? null : await db.getGuildOrNull(guild.id);
+
+      if (guildData case final data? when !data.enabledModules.contains('github_expand')) {
+        return;
+      }
+
       if (!githubLink.hasMatch(message.content)) {
         return;
       }
