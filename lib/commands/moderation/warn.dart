@@ -16,12 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
 
-import '../../database.dart';
 import '../../kiwii.dart';
 import '../../plugins/localization.dart';
 import '../../src/autocomplete/case.dart';
@@ -43,8 +41,7 @@ final warnCommand = ChatCommand(
       @Name('reference-case') @Description('The reference case') @Autocomplete(caseAutoCompleteNoHistory) int? caseId,
       @Name('report-reference') @Description('The reference report') int? reportId,
     ]) async {
-      final db = GetIt.I.get<AppDatabase>();
-      final guildSettings = await db.getGuildOrNull(ctx.guild!.id);
+      final guildSettings = await ctx.client.repositories.guilds.getOrNull(ctx.guild!.id);
 
       final modLogChannel = guildSettings?.modLogChannelId;
 

@@ -19,6 +19,7 @@
 import 'package:darq/darq.dart';
 import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart' hide Cache;
+import 'package:nyxx_extensions/nyxx_extensions.dart';
 
 import '../kiwii.dart';
 import '../plugins/localization.dart';
@@ -78,7 +79,7 @@ Future<void> onGuildMemberUpdateTimeout(GuildMemberUpdateEvent event) async {
 
     final client = event.guild.manager.client;
 
-    final guildSettings = await client.db.getGuildOrNull(event.guildId);
+    final guildSettings = await client.repositories.guilds.getOrNull(event.guildId);
 
     if (guildSettings == null) {
       return;
@@ -114,11 +115,11 @@ Future<void> onGuildMemberUpdateTimeout(GuildMemberUpdateEvent event) async {
     final logs = auditLogs.firstWhereOrDefault((e) => e.targetId == newMember.id && e.changes?.any((c) => c.key == 'communication_disabled_until') == true,
         defaultValue: null);
 
-    if (logs?.changes?.isEmpty == true) {
+    if (logs == null || logs.changes == null || logs.changes?.isEmpty == true) {
       return;
     }
 
-    final timeoutChanges = logs!.changes!.firstWhereOrDefault((value) => value.key == 'communication_disabled_until', defaultValue: null);
+    final timeoutChanges = logs.changes!.firstWhereOrDefault((value) => value.key == 'communication_disabled_until', defaultValue: null);
 
     if (timeoutChanges == null) {
       return;

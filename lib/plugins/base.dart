@@ -18,6 +18,7 @@
 
 import 'dart:async';
 
+import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart';
 
 import '../kiwii.dart';
@@ -26,11 +27,13 @@ abstract base class BasePlugin extends NyxxPlugin<NyxxGateway> {
   /// The description of the plugin.
   String helpText(NyxxGateway self);
 
+  final client = GetIt.I.get<NyxxGateway>();
+
   /// Whether the plugin is enabled.
   FutureOr<bool> isEnabled(NyxxGateway self, {required Guild guild}) async {
-    final guildDb = await self.db.getGuildOrNull(guild.id);
+    final guildDb = await client.repositories.guilds.getOrNull(guild.id);
 
-    return guildDb != null && guildDb.enabledModules.contains(name.toLowerCase());
+    return guildDb != null && guildDb.enabledModules.contains(name);
   }
 
   FutureOr<void> onLoad(NyxxGateway self, {required Guild guild});

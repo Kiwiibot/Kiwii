@@ -17,8 +17,8 @@
  */
 
 import 'package:nyxx/nyxx.dart';
+import 'package:option/option.dart';
 
-import '../database.dart';
 import '../kiwii.dart';
 import '../plugins/localization.dart';
 import '../src/models/appeal.dart';
@@ -29,13 +29,13 @@ import '../src/moderation/replies/acknowledge_appeal.dart';
 Future<void> waitForAppeals(MessageCreateEvent event) async {
   final user = event.message.author as User;
 
-  final hasPendingAppeal = await event.gateway.client.db.pendingAppeal(user.id);
+  final hasPendingAppeal = await event.gateway.client.repositories.appeals.pending(user.id);
 
   if (hasPendingAppeal == null) {
     return;
   }
 
-  final guildSettings = await event.gateway.client.db.getGuild(hasPendingAppeal.guildId);
+  final guildSettings = await event.gateway.client.repositories.guilds.get(hasPendingAppeal.guildId);
 
   final guild = await event.gateway.client.guilds.get(hasPendingAppeal.guildId);
 
@@ -44,12 +44,14 @@ Future<void> waitForAppeals(MessageCreateEvent event) async {
     return;
   }
 
-  final updatedAppeal = await updateAppeal(UpdateAppeal(
-    appealId: hasPendingAppeal.appealId,
-    guildId: hasPendingAppeal.guildId,
-    reason: event.message.content,
-    status: AppealStatus.pending,
-  ));
+  final updatedAppeal = await updateAppeal(
+    UpdateAppeal(
+      appealId: hasPendingAppeal.appealId,
+      guildId: hasPendingAppeal.guildId,
+      reason: Some(event.message.content),
+      status: Some(AppealStatus.pending),
+    ),
+  );
 
   await acknowledgeAppeal(updatedAppeal, guild, user, guildSettings.appealChannelId!);
 
@@ -76,23 +78,17 @@ Future<void> acceptAppeal(InteractionCreateEvent<MessageComponentInteraction> ev
   final guild = await event.interaction.guild!.get();
   final client = event.gateway.client;
 
-  final guildSettings = await client.db.getGuild(guild.id);
+  final guildSettings = await client.repositories.guilds.get(guild.id);
 
-  final appeal = await (client.db.appeals.select()..where((tbl) => tbl.refId.equals(caseId))).getSingleOrNull();
+  final appeal = await client.repositories.appeals.byRef(caseId);
 
   if (appeal == null) {
-    await event.interaction.respond(
-      MessageBuilder(content: guild.t.moderation.common.errors.appealNotFound),
-      isEphemeral: true,
-    );
+    await event.interaction.respond(MessageBuilder(content: guild.t.moderation.common.errors.appealNotFound), isEphemeral: true);
   }
 
-  final updatedAppeal = await updateAppeal(UpdateAppeal(
-    appealId: appeal!.appealId,
-    guildId: appeal.guildId,
-    status: AppealStatus.accepted,
-    reason: appeal.reason,
-  ));
+  final updatedAppeal = await updateAppeal(
+    UpdateAppeal(appealId: appeal!.appealId, guildId: appeal.guildId, status: Some(AppealStatus.accepted), reason: Some(appeal.reason)),
+  );
 
   final user = await client.users.fetch(userId);
 
@@ -102,33 +98,24 @@ Future<void> acceptAppeal(InteractionCreateEvent<MessageComponentInteraction> ev
 
   await acknowledgeAppeal(updatedAppeal, guild, user, guildSettings.appealChannelId!, mod);
 
-  await event.interaction.respond(
-    MessageBuilder(content: guild.t.moderation.appeal.modAccepted),
-    isEphemeral: true,
-  );
+  await event.interaction.respond(MessageBuilder(content: guild.t.moderation.appeal.modAccepted), isEphemeral: true);
 }
 
 Future<void> rejectAppeal(InteractionCreateEvent<MessageComponentInteraction> event, int caseId, Snowflake userId) async {
   final guild = await event.interaction.guild!.get();
   final client = event.gateway.client;
 
-  final guildSettings = await client.db.getGuild(guild.id);
+  final guildSettings = await client.repositories.guilds.get(guild.id);
 
-  final appeal = await (client.db.appeals.select()..where((tbl) => tbl.refId.equals(caseId))).getSingleOrNull();
+  final appeal = await client.repositories.appeals.byRef(caseId);
 
   if (appeal == null) {
-    await event.interaction.respond(
-      MessageBuilder(content: guild.t.moderation.common.errors.appealNotFound),
-      isEphemeral: true,
-    );
+    await event.interaction.respond(MessageBuilder(content: guild.t.moderation.common.errors.appealNotFound), isEphemeral: true);
   }
 
-  final updatedAppeal = await updateAppeal(UpdateAppeal(
-    appealId: appeal!.appealId,
-    guildId: appeal.guildId,
-    status: AppealStatus.denied,
-    reason: appeal.reason,
-  ));
+  final updatedAppeal = await updateAppeal(
+    UpdateAppeal(appealId: appeal!.appealId, guildId: appeal.guildId, status: Some(AppealStatus.denied), reason: Some(appeal.reason)),
+  );
 
   final user = await client.users.fetch(userId);
 
@@ -138,8 +125,5 @@ Future<void> rejectAppeal(InteractionCreateEvent<MessageComponentInteraction> ev
 
   await acknowledgeAppeal(updatedAppeal, guild, user, guildSettings.appealChannelId!, mod);
 
-  await event.interaction.respond(
-    MessageBuilder(content: guild.t.moderation.appeal.modRejected),
-    isEphemeral: true,
-  );
+  await event.interaction.respond(MessageBuilder(content: guild.t.moderation.appeal.modRejected), isEphemeral: true);
 }

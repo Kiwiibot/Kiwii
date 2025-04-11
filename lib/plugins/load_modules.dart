@@ -26,9 +26,12 @@ import 'github_expand.dart';
 import 'overwatch.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
 
+import 'starboard.dart';
+
 final modules = <String, BasePlugin>{
-  'overwatch': OverwatchPlugin(),
-  // 'github_expand': GithubExpand(),
+  'Overwatch': OverwatchPlugin(),
+  'GithubExpand': GithubExpand(),
+  'Starboard': StarboardPlugin(),
 };
 
 class ModulesPlugin extends NyxxPlugin<NyxxGateway> {
@@ -52,11 +55,11 @@ class ModulesPlugin extends NyxxPlugin<NyxxGateway> {
 }
 
 Future<void> loadModules(NyxxGateway client, Guild guild) async {
-  for (final MapEntry(:key, value: module) in modules.entries) {
+  for (final (key, module) in modules.$) {
     final isEnabled = await module.isEnabled(client, guild: guild);
 
     if (isEnabled) {
-      guild.modules[key.toLowerCase()] = module;
+      guild.modules[key] = module;
       await module.onLoad(client, guild: guild);
     }
   }

@@ -46,10 +46,10 @@ final banCommand = ChatCommand(
       @Name('reference-case') @Description('The reference case') @Autocomplete(caseAutoCompleteNoHistory) int? caseId,
     ]) async {
       final user = await ctx.client.users.get(member.id);
-      final modLogChannelId = await ctx.client.db.getGuildOrNull(ctx.guild!.id);
+      final guildSettings = await ctx.client.repositories.guilds.getOrNull(ctx.guild!.id);
       final cache = GetIt.I.get<Cache<String>>();
 
-      if (modLogChannelId == null) {
+      if (guildSettings?.modLogChannelId == null) {
         await ctx.send(ctx.guild.t.general.errors.noModChannel);
         return;
       }

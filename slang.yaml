@@ -1,7 +1,7 @@
 base_locale: en-GB
 fallback_strategy: base_locale
 input_directory: lib/i18n
-input_file_pattern: .i18n.yaml
+input_file_pattern: .yaml
 flutter_integration: false
 locale_handling: true
 key_case: camel

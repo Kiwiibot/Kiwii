@@ -16,16 +16,51 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import 'dart:math';
+
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
+import 'package:nyxx_extensions/nyxx_extensions.dart';
+
+import '../kiwii.dart';
+import '../plugins/localization.dart';
+
+
+final _permissions = Permissions.sendMessages | Permissions.viewChannel;
+final _clientPermissions = Permissions.sendMessages | Permissions.viewChannel;
 
 final ping = ChatCommand(
   'ping',
   'Ping the bot',
-  id(
-    'ping',
-    (ChatContext context) async {
-      await context.respond(MessageBuilder(content: 'Pong!'));
-    },
+  id('ping', (ChatContext ctx) async {
+    final msg = await ctx.respond(MessageBuilder(content: ctx.guild.t.commands.ping.pinging));
+
+    final createdAt = switch (ctx) {
+      MessageChatContext(:final message) => message.createdAt,
+      InteractionChatContext(:final interaction) => interaction.id.timestamp,
+      _ => (throw 'Nah'),
+    };
+
+    final ping = msg.createdAt.difference(createdAt);
+
+    final hb = ctx.client.gateway.latency;
+
+    await msg.edit(
+      MessageUpdateBuilder(
+        content: ctx.guild.t.commands.ping.pong(
+          o: 'o' * min(ping.inMilliseconds ~/ 100, 1500),
+          ping: separateThousands(ping.inMilliseconds.toString()),
+          hb: separateThousands(hb.inMilliseconds.toString()),
+        ),
+      ),
+    );
+  }),
+  localizedDescriptions: {Locale.fr: 'Ping le bot'},
+  options: KiwiiCommandOptions(
+    category: 'utility',
+    img: 'https://cdn-icons-png.flaticon.com/512/3883/3883802.png',
+    permissions: _permissions,
+    clientPermissions: _clientPermissions,
   ),
+  checks: [BasePermissionsCheck(_permissions), BaseSelfPermissionsCheck(_clientPermissions)],
 );

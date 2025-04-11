@@ -16,46 +16,44 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart';
 
-import '../../../database.dart' hide Guild;
+// import '../../../database.dart' hide Guild;
+import '../../../kiwii.dart';
 import '../../../plugins/localization.dart';
 import '../../models/case.dart';
 import 'create_case.dart';
 
 Future<Case> deleteCase(DeleteCase deleteCase, Guild guild, {bool shouldSkip = false, bool isManual = false}) async {
-  final db = GetIt.I.get<AppDatabase>();
   final t = guild.t;
+  final client = guild.manager.client;
   Case? ccase;
   var localReason = deleteCase.reason;
 
   if (deleteCase.targetId != null) {
-    ccase = await (db.cases.select()
-          ..where(
-            (tbl) =>
-                tbl.targetId.equalsValue(deleteCase.targetId!) &
-                tbl.guildId.equalsValue(deleteCase.guildId) &
-                tbl.action.equalsValue(deleteCase.action ?? CaseAction.ban),
-          )
-          ..orderBy(
-            [
-              (u) => OrderingTerm.desc(u.createdAt),
-            ],
-          )
-          ..limit(1))
-        .getSingle();
+    ccase = await client.repositories.connection
+        .execute(
+          r'''
+SELECT * FROM cases
+WHERE target_id = $1
+  AND guild_id = $2
+  AND action = $3
+ORDER BY created_at DESC
+LIMIT 1;
+''',
+          parameters: [deleteCase.targetId!.value, deleteCase.guildId.value, deleteCase.action?.index ?? CaseAction.ban.index],
+        )
+        .then((r) => Case.fromRow(r.single.toColumnMap()));
   }
 
   if (deleteCase.targetId == null) {
-    ccase = await db.getCase(deleteCase.caseId!, deleteCase.guildId);
+    ccase = await client.repositories.cases.get(deleteCase.caseId!, deleteCase.guildId);
   }
 
   if (ccase?.action == CaseAction.role) {
-    await (db.cases.update()..where((tbl) => tbl.guildId.equalsValue(deleteCase.guildId) & tbl.caseId.equals(ccase!.caseId))).write(
-      CasesCompanion(
-        actionProcessed: Value(true),
-      ),
+    await client.repositories.connection.execute(
+      r'UPDATE cases SET action_processed = TRUE WHERE guild_id = $1 AND case_id = $2;',
+      parameters: [deleteCase.guildId.value, ccase!.caseId],
     );
 
     if (isManual == true) {
@@ -66,12 +64,10 @@ Future<Case> deleteCase(DeleteCase deleteCase, Guild guild, {bool shouldSkip = f
   }
 
   if (ccase?.action == CaseAction.timeout) {
-    await (db.cases.update()..where((tbl) => tbl.guildId.equalsValue(deleteCase.guildId) & tbl.caseId.equals(ccase!.caseId))).write(
-      CasesCompanion(
-        actionProcessed: Value(true),
-      ),
+    await client.repositories.connection.execute(
+      r'UPDATE cases SET action_processed = TRUE WHERE guild_id = $1 AND case_id = $2;',
+      parameters: [deleteCase.guildId.value, ccase!.caseId],
     );
-
     if (isManual) {
       localReason = t.moderation.logs.cases.timeoutDeleteManual;
     } else {
@@ -85,9 +81,10 @@ Future<Case> deleteCase(DeleteCase deleteCase, Guild guild, {bool shouldSkip = f
     guild,
     CreateCase(
       guildId: guild.id,
-      action: caseAction == CaseAction.ban
-          ? CaseAction.unban
-          : caseAction == CaseAction.role
+      action:
+          caseAction == CaseAction.ban
+              ? CaseAction.unban
+              : caseAction == CaseAction.role
               ? CaseAction.unrole
               : CaseAction.timeoutEnd,
       targetId: ccase?.targetId ?? deleteCase.targetId!,

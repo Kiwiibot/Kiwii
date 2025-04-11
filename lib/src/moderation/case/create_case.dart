@@ -16,17 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import 'package:drift_postgres/drift_postgres.dart';
-import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart';
 
-import '../../../database.dart' hide Guild;
+// import '../../../database.dart' hide Guild;
 import '../../../kiwii.dart';
 import '../../models/appeal.dart';
 import '../../models/case.dart';
 import '../appeal/create_appeal.dart';
-import '../reports/resolve_report.dart';
-import 'update_case.dart';
 
 enum CaseAction {
   role,
@@ -43,13 +39,13 @@ enum CaseAction {
 const reportAutoResolveIgnoreActions = [CaseAction.unban, CaseAction.timeoutEnd];
 
 Future<Case> createCase(Guild guild, CreateCase ccase, {bool skip = false, Member? target, int? deleteMessageDays = 1}) async {
-  final db = GetIt.I.get<AppDatabase>();
-  final logger = GetIt.I.get<Logger>();
-  final guildSettings = await db.getGuild(guild.id);
+  final client = guild.manager.client;
+
+  final guildSettings = await client.repositories.guilds.get(guild.id);
 
   final reason = ccase.modTag != null ? 'Mod: ${ccase.modTag}${ccase.reason != null ? ' | ${ccase.reason!.replaceAll('`', '')}' : ''}' : ccase.reason;
 
-  final nextCaseId = await nextCase(guild.id);
+  final nextCaseId = await client.repositories.connection.execute(r'SELECT next_case($1);', parameters: [guild.id.value]).then((r) => r.single.single as int);
 
   try {
     if (!skip) {
@@ -100,65 +96,37 @@ Future<Case> createCase(Guild guild, CreateCase ccase, {bool skip = false, Membe
           );
       }
     }
-  } catch (e, st) {
-    logger.warning('Failed to execute action for case $nextCaseId in guild ${guild.id}', e, st);
+  } catch (e) {
+    print('Failed to execute action for case $nextCaseId in guild ${guild.id}');
+
+    rethrow;
   }
 
-  final caseData = Case(
-    guildId: guild.id,
-    caseId: nextCaseId,
-    targetId: ccase.targetId,
-    targetTag: ccase.targetTag,
-    action: ccase.action,
-    createdAt: PgDateTime(DateTime.now()),
-    actionExpiration: ccase.actionExpiration,
-    appealRefId: ccase.appealRefId,
-    contextMessageId: ccase.contextMessageId,
-    modId: ccase.modId,
-    modTag: ccase.modTag,
-    multi: ccase.multi,
-    reason: ccase.reason,
-    reportRefId: ccase.reportRefId,
-    refId: ccase.refId,
-    actionProcessed: ccase.actionExpiration == null,
-  );
+  final caseData = ccase.copyWith(guildId: guild.id);
 
-  final newCase = await db.createCase(caseData);
+  final newCase = await client.repositories.cases.create(caseData);
 
-  if (!reportAutoResolveIgnoreActions.contains(ccase.action)) {
-    try {
-      final resolvedReports = await resolvePendingReports(
-        guild,
-        ccase.targetId,
-        newCase.caseId,
-        await guild.manager.client.users.get(newCase.modId!),
-      );
+  // if (!reportAutoResolveIgnoreActions.contains(ccase.action)) {
+    // try {
+  //     final resolvedReports = await resolvePendingReports(
+  //       guild,
+  //       ccase.targetId,
+  //       newCase.caseId,
+  //       await guild.manager.client.users.get(newCase.modId!),
+  //     );
 
-      if (resolvedReports.isNotEmpty && ccase.reportRefId != null) {
-        return updateCase(UpdateCase(
-          caseId: newCase.caseId,
-          guildId: newCase.guildId,
-          reportRefId: resolvedReports.last.reportId,
-        ));
-      }
-    } catch (e, st) {
-      logger.warning('Failed to resolve reports for case $nextCaseId in guild ${guild.id}', e, st);
-    }
-  }
+  //     if (resolvedReports.isNotEmpty && ccase.reportRefId != null) {
+  //       return updateCase(UpdateCase(
+  //         caseId: newCase.caseId,
+  //         guildId: newCase.guildId,
+  //         reportRefId: Some(resolvedReports.last.reportId),
+  //       ));
+  //     }
+  //   } catch (e) {
+  //     print('Failed to resolve reports for case $nextCaseId in guild ${guild.id}');
+  //   }
+  // }
 
   return newCase;
 }
 
-Future<int> nextCase(Snowflake guildId) async {
-  final db = GetIt.I.get<AppDatabase>();
-
-  final lastCaseId = await db.customSelect(
-    'SELECT MAX(case_id) FROM cases WHERE guild_id = \$1',
-    variables: [
-      Variable.withBigInt(guildId.toBigInt()),
-    ],
-    readsFrom: {db.cases},
-  ).getSingle();
-
-  return (lastCaseId.data['max'] as int? ?? 0) + 1;
-}

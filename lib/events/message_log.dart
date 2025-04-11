@@ -16,20 +16,20 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import 'package:get_it/get_it.dart';
+import 'dart:typed_data';
+
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
 import 'package:diff_match_patch/diff_match_patch.dart';
 
-import '../database.dart';
 import '../plugins/localization.dart';
 import '../utils/utils.dart';
 import '../utils/extensions.dart';
 import 'message_create.dart';
 
 Future<void> onMessageDelete(MessageDeleteEvent event) async {
-  final db = GetIt.I.get<AppDatabase>();
-  final self = await event.gateway.client.user.get();
+  final client = event.gateway.client;
+  final self = await client.user.get();
 
   if (event.deletedMessage == null || event.guildId == null) {
     return;
@@ -51,13 +51,14 @@ Future<void> onMessageDelete(MessageDeleteEvent event) async {
     return;
   }
 
-  final logWebhookId = (await db.getGuildOrNull(event.guildId!))?.guildLogWebhookId ?? const Snowflake(1250365441470103573);
+  final logWebhookId = (await client.repositories.guilds.getOrNull(event.guildId!))?.guildLogWebhookId ?? const Snowflake(1250365441470103573);
 
-  // if (logWebhookId == null) {
-  //   return;
-  // }
+  if (logWebhookId == null) {
+    // TODO:
+    return;
+  }
 
-  // todo: ignore channels
+  // TODO: ignore channels
 
   final webhook = await event.gateway.client.webhooks.get(logWebhookId);
 
@@ -159,10 +160,10 @@ Future<void> onMessageDelete(MessageDeleteEvent event) async {
 
   final newEmbed = msg.embeds.first.toEmbedBuilder();
 
-  if (msg.attachments.isNotEmpty) {
-    final urls = msg.attachments.map((a) => a.proxiedUrl);
+  if (msg.embeds.any((e) => e.image != null)) {
+    final urls = msg.embeds.where((e) => e.image != null).map((e) => e.image!.proxiedUrl);
 
-    newEmbed.fields![1] = EmbedFieldBuilder(
+    newEmbed.fields!.add(EmbedFieldBuilder(
       name: guild.t.logs.guildLogs.messageDeleted.attachments.title,
       value: guild.t.logs.guildLogs.messageDeleted.attachments.value(
         attachments: [
@@ -170,7 +171,7 @@ Future<void> onMessageDelete(MessageDeleteEvent event) async {
         ].join(' '),
       ),
       isInline: false,
-    );
+    ));
   }
 
   final builder = MessageUpdateBuilder(
@@ -179,13 +180,10 @@ Future<void> onMessageDelete(MessageDeleteEvent event) async {
       ...msg.embeds.sublist(1).map((e) => e.toEmbedBuilder()),
     ],
     content: msg.content,
-    attachments: attachments,
-    suppressEmbeds: msg.flags.has(
-      MessageFlags.suppressEmbeds,
-    ),
+    suppressEmbeds: msg.flags.suppressesEmbeds,
   );
 
-  await message.edit(builder);
+  await event.gateway.client.webhooks.updateWebhookMessage(webhook.id, msg.id, builder, token: webhook.token!);
 }
 
 bool isImage(List<int> data) {
@@ -206,6 +204,8 @@ Future<void> onMessageUpdate(MessageUpdateEvent event) async {
   final oldMessage = event.oldMessage;
   final newMessage = await event.message.get();
 
+  final client = event.gateway.client;
+
   if (oldMessage == null) {
     return;
   }
@@ -218,15 +218,14 @@ Future<void> onMessageUpdate(MessageUpdateEvent event) async {
     return;
   }
 
-  final db = GetIt.I.get<AppDatabase>();
-
   // final guild = await event.guild!.get();
 
-  final logWebhookId = (await db.getGuild(event.guildId!)).guildLogWebhookId ?? const Snowflake(1250365441470103573);
+  final logWebhookId = (await client.repositories.guilds.get(event.guildId!)).guildLogWebhookId ?? const Snowflake(1250365441470103573);
 
-  // if (logWebhookId == null) {
-  //   return;
-  // }
+  if (logWebhookId == null) {
+    // TODO:
+    return;
+  }
 
   final webhook = await event.gateway.client.webhooks.get(logWebhookId);
 

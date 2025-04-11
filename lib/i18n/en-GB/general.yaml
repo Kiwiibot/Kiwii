@@ -63,5 +63,3 @@ categories:
   nsfw: NSFW
   unknown: Unknown
 
-settings:
-  webhook_create_reason: Webhook created to logs members and messages.

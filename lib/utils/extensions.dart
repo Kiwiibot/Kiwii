@@ -20,20 +20,25 @@ import 'package:darq/darq.dart';
 import 'package:dartx/dartx.dart' hide StringCapitalizeExtension;
 import 'package:get_it/get_it.dart';
 import 'package:neat_cache/neat_cache.dart';
-import 'package:nyxx/nyxx.dart' hide Cache;
+import 'package:nyxx/nyxx.dart' hide Cache, Connection;
 import 'package:nyxx_commands/nyxx_commands.dart' hide id;
 import 'package:nyxx_extensions/nyxx_extensions.dart';
+import 'package:postgres/postgres.dart';
 
-import '../database.dart' hide Guild;
 import '../plugins/base.dart';
+import '../src/models/repositories/repositories.dart';
 
-final _guildModules = <Snowflake, Map<String, BasePlugin>>{};
+final guildModules = <Snowflake, Map<String, BasePlugin>>{};
 
 extension ContextExtension on ChatContext {
   Future<Message> send(String content) => respond(MessageBuilder(content: content));
 
   /// Returns the bot's prefix or '/' if this was invoked from an interaction.
   String get realPrefix => this is InteractionChatContext ? '/' : (this as MessageChatContext).prefix;
+}
+
+extension PartialGuildExtensions on PartialGuild {
+  Map<String, BasePlugin> get modules => guildModules[id] ??= {};
 }
 
 extension GuildExtensions on Guild {
@@ -43,119 +48,107 @@ extension GuildExtensions on Guild {
       .where((e) => e.value is GuildChannel && (e.value as GuildChannel).guildId == id)
       .toMap((e) => e as MapEntry<Snowflake, GuildChannel>);
 
-  Map<String, BasePlugin> get modules => _guildModules[id] ??= {};
-
-  Map<String, bool> get enabledModules => {};
-
   Map<String, Object?> toJson() => {
-        'id': id.toString(),
-        'name': name,
-        'icon': iconHash,
-        'splash': splashHash,
-        'discovery_splash': discoverySplashHash,
-        'owner_id': ownerId.toString(),
-        'afk_channel_id': afkChannelId?.toString(),
-        'afk_timeout': afkTimeout.inSeconds,
-        'widget_enabled': isWidgetEnabled,
-        'widget_channel_id': widgetChannelId?.toString(),
-        'verification_level': verificationLevel.value,
-        'default_message_notifications': defaultMessageNotificationLevel.value,
-        'explicit_content_filter': explicitContentFilterLevel.value,
-        'roles': roles.cache.values.map((e) => e.toJson()).toList(),
-        'emojis': emojis.cache.values.map((e) => (e as GuildEmoji).toJson()).toList(),
-        'features': features.map((e) => e.value).toList(),
-        'mfa_level': mfaLevel.value,
-        'application_id': applicationId?.toString(),
-        'system_channel_id': systemChannelId?.toString(),
-        'system_channel_flags': systemChannelFlags.value,
-        'rules_channel_id': rulesChannelId?.toString(),
-        'max_presences': maxPresences,
-        'max_members': maxMembers,
-        'vanity_url_code': vanityUrlCode,
-        'description': description,
-        'banner': bannerHash,
-        'premium_tier': premiumTier.value,
-        'premium_subscription_count': premiumSubscriptionCount,
-        'preferred_locale': preferredLocale.identifier,
-        'public_updates_channel_id': publicUpdatesChannelId?.toString(),
-        'max_video_channel_users': maxVideoChannelUsers,
-        'max_stage_video_channel_users': maxStageChannelUsers,
-        'approximate_member_count': approximateMemberCount,
-        'approximate_presence_count': approximatePresenceCount,
-        'welcome_screen': welcomeScreen?.toJson(),
-        'nsfw_level': nsfwLevel.value,
-        'stickers': stickers.cache.values.map((e) => e.toJson()).toList(),
-        'premium_progress_bar_enabled': hasPremiumProgressBarEnabled,
-        'safety_alerts_channel_id': safetyAlertsChannelId?.toString(),
-      };
+    'id': id.toString(),
+    'name': name,
+    'icon': iconHash,
+    'splash': splashHash,
+    'discovery_splash': discoverySplashHash,
+    'owner_id': ownerId.toString(),
+    'afk_channel_id': afkChannelId?.toString(),
+    'afk_timeout': afkTimeout.inSeconds,
+    'widget_enabled': isWidgetEnabled,
+    'widget_channel_id': widgetChannelId?.toString(),
+    'verification_level': verificationLevel.value,
+    'default_message_notifications': defaultMessageNotificationLevel.value,
+    'explicit_content_filter': explicitContentFilterLevel.value,
+    'roles': roles.cache.values.map((e) => e.toJson()).toList(),
+    'emojis': emojis.cache.values.map((e) => (e as GuildEmoji).toJson()).toList(),
+    'features': features.map((e) => e.value).toList(),
+    'mfa_level': mfaLevel.value,
+    'application_id': applicationId?.toString(),
+    'system_channel_id': systemChannelId?.toString(),
+    'system_channel_flags': systemChannelFlags.value,
+    'rules_channel_id': rulesChannelId?.toString(),
+    'max_presences': maxPresences,
+    'max_members': maxMembers,
+    'vanity_url_code': vanityUrlCode,
+    'description': description,
+    'banner': bannerHash,
+    'premium_tier': premiumTier.value,
+    'premium_subscription_count': premiumSubscriptionCount,
+    'preferred_locale': preferredLocale.identifier,
+    'public_updates_channel_id': publicUpdatesChannelId?.toString(),
+    'max_video_channel_users': maxVideoChannelUsers,
+    'max_stage_video_channel_users': maxStageChannelUsers,
+    'approximate_member_count': approximateMemberCount,
+    'approximate_presence_count': approximatePresenceCount,
+    'welcome_screen': welcomeScreen?.toJson(),
+    'nsfw_level': nsfwLevel.value,
+    'stickers': stickers.cache.values.map((e) => e.toJson()).toList(),
+    'premium_progress_bar_enabled': hasPremiumProgressBarEnabled,
+    'safety_alerts_channel_id': safetyAlertsChannelId?.toString(),
+  };
 }
 
 extension StickersExtension on GuildSticker {
   Map<String, Object?> toJson() => {
-        'id': id.toString(),
-        'name': name,
-        'description': description,
-        'tags': tags,
-        'asset': '',
-        'format_type': formatType.value,
-        'available': available,
-        'guild_id': guildId.toString(),
-        'type': type.value,
-        'sort_value': sortValue,
-      };
+    'id': id.toString(),
+    'name': name,
+    'description': description,
+    'tags': tags,
+    'asset': '',
+    'format_type': formatType.value,
+    'available': available,
+    'guild_id': guildId.toString(),
+    'type': type.value,
+    'sort_value': sortValue,
+  };
 }
 
 extension WelcomeScreenExtensions on WelcomeScreen {
-  Map<String, Object?> toJson() => {
-        'description': description,
-        'welcome_channels': channels.map((e) => e.toJson()).toList(),
-      };
+  Map<String, Object?> toJson() => {'description': description, 'welcome_channels': channels.map((e) => e.toJson()).toList()};
 }
 
 extension WelcomeScreenChannelExtensions on WelcomeScreenChannel {
-  Map<String, Object?> toJson() => {
-        'channel_id': channelId.toString(),
-        'description': description,
-        'emoji_id': emojiId?.toString(),
-        'emoji_name': emojiName,
-      };
+  Map<String, Object?> toJson() => {'channel_id': channelId.toString(), 'description': description, 'emoji_id': emojiId?.toString(), 'emoji_name': emojiName};
 }
 
 extension EmojisExtension on GuildEmoji {
   Map<String, Object?> toJson() => {
-        'id': id.toString(),
-        'name': name,
-        'roles': roles?.map((e) => e.id.toString()).toList(),
-        'user': user?.toJson(),
-        'require_colons': requiresColons,
-        'managed': isManaged,
-        'animated': isAnimated,
-        'available': isAvailable,
-      };
+    'id': id.toString(),
+    'name': name,
+    'roles': roles?.map((e) => e.id.toString()).toList(),
+    'user': user?.toJson(),
+    'require_colons': requiresColons,
+    'managed': isManaged,
+    'animated': isAnimated,
+    'available': isAvailable,
+  };
 }
 
 extension RoleExtensions on Role {
   Map<String, Object?> toJson() => {
-        'id': id.toString(),
-        'name': name,
-        'color': color.value,
-        'hoist': isHoisted,
-        'position': position,
-        'permissions': permissions.value.toString(),
-        'mentionable': isMentionable,
-        'tags': tags?.toJson(),
-      };
+    'id': id.toString(),
+    'name': name,
+    'color': color.value,
+    'hoist': isHoisted,
+    'position': position,
+    'permissions': permissions.value.toString(),
+    'mentionable': isMentionable,
+    'tags': tags?.toJson(),
+  };
 }
 
 extension RoleTagsExtensions on RoleTags {
   Map<String, Object?> toJson() => {
-        'bot_id': botId?.toString(),
-        'integration_id': integrationId?.toString(),
-        'premium_subscriber': isPremiumSubscriber,
-        'subscription_listing_id': subscriptionListingId?.toString(),
-        'available_for_purchase': isAvailableForPurchase,
-        'guild_connections': isLinkedRole,
-      };
+    'bot_id': botId?.toString(),
+    'integration_id': integrationId?.toString(),
+    'premium_subscriber': isPremiumSubscriber,
+    'subscription_listing_id': subscriptionListingId?.toString(),
+    'available_for_purchase': isAvailableForPurchase,
+    'guild_connections': isLinkedRole,
+  };
 }
 
 extension MemberExtensions on Member {
@@ -232,6 +225,43 @@ extension MemberExtensions on Member {
   Future<List<Role>> get resolvedRoles => roles.get();
 
   Future<Message> sendMessage(MessageBuilder builder) async => (user ?? await manager.client.users.get(id)).sendMessage(builder);
+
+  Member copyWith({
+    Snowflake? id,
+    AvatarDecorationData? avatarDecorationData,
+    String? avatarDecorationHash,
+    String? avatarHash,
+    String? bannerHash,
+    DateTime? communicationDisabledUntil,
+    MemberFlags? flags,
+    bool? isDeaf,
+    bool? isMute,
+    bool? isPending,
+    DateTime? joinedAt,
+    String? nick,
+    Permissions? permissions,
+    DateTime? premiumSince,
+    List<Snowflake>? roleIds,
+    User? user,
+  }) => Member(
+    id: id ?? this.id,
+    avatarDecorationData: avatarDecorationData ?? this.avatarDecorationData,
+    avatarDecorationHash: avatarDecorationHash ?? this.avatarDecorationHash,
+    avatarHash: avatarHash ?? this.avatarHash,
+    bannerHash: bannerHash ?? this.bannerHash,
+    communicationDisabledUntil: communicationDisabledUntil ?? this.communicationDisabledUntil,
+    flags: flags ?? this.flags,
+    isDeaf: isDeaf ?? this.isDeaf,
+    isMute: isMute ?? this.isMute,
+    isPending: isPending ?? this.isPending,
+    joinedAt: joinedAt ?? this.joinedAt,
+    manager: manager,
+    nick: nick ?? this.nick,
+    permissions: permissions ?? this.permissions,
+    premiumSince: premiumSince ?? this.premiumSince,
+    roleIds: roleIds ?? this.roleIds,
+    user: user ?? this.user,
+  );
 }
 
 extension HighestRoleExtension on Member {
@@ -256,28 +286,65 @@ extension ChatCommandExtension on CommandRegisterable<ChatContext> {
 }
 
 extension UserExtension on User {
-  String get tag => discriminator == '0' ? username : '$username#$discriminator';
+  // String get tag => discriminator == '0' ? username : '$username#$discriminator';
 
   DmChannel? get dm => manager.client.channels.cache.values.firstOrNullWhere((e) => e is DmChannel && e.recipient.id == id) as DmChannel?;
 
   Future<Message> sendMessage(MessageBuilder builder) async => (dm ?? await manager.createDm(id)).sendMessage(builder);
 
   Map<String, Object?> toJson() => {
-        'id': id.toString(),
-        'username': username,
-        'discriminator': discriminator,
-        'global_name': globalName,
-        'avatar': avatarHash,
-        'bot': isBot,
-        'system': isSystem,
-        'mfa_enabled': hasMfaEnabled,
-        'banner': bannerHash,
-        'accent_color': accentColor?.toHexString(),
-        'locale': locale?.identifier,
-        'flags': flags?.value,
-        'public_flags': publicFlags?.value,
-        'avatar_decoration': avatarDecorationHash,
-      };
+    'id': id.toString(),
+    'username': username,
+    'discriminator': discriminator,
+    'global_name': globalName,
+    'avatar': avatarHash,
+    'bot': isBot,
+    'system': isSystem,
+    'mfa_enabled': hasMfaEnabled,
+    'banner': bannerHash,
+    'accent_color': accentColor?.toHexString(),
+    'locale': locale?.identifier,
+    'flags': flags?.value,
+    'public_flags': publicFlags?.value,
+    'avatar_decoration': avatarDecorationHash,
+  };
+
+  User copyWith({
+    Snowflake? id,
+    String? username,
+    String? discriminator,
+    String? globalName,
+    String? avatarHash,
+    bool? isBot,
+    bool? isSystem,
+    bool? hasMfaEnabled,
+    String? bannerHash,
+    DiscordColor? accentColor,
+    Locale? locale,
+    UserFlags? flags,
+    NitroType? nitroType,
+    UserFlags? publicFlags,
+    String? avatarDecorationHash,
+    AvatarDecorationData? avatarDecorationData,
+  }) => User(
+    id: id ?? this.id,
+    username: username ?? this.username,
+    discriminator: discriminator ?? this.discriminator,
+    globalName: globalName ?? this.globalName,
+    avatarHash: avatarHash ?? this.avatarHash,
+    isBot: isBot ?? this.isBot,
+    isSystem: isSystem ?? this.isSystem,
+    hasMfaEnabled: hasMfaEnabled ?? this.hasMfaEnabled,
+    bannerHash: bannerHash ?? this.bannerHash,
+    accentColor: accentColor ?? this.accentColor,
+    locale: locale ?? this.locale,
+    flags: flags ?? this.flags,
+    nitroType: nitroType ?? this.nitroType,
+    publicFlags: publicFlags ?? this.publicFlags,
+    avatarDecorationHash: avatarDecorationHash ?? this.avatarDecorationHash,
+    avatarDecorationData: avatarDecorationData ?? this.avatarDecorationData,
+    manager: manager,
+  );
 }
 
 extension FutureErrorNullable<T> on Future<T> {
@@ -290,8 +357,8 @@ extension FutureErrorNullable<T> on Future<T> {
   }
 }
 
-extension MapEntriesRecord<K, V> on Iterable<MapEntry<K, V>> {
-  Iterable<(K, V)> get $ => [for (final MapEntry(:key, :value) in this) (key, value)];
+extension MapEntriesRecord<K, V> on Map<K, V> {
+  Iterable<(K, V)> get $ => entries.map((e) => (e.key, e.value));
 }
 
 // extension ThreadExtension on Thread {
@@ -299,19 +366,10 @@ extension MapEntriesRecord<K, V> on Iterable<MapEntry<K, V>> {
 // }
 
 extension EmbedBuilderBetter on EmbedBuilder {
-  void addBlankField({bool isInline = false}) => addField(
-        name: '\u200b',
-        value: '\u200b',
-        isInline: isInline,
-      );
+  void addBlankField({bool isInline = false}) => addField(name: '\u200b', value: '\u200b', isInline: isInline);
 
-  void addField({required String name, required String value, bool isInline = false}) => (fields ?? (fields = [])).add(
-        EmbedFieldBuilder(
-          name: name,
-          value: value,
-          isInline: isInline,
-        ),
-      );
+  void addField({required String name, required String value, bool isInline = false}) =>
+      (fields ?? (fields = [])).add(EmbedFieldBuilder(name: name, value: value, isInline: isInline));
 
   void maybeAddField({String? name, String? value, bool isInline = false}) {
     if (name != null && value != null) {
@@ -354,11 +412,18 @@ extension StringExtension on String {
   String get title => splitMapJoin(' ', onNonMatch: (s) => s.capitalize, onMatch: (s) => s[0]!);
 }
 
+final _repositories = Repositories.fromConnection(GetIt.I.get<Connection>());
+
 extension ClientExtensions on NyxxRest {
-  AppDatabase get db => GetIt.I.get<AppDatabase>();
+  // AppDatabase get db => GetIt.I.get<AppDatabase>();
   Cache<String> get selfCache => GetIt.I.get<Cache<String>>();
+  Repositories get repositories => _repositories;
 }
 
 extension AttachmentExtension on Attachment {
   Future<AttachmentBuilder> toAttachmentBuilder() async => AttachmentBuilder(fileName: fileName, description: description, data: await fetch());
+}
+
+extension EmojiToString on Emoji {
+  String get string => this is TextEmoji ? (this as TextEmoji).name : '<:${(this as GuildEmoji).name}:$id>';
 }

@@ -16,14 +16,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart';
 
-import '../database.dart' hide Guild;
-import '../translations.g.dart' show AppLocale, Translations, LocaleSettings;
+import '../src/models/guild.dart' hide Guild;
+import '../translations.g.dart' show AppLocale, Translations;
 import '../utils/constants.dart';
+import '../utils/utils.dart';
 
 final guildLocales = <Snowflake, AppLocale>{};
+
+final defaultBuiltLocale = AppLocale.enGb.buildSync();
+final defaultLocale = AppLocale.enGb;
+
+final _locales = {
+  AppLocale.enGb: defaultBuiltLocale,
+};
 
 final localization = LocalizationPlugin();
 
@@ -40,37 +47,30 @@ class LocalizationPlugin extends NyxxPlugin<NyxxGateway> {
   @override
   Future<NyxxGateway> doConnect(ApiOptions apiOptions, ClientOptions clientOptions, Future<NyxxGateway> Function() connect) async {
     client = await super.doConnect(apiOptions, clientOptions, connect);
-    final db = GetIt.I.get<AppDatabase>();
     client.on<GuildCreateEvent>((event) async {
       final guild = event.guild;
-      final data = (await (db.select(db.guildTable)
-            ..where((e) => e.guildId.equals(guild.id.value))
-            ..limit(1))
-          .getSingleOrNull());
+      final data = await client.repositories.guilds.getOrNull(guild.id);
       final locale = data?.locale != null ? data!.locale : AppLocale.enGb;
       guildLocales[guild.id] = locale;
     });
 
+    _locales[AppLocale.frFr] = await AppLocale.frFr.build();
+
     return client;
   }
 
-  Future<void> setLocale(AppLocale locale, Snowflake guildId) {
-    final db = GetIt.I.get<AppDatabase>();
+  Future<void> setLocale(AppLocale locale, Snowflake guildId) async {
     guildLocales[guildId] = locale;
-    return db.into(db.guildTable).insert(
-          GuildTableCompanion.insert(
-            guildId: Value(guildId),
-            locale: Value(locale),
-          ),
-          onConflict: DoUpdate(
-            (tbl) => GuildTableCompanion(
-              locale: Value(locale),
-            ),
-          ),
-        );
+    var guild = await client.repositories.guilds.getOrNull(guildId);
+
+    if (guild == null) {
+      await client.repositories.guilds.create(EditableGuild(guildId: guildId, locale: locale));
+    } else {
+      await client.repositories.guilds.edit(EditableGuild(guildId: guildId, locale: locale));
+    }
   }
 }
 
 extension LocaleGuild on Guild? {
-  Translations get t => this != null ? LocaleSettings.instance.translationMap[guildLocales[this!.id]] ?? AppLocale.enGb.build() : AppLocale.enGb.build();
+  Translations get t => this != null ? _locales[guildLocales[this!.id]] ?? defaultBuiltLocale : defaultBuiltLocale;
 }

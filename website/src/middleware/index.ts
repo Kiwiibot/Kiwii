@@ -17,6 +17,8 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
         }
       );
 
+      console.log(memberData)
+
       if (!memberData.ok) {
         ctx.cookies.set("error", "You are not a member of this server.", {
           path: "/errors/unauthorized",
@@ -25,12 +27,14 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
       }
 
       const member = await memberData.json();
+      console.log(member)
       ctx.locals.member = member;
     }
 
     const { member } = ctx.locals;
 
     if (ctx.url.pathname.includes("/moderation/")) {
+      console.log(ctx.locals)
       const permissionsData = await fetch(
         `${import.meta.env.API_URL}/permissions/${ctx.params.guildId}/${
           member.user?.id

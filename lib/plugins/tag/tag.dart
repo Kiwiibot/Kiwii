@@ -19,10 +19,12 @@
 import 'dart:async';
 
 import 'package:get_it/get_it.dart';
-import '../../database.dart';
+import 'package:postgres/postgres.dart';
+
 import '../../kiwii.dart';
+import '../../src/models/tag.dart';
 import '../../utils/parser.dart';
-import 'package:nyxx/nyxx.dart';
+import 'package:nyxx/nyxx.dart' hide Connection;
 import 'package:nyxx_commands/nyxx_commands.dart';
 // ignore: implementation_imports
 import 'package:nyxx_commands/src/context/base.dart';
@@ -52,12 +54,13 @@ class TagPlugin extends NyxxPlugin<NyxxGateway> {
   final StreamController<Map<String, Object?>?> _onRawMessageCreateController = StreamController.broadcast();
   Stream<Map<String, Object?>?> get onRawMessageCreate => _onRawMessageCreateController.stream;
   late final NyxxGateway client;
-  final db = GetIt.I.get<AppDatabase>();
   @override
   Future<void> afterConnect(NyxxGateway client) async {
     this.client = client;
 
     onRawMessageCreate.listen(processTag);
+
+    await GetIt.I.get<Connection>().execute('SELECT * FROM tags;').then((r) => client.repositories.tags.tags.addAll(r.map((row) => Tag.fromRow(row.toColumnMap()))));
   }
 
   @override
@@ -113,25 +116,18 @@ class TagPlugin extends NyxxPlugin<NyxxGateway> {
 
     final parser = Parser(client, ctx);
 
-    final tags = await (db.select(db.tags)
-          ..where((tags) => tags.name.equals(rawTag) & tags.locationId.equals(guild.id.value))
-          ..limit(1))
-        .get();
+    final tag = await client.repositories.tags.find(rawTag, ctx.guild!.id);
 
-    if (tags.isEmpty) {
-      return;
-    }
-
-    final tag = tags.first;
     // Render tag.
     final renderedTag = await parser.parse(tag.content, tag, args);
     // Increment usage count.
-    await db.into(db.tags).insert(tag.copyWith(timesCalled: tag.timesCalled + 1), mode: InsertMode.replace);
+    await ctx.client.repositories.tags.edit(EditableTag(timesCalled: tag.timesCalled + 1, id: tag.id));
+
     await message.channel.sendMessage(
       MessageBuilder(
         content: renderedTag.result,
         allowedMentions: AllowedMentions.roles() & AllowedMentions.users(),
-        replyId: message.id,
+        referencedMessage: MessageReferenceBuilder.reply(messageId: message.id),
       ),
     );
   }

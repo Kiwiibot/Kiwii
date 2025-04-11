@@ -1,4 +1,4 @@
-FROM dart:3.3.1 AS kiwii
+FROM dart:3.7.0 AS kiwii
 
 WORKDIR /bot
 

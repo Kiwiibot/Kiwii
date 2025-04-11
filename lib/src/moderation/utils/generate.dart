@@ -18,14 +18,14 @@
 
 import 'dart:math';
 
-import 'package:dartx/dartx.dart';
 import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
 
-import '../../../database.dart';
 import '../../../kiwii.dart';
 import '../../../translations.g.dart';
+import '../../models/appeal.dart';
+import '../../models/case.dart';
 import '../appeal/create_appeal.dart';
 import '../case/create_case.dart';
 import 'strings.dart';
@@ -64,12 +64,13 @@ Future<EmbedBuilder> generateHistory(({Member? member, User user}) target, Snowf
 }
 
 Future<EmbedBuilder> generateCaseHistory(({Member? member, User user}) target, Snowflake guildId, Translations t) async {
-  final db = GetIt.I.get<AppDatabase>();
-  final guildSettings = await db.getGuild(guildId);
-  final cases = await (db.cases.select()
-        ..where((tbl) => tbl.guildId.equalsValue(guildId) & tbl.targetId.equalsValue(target.user.id) & tbl.action.isNotIn([1, 8]))
-        ..orderBy([(u) => OrderingTerm(expression: u.createdAt, mode: OrderingMode.desc)]))
-      .get();
+  final client = target.user.manager.client;
+
+  final guildSettings = await client.repositories.guilds.get(guildId);
+  final cases = await client.repositories.connection.execute(
+    r'SELECT * FROM cases WHERE guild_id = $1 AND target_id = $2 AND action NOT IN (1, 8) ORDER BY created_at DESC;',
+    parameters: [guildId.value, target.user.id.value]
+  ).then((r) => r.map((s) => Case.fromRow(s.toColumnMap())));
 
   final caseFolded = cases.fold<Map<CaseAction, int>>({}, (acc, c) {
     final action = c.action;
@@ -77,28 +78,21 @@ Future<EmbedBuilder> generateCaseHistory(({Member? member, User user}) target, S
     return acc;
   });
 
-  // // Add 0s for missing actions
-  // for (final action in CaseAction.values) {
-  //   if (!caseFolded.containsKey(action)) {
-  //     caseFolded[action] = 0;
-  //   }
-  // }
-
-  // final values = caseFolded.values.toList();
   final values = [
-    caseFolded.getOrElse(CaseAction.role, () => 0),
-    caseFolded.getOrElse(CaseAction.warn, () => 0),
-    caseFolded.getOrElse(CaseAction.kick, () => 0),
-    caseFolded.getOrElse(CaseAction.softBan, () => 0),
-    caseFolded.getOrElse(CaseAction.ban, () => 0),
-    caseFolded.getOrElse(CaseAction.unban, () => 0),
-    caseFolded.getOrElse(CaseAction.timeout, () => 0)
+    caseFolded[CaseAction.role] ?? 0,
+    caseFolded[CaseAction.warn] ?? 0,
+    caseFolded[CaseAction.kick] ?? 0,
+    caseFolded[CaseAction.softBan] ?? 0,
+    caseFolded[CaseAction.ban] ?? 0,
+    caseFolded[CaseAction.unban] ?? 0,
+    caseFolded[CaseAction.timeout] ?? 0,
   ];
-  final coloursIndex = min(values.isEmpty ? 0 : values.reduce((a, b) => a + b), Colours.values.length - 1);
+
+  final coloursIndex = min(values.reduce((a, b) => a + b), Colours.values.length - 1);
 
   final records = cases.map<HistoryRecord>(
     (case_) => (
-      createdAt: case_.createdAt.dateTime,
+      createdAt: case_.createdAt,
       identifierLabel: '#${case_.caseId}',
       identifierUri: Uri.https('discord.com', '/channels/$guildId/${guildSettings.modLogChannelId}/${case_.logMessageId}'),
       label: formatCaseAction(case_.action, t),
@@ -106,14 +100,7 @@ Future<EmbedBuilder> generateCaseHistory(({Member? member, User user}) target, S
     ),
   );
 
-  return generateHistoryEmbed(
-    target.user,
-    t.moderation.history.cases.title,
-    Colours.values[coloursIndex].value,
-    records,
-    actionSummary(values, t),
-    t,
-  );
+  return generateHistoryEmbed(target.user, t.moderation.history.cases.title, Colours.values[coloursIndex].value, records, actionSummary(values, t), t);
 }
 
 String actionSummary(List<int> actions, Translations t) {
@@ -137,15 +124,12 @@ EmbedBuilder generateHistoryEmbed(User author, String title, int colour, Iterabl
         t.moderation.common.errors.noHistory
       else
         for (final record in records)
-          '${formatDate(record.createdAt, TimestampStyle.shortDate)} ${inlineCode(record.label)} ${hyperlink(record.identifierLabel, record.identifierUri.toString())} ${record.description ?? ''}'
+          '${formatDate(record.createdAt, TimestampStyle.shortDate)} ${inlineCode(record.label)} ${hyperlink(record.identifierLabel, record.identifierUri.toString())} ${record.description ?? ''}',
     ].join('\n'),
     title: title,
     color: DiscordColor(colour),
     footer: EmbedFooterBuilder(text: footerText),
-    author: EmbedAuthorBuilder(
-      name: '${author.tag} (${author.id})',
-      iconUrl: author.avatar.url,
-    ),
+    author: EmbedAuthorBuilder(name: '${author.tag} (${author.id})', iconUrl: author.avatar.url),
   );
 }
 
@@ -154,10 +138,7 @@ EmbedBuilder generateUserInfo(({Member? member, User user}) target, Translations
   final createdAt = formatDate(target.user.id.timestamp, TimestampStyle.shortDateTime);
 
   final embed = EmbedBuilder(
-    author: EmbedAuthorBuilder(
-      name: '${target.user.tag} (${target.user.id})',
-      iconUrl: target.user.avatar.url,
-    ),
+    author: EmbedAuthorBuilder(name: '${target.user.tag} (${target.user.id})', iconUrl: target.user.avatar.url),
     color: DiscordColor(0x5865f2),
     fields: [
       EmbedFieldBuilder(
@@ -203,7 +184,6 @@ EmbedBuilder generateUserInfo(({Member? member, User user}) target, Translations
 Future<String> generateCaseLog(Case ccase, Snowflake logChannelId, Translations t, String prefix) async {
   final client = GetIt.I.get<NyxxGateway>();
   final logger = GetIt.I.get<Logger>();
-  final db = GetIt.I.get<AppDatabase>();
 
   var action = formatCaseAction(ccase.action, t);
 
@@ -235,7 +215,7 @@ Future<String> generateCaseLog(Case ccase, Snowflake logChannelId, Translations 
   }
 
   if (ccase.refId != null) {
-    final reference = await db.getCase(ccase.refId!, ccase.guildId);
+    final reference = await client.repositories.cases.get(ccase.refId!, ccase.guildId);
 
     msg += t.moderation.logs.cases.caseReference(
       action: formatCaseAction(reference.action, t),
@@ -255,32 +235,24 @@ Future<EmbedBuilder> generateCaseEmbed(Snowflake guildId, Snowflake logChannelId
     color: DiscordColor(generateCaseColour(ccase.action).value),
     description: await generateCaseLog(ccase, logChannelId, t, prefix),
     footer: EmbedFooterBuilder(text: t.moderation.logs.cases.footer(caseId: ccase.caseId)),
-    timestamp: ccase.createdAt.dateTime.toUtc(),
-    author: user != null
-        ? EmbedAuthorBuilder(
-            name: '${user.tag} (${user.id})',
-            iconUrl: user.avatar.url,
-          )
-        : null,
+    timestamp: ccase.createdAt.toUtc(),
+    author: user != null ? EmbedAuthorBuilder(name: '${user.tag} (${user.id})', iconUrl: user.avatar.url) : null,
   );
 
   if (user != null) {
-    embed.author = EmbedAuthorBuilder(
-      name: '${user.tag} (${user.id})',
-      iconUrl: user.avatar.url,
-    );
+    embed.author = EmbedAuthorBuilder(name: '${user.tag} (${user.id})', iconUrl: user.avatar.url);
   }
 
   return embed;
 }
 
 Colours generateCaseColour(CaseAction action) => switch (action) {
-      CaseAction.role || CaseAction.warn || CaseAction.timeout => Colours.yellow,
-      CaseAction.kick || CaseAction.softBan => Colours.orangeYellow,
-      CaseAction.ban => Colours.red,
-      CaseAction.unban => Colours.green,
-      _ => Colours.unknown,
-    };
+  CaseAction.role || CaseAction.warn || CaseAction.timeout => Colours.yellow,
+  CaseAction.kick || CaseAction.softBan => Colours.orangeYellow,
+  CaseAction.ban => Colours.red,
+  CaseAction.unban => Colours.green,
+  _ => Colours.unknown,
+};
 
 Future<EmbedBuilder> generateAppealEmbed(Appeal appeal, User user, Translations t, [User? mod]) async {
   final footerText = switch (appeal.status) {
@@ -291,20 +263,9 @@ Future<EmbedBuilder> generateAppealEmbed(Appeal appeal, User user, Translations 
 
   final embed = EmbedBuilder(
     title: t.moderation.logs.appeals.title,
-    description: t.moderation.logs.appeals.description(
-      user: user.mention,
-      caseId: appeal.refId!,
-      reason: appeal.reason!,
-      userID: user.id,
-      userTag: user.tag,
-    ),
-    author: EmbedAuthorBuilder(
-      name: user.tag,
-      iconUrl: user.avatar.url,
-    ),
-    footer: EmbedFooterBuilder(
-      text: footerText,
-    ),
+    description: t.moderation.logs.appeals.description(user: user.mention, caseId: appeal.refId!, reason: appeal.reason!, userID: user.id, userTag: user.tag),
+    author: EmbedAuthorBuilder(name: user.tag, iconUrl: user.avatar.url),
+    footer: EmbedFooterBuilder(text: footerText),
     color: DiscordColor(0x5865f2),
   );
 
@@ -316,34 +277,21 @@ Future<List<ActionRowBuilder>> generateAppealComponents(Appeal appeal, User user
     AppealStatus.accepted => [],
     AppealStatus.denied => [],
     _ => [
-        ActionRowBuilder(
-          components: [
-            ButtonBuilder(
-              style: ButtonStyle.primary,
-              label: t.moderation.buttons.appealApprove,
-              customId: 'appeal-accept-${appeal.refId}-${user.id}',
-            ),
-            ButtonBuilder(
-              style: ButtonStyle.danger,
-              label: t.moderation.buttons.appealReject,
-              customId: 'appeal-reject-${appeal.refId}-${user.id}',
-            ),
-          ],
-        ),
-      ],
+      ActionRowBuilder(
+        components: [
+          ButtonBuilder(style: ButtonStyle.primary, label: t.moderation.buttons.appealApprove, customId: 'appeal-accept-${appeal.refId}-${user.id}'),
+          ButtonBuilder(style: ButtonStyle.danger, label: t.moderation.buttons.appealReject, customId: 'appeal-reject-${appeal.refId}-${user.id}'),
+        ],
+      ),
+    ],
   };
 
   return components;
 }
 
 EmbedBuilder generateMemberLog(Member member, User user, Translations t, {bool isJoin = false}) {
-  var description = '${t.logs.guildLogs.memberLog.description(
-    user: user.mention,
-    userTag: user.tag,
-    userId: user.id,
-    createdAt: user.id.timestamp.format(TimestampStyle.shortDateTime),
-    createdSince: user.id.timestamp.format(TimestampStyle.relativeTime),
-  )}\n';
+  var description =
+      '${t.logs.guildLogs.memberLog.description(user: user.mention, userTag: user.tag, userId: user.id, createdAt: user.id.timestamp.format(TimestampStyle.shortDateTime), createdSince: user.id.timestamp.format(TimestampStyle.relativeTime))}\n';
 
   description += t.logs.guildLogs.memberLog.joinedAt(
     joinedAt: member.joinedAt.format(TimestampStyle.shortDateTime),
@@ -351,10 +299,8 @@ EmbedBuilder generateMemberLog(Member member, User user, Translations t, {bool i
   );
 
   if (!isJoin) {
-    description += '\n${t.logs.guildLogs.memberLog.leftAt(
-      leftAt: DateTime.now().format(TimestampStyle.shortDateTime),
-      leftSince: DateTime.now().format(TimestampStyle.relativeTime),
-    )}';
+    description +=
+        '\n${t.logs.guildLogs.memberLog.leftAt(leftAt: DateTime.now().format(TimestampStyle.shortDateTime), leftSince: DateTime.now().format(TimestampStyle.relativeTime))}';
   }
 
   return EmbedBuilder(

@@ -17,18 +17,19 @@
  */
 
 import 'package:get_it/get_it.dart';
-import 'package:nyxx/nyxx.dart';
+import 'package:nyxx/nyxx.dart' hide Connection;
 import 'package:nyxx_extensions/nyxx_extensions.dart';
+import 'package:postgres/postgres.dart';
 
-import '../../../database.dart' hide Guild;
 import '../../../kiwii.dart';
+import '../../models/case.dart';
+import '../../models/report.dart';
 import '../reports/create_report.dart';
 
 Future<Thread> acknowledgeReport(Guild guild, Report report, [Message? message, List<Message>? messages]) async {
-  final db = GetIt.I.get<AppDatabase>();
   final client = guild.manager.client as NyxxGateway;
 
-  final guildSettings = await db.getGuild(guild.id);
+  final guildSettings = await client.repositories.guilds.get(guild.id);
 
   final reportForum = client.channels.cache[report.channelId] as ForumChannel?;
   final reportStatusTags = guildSettings.reportStatusTags;
@@ -41,7 +42,7 @@ Future<Thread> acknowledgeReport(Guild guild, Report report, [Message? message, 
     }
   } catch (_) {}
 
-  final author = await client.users.get(report.authorId!);
+  final author = await client.users.get(report.authorId);
 
   final embeds = [await generateReportEmbed(author, report, guildSettings.modLogChannelId!, localMessage)];
 
@@ -54,17 +55,20 @@ Future<Thread> acknowledgeReport(Guild guild, Report report, [Message? message, 
   var reportPost = await client.channels.get(report.logPostId ?? Snowflake.zero).silentCatchAsNull() as Thread?;
 
   if (reportPost == null) {
+    // TODO:
     reportPost = await reportForum!.createForumThread(ForumThreadBuilder(
       name: 'Reported aaa',
       message: MessageBuilder(content: 'TODO'),
       appliedTags: [typeTag, statusTag],
     ));
 
-    await db.updateReport(
-      report.copyWith(
-        logPostId: Value(reportPost.id),
-      ),
-    );
+    // await db.updateReport(
+    //   report.copyWith(
+    //     logPostId: Value(reportPost.id),
+    //   ),
+    // );
+
+    // await 
 
     return reportPost;
   }
@@ -114,10 +118,10 @@ Future<EmbedBuilder> generateReportEmbed(User user, Report report, Snowflake mod
 }
 
 Future<String> generateReportLog(Report report, Snowflake modChannelId, [Message? message]) async {
-  final db = GetIt.I.get<AppDatabase>();
+  final connection = GetIt.I.get<Connection>();
 
   final parts = [
-    '**Reported User:** ${userMention(report.targetId!)} - `${report.targetTag}` (${report.targetId})',
+    '**Reported User:** ${userMention(report.targetId)} - `${report.targetTag}` (${report.targetId})',
     '**Reason:** ${codeBlock(cutText(report.reason!.trim(), 3000))}',
   ];
 
@@ -128,7 +132,7 @@ Future<String> generateReportLog(Report report, Snowflake modChannelId, [Message
   }
 
   if (report.refId != null) {
-    final references = await (db.cases.select()..where((e) => e.guildId.equalsValue(report.guildId) & e.caseId.equals(report.refId!))).getSingle();
+    final references = await connection.execute(r'SELECT * FROM cases WHERE guild_id = $1 AND case_id = $2', parameters: [report.guildId.value, report.refId!]).then((r) => Case.fromRow(r.single.toColumnMap()));
     parts.add('**Reference:** [Case #${references.caseId}](https://discord.com/channels/${report.guildId}/$modChannelId/${references.logMessageId})');
   }
 

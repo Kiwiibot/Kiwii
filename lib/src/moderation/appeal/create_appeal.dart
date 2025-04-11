@@ -16,53 +16,29 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import 'package:drift_postgres/drift_postgres.dart';
 import 'package:get_it/get_it.dart';
-import 'package:nyxx/nyxx.dart';
+import 'package:postgres/postgres.dart';
 
-import '../../../database.dart';
 import '../../models/appeal.dart';
 
-enum AppealStatus {
-  pending,
-  accepted,
-  denied,
-}
+enum AppealStatus { pending, accepted, denied }
 
 Future<Appeal> createAppeal(CreateAppeal appeal) async {
-  final db = GetIt.I.get<AppDatabase>();
-  final logger = GetIt.I.get<Logger>();
-
-  final nextAppealId = await nextAppeal(appeal.guildId);
+  final connection = GetIt.I.get<Connection>();
 
   try {
-    final newAppeal = Appeal(
-      appealId: nextAppealId,
-      targetId: appeal.targetId,
-      targetTag: appeal.targetTag,
-      guildId: appeal.guildId,
-      createdAt: PgDateTime(DateTime.now()),
-      status: AppealStatus.pending,
-      refId: appeal.refId,
-    );
+    final row = await connection
+        .execute(
+          r'INSERT INTO appeals (appeal_id, guild_id, status, target_id, target_tag, ref_id)'
+          r'VALUES (next_appeal($1), $1, $2, $3, $4, $5)'
+          'RETURNING *;',
+          parameters: [appeal.guildId.value, AppealStatus.pending.index, appeal.targetId.value, appeal.targetTag, appeal.refId],
+        )
+        .then((r) => r.single.toColumnMap());
 
-    await db.createAppeal(newAppeal);
-
-    return newAppeal;
+    return Appeal.fromRow(row);
   } catch (e) {
-    logger.warning('Failed to create appeal: $e');
+    print('Failed to create appeal: $e');
     rethrow;
   }
-}
-
-Future<int> nextAppeal(Snowflake guildId) async {
-  final db = GetIt.I.get<AppDatabase>();
-
-  final lastAppeal = await (db.appeals.select()
-        ..where((a) => a.guildId.equalsValue(guildId))
-        ..orderBy([(u) => OrderingTerm.desc(u.appealId)])
-        ..limit(1))
-      .getSingleOrNull();
-
-  return (lastAppeal?.appealId ?? 0) + 1;
 }

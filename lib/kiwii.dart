@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-library kiwii;
+library;
 
 export 'utils/extensions.dart';
 export 'utils/markov.dart';

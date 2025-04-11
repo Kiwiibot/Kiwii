@@ -11,5 +11,4 @@
   },
   "dart.lineLength": 160,
   "editor.hover.enabled": true,
-  "dart.sdkPath": "~/.asdf/installs/dart/3.3.1",
 }

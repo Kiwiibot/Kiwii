@@ -16,25 +16,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart';
 
-import '../database.dart';
+import '../kiwii.dart';
 import '../plugins/localization.dart';
 import '../src/moderation/utils/generate.dart';
 
 Future<void> onGuildMemberAdd(GuildMemberAddEvent event) async {
-  final db = GetIt.I.get<AppDatabase>();
-
   final guild = await event.guild.get();
   final member = event.member;
   final client = event.guild.manager.client;
 
-  final logwebhookId = (await db.getGuildOrNull(guild.id))?.guildLogWebhookId ?? const Snowflake(1250365441470103573);
+  final logwebhookId = (await client.repositories.guilds.getOrNull(guild.id))?.guildLogWebhookId ?? const Snowflake(1250365441470103573);
 
-  // if (logwebhookId == null) {
-  //   return;
-  // }
+  if (logwebhookId == null) {
+    // TODO:
+    return;
+  }
 
   final webhook = await client.webhooks.get(logwebhookId);
 
@@ -44,13 +42,12 @@ Future<void> onGuildMemberAdd(GuildMemberAddEvent event) async {
 }
 
 Future<void> onGuildMemberRemove(GuildMemberRemoveEvent event) async {
-  final db = GetIt.I.get<AppDatabase>();
 
   final guild = await event.guild.get();
   final member = event.removedMember!;
   final client = event.guild.manager.client;
 
-  final logwebhookId = (await db.getGuildOrNull(guild.id))?.guildLogWebhookId ?? const Snowflake(1250365441470103573);
+  final logwebhookId = (await client.repositories.guilds.getOrNull(guild.id))?.guildLogWebhookId ?? const Snowflake(1250365441470103573);
 
 
   final webhook = await client.webhooks.get(logwebhookId);

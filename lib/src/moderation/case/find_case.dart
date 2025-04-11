@@ -17,38 +17,43 @@
  */
 
 import 'package:get_it/get_it.dart';
-import 'package:nyxx/nyxx.dart';
+import 'package:nyxx/nyxx.dart' hide Connection;
+import 'package:postgres/postgres.dart';
 
-import '../../../database.dart';
+import '../../models/case.dart';
+
+// import '../../../database.dart';
 
 Future<List<Case>> listCases(String sentence, Snowflake guildId) {
-  final db = GetIt.I.get<AppDatabase>();
+  final connection = GetIt.I.get<Connection>();
 
   if (sentence.isEmpty) {
-    return (db.select(db.cases)
-          ..where(
-            (tbl) => tbl.guildId.equalsValue(guildId),
-          )
-          ..orderBy([
-            (u) => OrderingTerm(expression: u.createdAt),
-          ])
-          ..limit(25))
-        .get();
+    return connection
+        .execute(r'SELECT * FROM cases WHERE guild_id = $1 ORDER BY created_at LIMIT 25;', parameters: [guildId.value])
+        .then((r) => r.map((c) => Case.fromRow(c.toColumnMap())).toList());
   }
   int? caseId;
   if ((caseId = int.tryParse(sentence)) != null) {
-    return (db.select(db.cases)
-          ..where(
-            (tbl) => tbl.guildId.equalsValue(guildId) & tbl.caseId.equals(caseId!),
-          ))
-        .get();
+    return connection
+        .execute(r'SELECT * FROM cases WHERE guild_id = $1 AND case_id = $2;', parameters: [guildId.value, caseId])
+        .then((r) => r.map((c) => Case.fromRow(c.toColumnMap())).toList());
   }
 
-  return (db.select(db.cases)
-        ..where((tbl) =>
-            tbl.guildId.equalsValue(guildId) &
-            (tbl.targetId.equals(int.tryParse(sentence) ?? 0) | tbl.targetTag.like('%$sentence%') | tbl.reason.like('%$sentence%')))
-        ..orderBy([(tbl) => OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.desc)])
-        ..limit(25))
-      .get();
+  return connection
+      .execute(
+        r'''
+SELECT *
+FROM cases
+WHERE guild_id = $1
+  AND (
+    target_id = $2
+    OR target_tag LIKE '%' || $3 || '%'
+    OR reason LIKE '%' || $3 || '%'
+  )
+ORDER BY created_at DESC
+LIMIT 25;
+''',
+        parameters: [guildId.value, int.tryParse(sentence) ?? 0, sentence],
+      )
+      .then((r) => r.map((c) => Case.fromRow(c.toColumnMap())).toList());
 }

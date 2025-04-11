@@ -16,6 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import 'dart:io';
+
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
 import 'package:stdlibc/stdlibc.dart';
@@ -43,6 +45,7 @@ final infoCommand = ChatCommand(
         ..addField(name: 'Machine', value: unameInfo?.machine ?? nA, isInline: true)
         ..addField(name: 'Uptime', value: '${info?.uptime ?? nA} seconds', isInline: true)
         ..addField(name: 'Total RAM', value: formatBytes(info!.totalram), isInline: true)
+        ..addField(name: 'Current used RAM', value: formatBytes(ProcessInfo.currentRss))
         ..color = DiscordColor(0x00FF00);
 
       await ctx.respond(MessageBuilder(embeds: [embed]));

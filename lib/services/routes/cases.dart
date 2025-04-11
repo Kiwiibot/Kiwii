@@ -23,20 +23,18 @@ import 'package:nyxx/nyxx.dart' hide Request;
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
-import '../../database.dart';
 import '../../kiwii.dart';
 
 part 'cases.g.dart';
 
 class CasesService {
-  final db = GetIt.I.get<AppDatabase>();
   final client = GetIt.I.get<NyxxGateway>();
 
   @Route.get('/<gId>')
   Future<Response> listCases(Request request, String gId) async {
     final guildId = Snowflake.parse(gId);
 
-    final cases = await (db.customSelect(
+    final cases = await (client.repositories.connection.execute(
       '''
       SELECT target_id, target_tag, count(*) cases_count
       FROM cases
@@ -46,41 +44,34 @@ class CasesService {
       ORDER BY MAX(created_at) DESC
       limit 50;
       ''',
-      variables: [Variable.withBigInt(guildId.toBigInt())],
-    ).get());
+      parameters: [guildId.value],
+    ));
 
-    final count = await (db.customSelect(
+    final count = await (client.repositories.connection.execute(
       '''
       SELECT count(*) as total_cases
       FROM cases
       WHERE guild_id = \$1
       AND action not in (1, 8);
       ''',
-      variables: [Variable.withBigInt(guildId.toBigInt())],
-    ).getSingle());
+      parameters: [guildId.value],
+    )).then((r) => r.single.first as int);
 
     return Response.ok(
       jsonEncode({
-        'cases': cases
-            .map(
-              (e) => Map.fromEntries(e.data.entries.map(
-                (e) => e.value is int && (e.value > 0xffffffff || e.value < -0x80000000)
-                    ? MapEntry(
-                        e.key,
-                        e.value.toString(),
-                      )
-                    : MapEntry(
-                        e.key,
-                        e.value,
-                      ),
-              )),
-            )
-            .toList(),
-        'count': count.data['total_cases'],
+        'cases':
+            cases
+                .map(
+                  (e) => Map.fromEntries(
+                    e.toColumnMap().entries.map(
+                      (e) => e.value is int && (e.value > 0xffffffff || e.value < -0x80000000) ? MapEntry(e.key, e.value.toString()) : MapEntry(e.key, e.value),
+                    ),
+                  ),
+                )
+                .toList(),
+        'count': count,
       }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: {'Content-Type': 'application/json'},
     );
   }
 
@@ -91,18 +82,11 @@ class CasesService {
 
     final user = await client.users.fetch(userId);
 
-    final cases = await (db.cases.select()
-          ..where(
-            (tbl) => tbl.guildId.equalsValue(guildId) & tbl.targetId.equalsValue(userId) & tbl.action.isNotIn([1, 8]),
-          )
-          ..orderBy(
-            [
-              (tbl) => OrderingTerm.desc(tbl.createdAt),
-            ],
-          ))
-        .get();
+    final cases = await (client.repositories.connection.execute(
+      r'SELECT * FROM cases WHERE guild_id = $1 AND target_id = $2 AND action NOT IN (1, 8) ORDER BY created_at DESC;',
+    )).then((r) => r.map((e) => e.toColumnMap()));
 
-    final count = await (db.customSelect(
+    final count = await (client.repositories.connection.execute(
       '''
       SELECT count(*)
       FROM cases
@@ -110,25 +94,10 @@ class CasesService {
       AND target_id = \$2
       AND action not in (1, 8);
       ''',
-      variables: [Variable.withBigInt(guildId.toBigInt()), Variable.withBigInt(userId.toBigInt())],
-    ).getSingle());
+      parameters: [guildId.value, userId.value],
+    )).then((r) => r.single.single as int);
 
-    return Response.ok(
-      jsonEncode({
-        'cases': cases
-            .map((e) => e.toJson(
-                  serializer: JsonSerializerDb(
-                    serializeDateTimeValuesAsString: true,
-                  ),
-                ))
-            .toList(),
-        'count': count.data['count'],
-        'user': user.toJson(),
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    );
+    return Response.ok(jsonEncode({'cases': cases.toList(), 'count': count, 'user': user.toJson()}), headers: {'Content-Type': 'application/json'});
   }
 
   Router get router => _$CasesServiceRouter(this);

@@ -28,8 +28,8 @@ import 'package:nyxx_commands/nyxx_commands.dart';
 import 'package:nyxx_commands/src/converters/built_in/member.dart';
 import 'package:nyxx_commands/src/converters/built_in/snowflake.dart';
 
-import '../database.dart';
 import '../plugins/tag/tag.dart';
+import '../src/models/tag.dart';
 import 'node.dart';
 import 'utils.dart';
 

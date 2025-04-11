@@ -63,7 +63,7 @@ const permissions = {
   'MANAGE_NICKNAMES': Permissions.manageNicknames,
   'MANAGE_ROLES': Permissions.manageRoles,
   'MANAGE_WEBHOOKS': Permissions.manageWebhooks,
-  'MANAGE_GUILD_EXPRESSIONS': Permissions.manageEmojisAndStickers,
+  'MANAGE_GUILD_EXPRESSIONS': Permissions.manageGuildExpressions,
   'USE_APPLICATION_COMMANDS': Permissions.useApplicationCommands,
   'REQUEST_TO_SPEAK': Permissions.requestToSpeak,
   'MANAGE_THREADS': Permissions.manageThreads,
@@ -76,8 +76,8 @@ const permissions = {
   'MODERATE_MEMBERS': Permissions.moderateMembers,
   'USE_SOUNDBOARD': Permissions.useSoundboard,
   'VIEW_CREATOR_MONETIZATION_ANALYTICS': Permissions.viewCreatorMonetizationAnalytics,
-  // 'USE_EXTERNAL_SOUNDS': Permissions.useExternalSounds,
-  // 'SEND_VOICE_MESSAGES': Permissions.sendVoiceMessages,
+  'USE_EXTERNAL_SOUNDS': Permissions.useExternalSounds,
+  'SEND_VOICE_MESSAGES': Permissions.sendVoiceMessages,
 };
 
 final permissionsReversed = reverseMap(permissions);
@@ -102,7 +102,7 @@ String formatBytes(int bytes, [int decimals = 2]) {
 
   const k = 1024;
   final dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
 
   final i = (log(bytes) / log(k)).floor();
 
@@ -144,7 +144,7 @@ String? pickByWeights(Map<String, int> entries) {
   final chosen = Random().nextInt(sum);
 
   int accumulated = 0;
-  for (final (k, v) in entries.entries.$) {
+  for (final (k, v) in entries.$) {
     accumulated += v;
     if (accumulated > chosen) {
       return k;
@@ -238,6 +238,7 @@ List<String> translatePermissions(Flags<Permissions> permissions, Translations t
 String insertEmojiForCategory(String key, String category) => switch (key) {
       'moderation' => '🛡️ $category',
       'nsfw' => '🔞 $category',
+      'utility' => '️🗒️ $category',
       _ => category,
     };
 

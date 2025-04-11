@@ -20,9 +20,9 @@ import 'package:darq/darq.dart';
 import 'package:get_it/get_it.dart';
 import 'package:neat_cache/neat_cache.dart';
 import 'package:nyxx/nyxx.dart' hide Cache;
+import 'package:nyxx_extensions/nyxx_extensions.dart';
+import 'package:option/option.dart';
 
-import '../database.dart';
-import '../kiwii.dart';
 import '../src/models/appeal.dart';
 import '../src/models/case.dart';
 import '../src/moderation/appeal/create_appeal.dart';
@@ -30,16 +30,16 @@ import '../src/moderation/appeal/update_appeal.dart';
 import '../src/moderation/case/create_case.dart';
 import '../src/moderation/case/delete_case.dart';
 import '../src/moderation/replies/acknowledge_case.dart';
+import '../utils/extensions.dart';
 
 Future<void> onGuildBanAdd(GuildBanAddEvent event) async {
-  final db = GetIt.I.get<AppDatabase>();
   final cache = GetIt.I.get<Cache<String>>();
   final logger = GetIt.I.get<Logger>();
 
   try {
     final user = event.user;
 
-    final guildSettings = await db.getGuild(event.guild.id);
+    final guildSettings = await event.gateway.client.repositories.guilds.get(event.guild.id);
     final modLogChannelId = guildSettings.modLogChannelId;
 
     if (modLogChannelId == null) {
@@ -83,14 +83,13 @@ Future<void> onGuildBanAdd(GuildBanAddEvent event) async {
 }
 
 Future<void> onGuildBanRemove(GuildBanRemoveEvent event) async {
-  final db = GetIt.I.get<AppDatabase>();
   final cache = GetIt.I.get<Cache<String>>();
   final logger = GetIt.I.get<Logger>();
 
   try {
     final user = event.user;
 
-    final guildSettings = await db.getGuild(event.guild.id);
+    final guildSettings = await event.gateway.client.repositories.guilds.get(event.guild.id);
     final modLogChannelId = guildSettings.modLogChannelId;
 
     if (modLogChannelId == null) {
@@ -130,16 +129,16 @@ Future<void> onGuildBanRemove(GuildBanRemoveEvent event) async {
 
     await acknowledgeCase(await event.guild.get(), ccase, '/', await logs.user?.get());
 
-    final appeal = await db.pendingAppeal(user.id);
+    final appeal = await event.gateway.client.repositories.appeals.pending(user.id);
 
     if (appeal != null) {
       await updateAppeal(
         UpdateAppeal(
           appealId: appeal.appealId,
           guildId: event.guild.id,
-          status: AppealStatus.denied,
-          modId: logs.userId,
-          modTag: (await logs.user?.get())?.tag,
+          status: Some(AppealStatus.denied),
+          modId: Some(logs.userId),
+          modTag: Some((await logs.user?.get())?.tag),
         ),
       );
     }

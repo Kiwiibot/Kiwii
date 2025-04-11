@@ -17,30 +17,41 @@
  */
 
 import 'package:get_it/get_it.dart';
-import 'package:nyxx/nyxx.dart';
+import 'package:postgres/postgres.dart';
 
-import '../../../database.dart';
 import '../../models/appeal.dart';
+import '../../../utils/sql.dart';
 
 Future<Appeal> updateAppeal(UpdateAppeal appeal) async {
-  final db = GetIt.I.get<AppDatabase>();
-  final logger = GetIt.I.get<Logger>();
+  final connection = GetIt.I.get<Connection>();
 
   try {
-    final currentAppeal = await db.getAppeal(appeal.appealId, appeal.guildId);
+    final entries = {
+      'status': appeal.status.map((s) => s?.index),
+      'reason': appeal.reason,
+      'ref_id': appeal.refId,
+      'mod_id': appeal.modId.map((id) => id?.value),
+      'mod_tag': appeal.modTag,
+    };
 
-    final updatedAppeal = currentAppeal.copyWith(
-      reason: Value(appeal.reason),
-      modId: Value(appeal.modId),
-      modTag: Value(appeal.modTag),
-      status: Value(appeal.status),
-    );
+    final buffer = StringBuffer('UPDATE appeals SET ');
 
-    await db.updateAppeal(updatedAppeal);
+    var (latestIndex, sets, args) = sql(entries);
+
+    buffer.write(sets);
+    buffer.write(' ');
+
+    buffer.write('WHERE guild_id = \$${++latestIndex} AND appeal_id = \$${++latestIndex}');
+
+    buffer.write('RETURNING *;');
+
+    final updatedAppeal = connection
+        .execute(buffer.toString(), parameters: [...args, appeal.guildId.value, appeal.appealId])
+        .then((r) => Appeal.fromRow(r.single.toColumnMap()));
 
     return updatedAppeal;
   } catch (e) {
-    logger.warning('Failed to update appeal: $e');
+    print('Failed to update appeal: $e');
     rethrow;
   }
 }

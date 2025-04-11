@@ -23,7 +23,6 @@ import 'package:nyxx/nyxx.dart' hide Request;
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
-import '../../database.dart';
 import '../../kiwii.dart';
 import '../../src/moderation/case/create_case.dart';
 
@@ -31,8 +30,6 @@ part 'users.g.dart';
 
 class UserService {
   final NyxxRest client = GetIt.I.get<NyxxGateway>();
-  final db = GetIt.I.get<AppDatabase>();
-
   @Route.get('/<guildId>/<userId>')
   Future<Response> getUser(Request request, String guildId, String userId) async {
     final uId = Snowflake.parse(userId);
@@ -50,38 +47,24 @@ class UserService {
     if (isBanned) {
       final user = await client.users.fetch(uId);
 
-      final ccase = await (db.select(db.cases)
-            ..where((tbl) => tbl.guildId.equalsValue(gId) & tbl.targetId.equalsValue(uId) & tbl.action.equalsValue(CaseAction.ban))
-            ..orderBy(
-              [
-                (u) => OrderingTerm.desc(u.createdAt),
-              ],
-            ))
-          .getSingle();
+      final ccase = await (client.repositories.connection.execute(
+        r'SELECT * FROM cases WHERE guild_id = $1 AND target_id = $2 AND action = $3 ORDER BY created_at DESC limit 1;',
+        parameters: [gId.value, uId.value, CaseAction.ban.index],
+      )).then((r) => r.single.toColumnMap());
 
-      final mod = await client.users.fetch(ccase.modId!);
+      final mod = await client.users.fetch(Snowflake.parse(ccase['mod_id']));
 
       final payload = {
         'user': user.toJson(),
         'moderator': mod.toJson(),
         'banned': isBanned,
-        'case': ccase.toJson(serializer: JsonSerializerDb(serializeDateTimeValuesAsString: true)),
+        'case': ccase,
       };
 
-      return Response.ok(
-        jsonEncode(payload),
-        headers: {'Content-Type': 'application/json'},
-      );
+      return Response.ok(jsonEncode(payload), headers: {'Content-Type': 'application/json'});
     }
 
-    return Response.ok(
-      jsonEncode({
-        'banned': isBanned,
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    );
+    return Response.ok(jsonEncode({'banned': isBanned}), headers: {'Content-Type': 'application/json'});
   }
 
   Router get router => _$UserServiceRouter(this);

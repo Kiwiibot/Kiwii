@@ -44,3 +44,21 @@ logs/*
 kiwii.sqlite
 kiwii.*.sqlite
 *.log
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
+
+api/*
+
+# Misc files
+a.*
+*.mjs
+services.json
+services.md
+revisions.json

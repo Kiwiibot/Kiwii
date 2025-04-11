@@ -17,46 +17,29 @@
  */
 
 import 'package:get_it/get_it.dart';
+import 'package:nyxx/nyxx.dart';
 
-import '../../../database.dart';
+import '../../../utils/extensions.dart';
 import '../../models/case.dart';
+import '../../../utils/sql.dart';
 
 Future<Case> updateCase(UpdateCase case_) async {
-  final db = GetIt.I.get<AppDatabase>();
+  final client = GetIt.I.get<NyxxGateway>();
 
-  final currentCase = await db.getCase(case_.caseId!, case_.guildId!);
+  final logger = Logger('Kiwii.Repositories.CaseRepository');
 
-  final updates = currentCase.copyWith(
-    reason: Value(case_.reason),
-    refId: Value(case_.refId),
-    actionExpiration: Value(case_.actionExpiration),
-    appealRefId: Value(case_.appealRefId),
-    contextMessageId: Value(case_.contextMessageId),
-    reportRefId: Value(case_.reportRefId),
-  );
+  var (index, query, args) = sql(case_.toRow());
 
-  return db.updateCase(updates);
-}
+  final buffer = StringBuffer('UPDATE cases SET $query');
+  buffer.write(' WHERE guild_id = \$${++index} AND case_id = \$${++index}');
 
-Future<List<Case>> batchUpdateCase(List<UpdateCase> cases) async {
-  final db = GetIt.I.get<AppDatabase>();
+  buffer.write(' RETURNING *;');
 
-  final updatedCases = <Case>[];
+  final realArgs = [...args, case_.guildId.value, case_.caseId];
 
-  for (final case_ in cases) {
-    final currentCase = await db.getCase(case_.caseId!, case_.guildId!);
+  logger.fine('Executing "$buffer" with $realArgs');
 
-    final updates = currentCase.copyWith(
-      reason: Value(case_.reason),
-      refId: Value(case_.refId),
-      actionExpiration: Value(case_.actionExpiration),
-      appealRefId: Value(case_.appealRefId),
-      contextMessageId: Value(case_.contextMessageId),
-      reportRefId: Value(case_.reportRefId),
-    );
+  final r = await client.repositories.connection.execute(buffer.toString(), parameters: realArgs).then((r) => r.single);
 
-    updatedCases.add(updates);
-  }
-
-  return db.insertOrUpdateCases(updatedCases);
+  return Case.fromRow(r.toColumnMap());
 }

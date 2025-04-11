@@ -37,7 +37,6 @@ final caseCommand = ChatCommand(
       @Autocomplete(caseAutoCompleteWithHistory) String phrase, [
       bool hideReply = false,
     ]) async {
-      final db = ctx.client.db;
       if (ctx is InteractionChatContext) {
         await ctx.acknowledge(level: hideReply ? ResponseLevel.hint : null);
       }
@@ -51,12 +50,13 @@ final caseCommand = ChatCommand(
           return;
         }
 
-        final ccase = await db.getCase(n, ctx.guild!.id);
+        final ccase = await ctx.client.repositories.cases.get(n, ctx.guild!.id);
 
-        final guildSettings = await db.getGuild(ctx.guild!.id);
+        final guildSettings = await ctx.client.repositories.guilds.get(ctx.guild!.id);
 
         if (guildSettings.modLogChannelId == null) {
           await ctx.send(ctx.guild.t.general.errors.noModChannel);
+          return;
         }
 
         final modChannel = await ctx.client.channels.get(guildSettings.modLogChannelId!);

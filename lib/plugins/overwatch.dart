@@ -18,19 +18,16 @@
 
 import 'dart:async';
 
-import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
 
-import '../database.dart' hide Guild;
 import '../kiwii.dart';
+import '../src/models/guild.dart' hide Guild;
 import 'base.dart';
 
 final class OverwatchPlugin extends BasePlugin {
   @override
-  final String name = 'overwatch';
-
-  final AppDatabase db = GetIt.I.get<AppDatabase>();
+  final String name = 'Overwatch';
 
   @override
   String helpText(NyxxGateway self) => '''
@@ -45,29 +42,26 @@ final class OverwatchPlugin extends BasePlugin {
     final guildCheck = overwatchCommand.checks.whereType<GuildCheck>().singleOrNull;
 
     if (guildCheck == null) {
-      (overwatchCommand.checks as List<AbstractCheck>).add(GuildCheck.anyId([guild.id]));
+      overwatchCommand.check(GuildCheck.anyId([guild.id]));
     } else {
-      (guildCheck.guildIds as List<Snowflake>).add(guild.id);
+      (guildCheck.guildIds as List<Snowflake?>).add(guild.id);
     }
 
-    commands.addCommandOnTheFly(overwatchCommand);
+    // Block until the client is ready to only post the command(s) once.
+    await self.onReady.first;
 
-    // Add the module to the guild's enabled modules
-    final guildDb = await db.getGuild(guild.id);
-    guildDb.enabledModules.add(name);
-    await db.update(db.guildTable).replace(guildDb);
-    guild.modules[name] = this;
+    commands.addCommandOnTheFly(overwatchCommand, guildId: guild.id);
   }
 
   @override
   FutureOr<void> onUnload(NyxxGateway self, {required Guild guild}) async {
     final commands = self.options.plugins.whereType<CommandsPlugin>().single;
 
-    commands.removeCommandOnTheFly(overwatchCommand);
+    commands.removeCommandOnTheFly(overwatchCommand, guildId: guild.id);
 
-    final guildDb = await db.getGuild(guild.id);
+    final guildDb = await self.repositories.guilds.get(guild.id);
     guildDb.enabledModules.remove(name);
-    await db.update(db.guildTable).replace(guildDb);
+    await self.repositories.guilds.edit(EditableGuild(guildId: guild.id, enabledModules: guildDb.enabledModules));
     guild.modules.remove(name);
   }
 }

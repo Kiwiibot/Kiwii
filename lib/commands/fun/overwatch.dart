@@ -77,13 +77,13 @@ final overwatchCommand = ChatGroup(
 
               // ignore: strict_raw_type
               void formatMap(Map source) {
-                for (var (k, v) in source.entries.$) {
+                for (var (k, v) in source.$) {
                   if (k == 'time_played') {
                     v = prettyDuration(Duration(seconds: v), t.$meta.locale);
                   }
 
                   if (v is Map) {
-                    v = [for (final (key, value) in v.entries.$) '${formatKey(key, t)}: **$value**'].join('\n');
+                    v = [for (final (key, value) in v.$) '${formatKey(key, t)}: **$value**'].join('\n');
                   }
 
                   embed.addField(
@@ -97,7 +97,7 @@ final overwatchCommand = ChatGroup(
               void getMostPlayedHero(Map<String, StatsRecap> source) {
                 String name = t.general.nonAvailable;
                 Duration timePlayed = Duration.zero;
-                for (final (k, v) in source.entries.$) {
+                for (final (k, v) in source.$) {
                   if (v.timePlayed > timePlayed) {
                     name = k;
                     timePlayed = v.timePlayed;
@@ -184,7 +184,7 @@ final overwatchCommand = ChatGroup(
                 embed.addField(
                   name: t.overwatch.hitpoints,
                   value: [
-                    for (final (k, v) in hero.hitpoints!.entries.$) '${formatKey(k, t)}: **$v**',
+                    for (final (k, v) in hero.hitpoints!.$) '${formatKey(k, t)}: **$v**',
                   ].join('\n'),
                   isInline: true,
                 );
@@ -417,6 +417,7 @@ Future<Iterable<CommandOptionChoiceBuilder<dynamic>>> heroesAutocomplete(Autocom
   final heroes = await client.heroes.heroes(locale: loc);
   final current = ctx.currentValue.toLowerCase();
   final filtered = heroes.where((element) => element.name.toLowerCase().contains(current) || element.key.name.contains(current)).take(25).toList();
+  filtered.sort((a, b) => a.name.compareTo(b.name));
   return filtered.map((e) => CommandOptionChoiceBuilder(name: e.name, value: e.name));
 }
 

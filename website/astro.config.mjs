@@ -2,10 +2,10 @@ import { defineConfig } from "astro/config";
 import node from "@astrojs/node";
 import { resolve } from "path";
 import tailwind from "@astrojs/tailwind";
-import solidJs from "@astrojs/solid-js";
-import react from "@astrojs/react";
+// import solidJs from "@astrojs/solid-js";
+// import react from "@astrojs/react";
 
-import lit from "@astrojs/lit";
+// import lit from "@astrojs/lit";
 
 // https://astro.build/config
 export default defineConfig({
@@ -29,15 +29,6 @@ export default defineConfig({
     },
   },
   integrations: [
-    tailwind(),
-    solidJs({
-      include: "src/solid/**",
-    }),
-    react({
-      include: "src/react/**",
-    }),
-    lit({
-      include: "src/lit/**",
-    }),
+    tailwind()
   ],
 });

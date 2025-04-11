@@ -21,16 +21,13 @@ import 'package:nyxx_commands/nyxx_commands.dart';
 
 import '../../kiwii.dart';
 
+/// Allows the executor to run a command as another user.
 final runAsCommand = ChatCommand(
-  'runas',
+  'run-as',
   'Run a command as another user',
   id(
-    'runas',
+    'run-as',
     (MessageChatContext ctx, User who, ChatCommand command) async {
-      if (command.options.type == CommandType.slashOnly) {
-        return ctx.send('Cannot run slash commands with runas');
-      }
-
       final member = await ctx.guild?.members.get(who.id);
       final rawArguments = ctx.rawArguments.split(' ').skip(2 + command.fullName.split(' ').length).join(' ');
       final newCtx = MessageChatContext(

@@ -24,61 +24,32 @@ import 'package:neat_cache/neat_cache.dart';
 // ignore: implementation_imports
 import 'package:neat_cache/src/providers/inmemory.dart';
 
+import '../utils/extensions.dart';
+
+// import '../utils/extensions.dart';
+
 final attachmentsCache = Cache(InMemoryCacheProvider<Uint8List>(512)).withTTL(const Duration(minutes: 30));
 
 Future<void> onMessageCreate(MessageCreateEvent event) async {
   final message = event.message;
 
   if (message.content == 'emit') {
-    final member = await event.guild!.get().then(
-          (g) => g.members.get(message.author.id),
-        );
-    final user = await event.message.manager.client.users.get(message.author.id);
-    final mockMember = Member(
-      id: member.id,
-      avatarDecorationData: null,
-      avatarDecorationHash: null,
-      avatarHash: null,
-      bannerHash: null,
-      communicationDisabledUntil: null,
-      flags: member.flags,
-      isDeaf: null,
-      isMute: null,
-      isPending: false,
-      joinedAt: member.joinedAt,
-      nick: member.nick,
-      manager: member.manager,
-      permissions: member.permissions,
-      premiumSince: member.premiumSince,
-      roleIds: member.roleIds,
-      user: User(
-        id: Snowflake.fromDateTime(DateTime.now().subtract(Duration(days: 14))),
-        accentColor: null,
-        avatarDecorationData: null,
-        avatarDecorationHash: null,
-        avatarHash: user.avatarHash,
-        bannerHash: user.bannerHash,
-        discriminator: user.discriminator,
-        flags: user.flags,
-        globalName: user.globalName,
-        hasMfaEnabled: false,
-        isBot: false,
-        isSystem: false,
-        locale: user.locale,
-        manager: user.manager,
-        nitroType: user.nitroType,
-        username: user.username,
-        publicFlags: user.publicFlags,
-      ),
-    );
+    final member = await event.guild!.get().then((g) => g.members.get(message.author.id));
+    // final user = await event.message.manager.client.users.get(message.author.id);
+    // final mockMember = member.copyWith(user: user.copyWith(id: Snowflake.fromDateTime(DateTime.now().subtract(Duration(days: 14)))));
 
+    // event.gateway.messagesController.add(
+    //   EventReceived(
+    //     event: GuildMemberRemoveEvent(gateway: event.gateway, guildId: event.guildId!, removedMember: member, user: user)..isIntentional = true,
+    //   ),
+    // );
     event.gateway.messagesController.add(
       EventReceived(
-        event: GuildMemberRemoveEvent(
+        event: GuildMemberUpdateEvent(
           gateway: event.gateway,
+          oldMember: member,
+          member: member.copyWith(communicationDisabledUntil: DateTime.now().add(const Duration(seconds: 60))),
           guildId: event.guildId!,
-          removedMember: member,
-          user: user
         )..isIntentional = true,
       ),
     );

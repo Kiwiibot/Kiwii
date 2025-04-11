@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
 
 import '../../utils/extensions.dart';
@@ -26,8 +25,8 @@ final sourceCommand = ChatCommand(
   'Get the source of the specified command',
   id(
     'source',
-    (ChatContext ctx, [@Autocomplete(autocompleteCallback) ChatCommand? command]) {
-      final sourceUrl = 'https://github.com/Rapougnac/Kiwii', branch = 'mistress';
+    (ChatContext ctx, [ChatCommand? command]) {
+      final sourceUrl = 'https://github.com/Kiwiibot/Kiwii', branch = 'mistress';
       if (command == null) {
         return ctx.send(sourceUrl);
       }
@@ -41,9 +40,3 @@ final sourceCommand = ChatCommand(
     },
   ),
 );
-
-Iterable<CommandOptionChoiceBuilder<dynamic>> autocompleteCallback(AutocompleteContext ctx) {
-  final current = ctx.currentValue;
-  final filtered = ctx.commands.walkCommands().where((element) => element.name.contains(current)).toList();
-  return filtered.map((e) => CommandOptionChoiceBuilder(name: e is ChatCommand ? e.fullName : e.name, value: e is ChatCommand ? e.fullName : e.name));
-}

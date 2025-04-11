@@ -51,7 +51,7 @@ if (!accessToken && !refreshToken) {
     {
       user && (
         <p>
-          Welcome back, <strong>{user.global_name}</strong>!
+          Welcome back, <strong>{user.global_name ?? user.username}</strong>!
         </p>
       )
     }

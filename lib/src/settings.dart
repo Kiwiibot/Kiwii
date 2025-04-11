@@ -26,7 +26,7 @@ String? getEnv(String key) => Platform.environment[key] ?? dotenv[key] ?? (!bool
 
 const version = '0.1.0';
 
-String fromEnvironment(String key, [String? defaultValue]) => getEnv(key) ?? defaultValue ?? (throw Exception('Missing `$key` environment variable'));
+String fromEnvironment(String key, [String? defaultValue]) => fromEnvironmentNullable(key, defaultValue) ?? (throw Exception('Missing `$key` environment variable'));
 
 String? fromEnvironmentNullable(String key, [String? defaultValue]) => getEnv(key) ?? defaultValue;
 

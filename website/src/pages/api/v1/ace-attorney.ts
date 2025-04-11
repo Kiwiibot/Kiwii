@@ -53,6 +53,9 @@ export const GET: APIRoute = async (context) => {
   const canvas = createCanvas(base.width, base.height);
   const ctx = canvas.getContext("2d");
   ctx.drawImage(base, 0, 0);
+  const font = fonts["Ace-Attorney.ttf"];
+  console.log(font);
+  console.log(font?.toCanvasString(14));
   ctx.font = fonts["Ace-Attorney.ttf"]?.toCanvasString(14) ?? "14px sans-serif";
   ctx.fillStyle = "white";
   ctx.textBaseline = "top";

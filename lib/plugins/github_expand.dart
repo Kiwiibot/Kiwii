@@ -16,30 +16,32 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import 'package:get_it/get_it.dart';
+import 'dart:async';
+
 import 'package:http/http.dart' as http;
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
 
-import '../database.dart';
 import '../utils/regexes.dart';
+import 'base.dart';
 
-class GithubExpand extends NyxxPlugin<NyxxGateway> {
+final indentationRegex = RegExp(r'\s+');
+
+final class GithubExpand extends BasePlugin {
   @override
   String get name => 'GithubExpand';
 
+  late final Map<Snowflake, StreamSubscription<MessageCreateEvent>> _subscriptions = {};
+
   @override
-  Future<void> afterConnect(client) async {
-    final db = GetIt.I.get<AppDatabase>();
-    client.on<MessageCreateEvent>((event) async {
+  String helpText(self) => '''
+A module to display lines when a github link has been detected.
+''';
+
+  @override
+  Future<void> onLoad(self, {required guild}) async {
+    _subscriptions[guild.id] = self.on<MessageCreateEvent>((event) async {
       final message = event.message;
-      final guild = event.guild;
-
-      final guildData = guild == null ? null : await db.getGuildOrNull(guild.id);
-
-      if (guildData case final data? when !data.enabledModules.contains('github_expand')) {
-        return;
-      }
 
       if (!githubLink.hasMatch(message.content)) {
         return;
@@ -63,7 +65,14 @@ class GithubExpand extends NyxxPlugin<NyxxGateway> {
           continue;
         }
 
-        final content = response.body.split('\n').sublist(start - 1, end ?? start).join('\n');
+        var res = response.body.split('\n').sublist(start - 1, end ?? start);
+        if (indentationRegex.hasMatch(res.first)) {
+          final match = indentationRegex.firstMatch(res.first);
+          final indentation = match!.group(0)!;
+          res = res.map((s) => s.replaceFirst(indentation, '')).toList();
+        }
+
+        final content = res.join('\n');
 
         codeblocks.add((content: content, language: language, name: name));
       }
@@ -92,5 +101,10 @@ class GithubExpand extends NyxxPlugin<NyxxGateway> {
         );
       }
     });
+  }
+
+  @override
+  Future<void> onUnload(self, {required guild}) async {
+    await _subscriptions[guild.id]?.cancel();
   }
 }

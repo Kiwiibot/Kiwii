@@ -66,106 +66,96 @@ const unproxiedMessages = <Snowflake>{};
 class ChatPlugin extends NyxxPlugin<NyxxGateway> {
   @override
   Future<void> afterConnect(client) async {
-    client.on<MessageCreateEvent>(
-      (event) async {
-        final openai = GetIt.I.get<OpenAIClient>();
-        final message = event.message;
-        if (message.author case User(isBot: true)) {
-          if (message.webhookId == null) {
-            return;
-          }
-        }
-
-        if ((await message.channel.get()).type != ChannelType.guildText) {
+    client.on<MessageCreateEvent>((event) async {
+      final openai = GetIt.I.get<OpenAIClient>();
+      final message = event.message;
+      if (message.author case User(isBot: true)) {
+        if (message.webhookId == null) {
           return;
         }
+      }
 
-        if (!settings.chatbotChannels.contains(message.channelId)) {
-          return;
+      if ((await message.channel.get()).type != ChannelType.guildText) {
+        return;
+      }
+
+      if (!settings.chatbotChannels.contains(message.channelId)) {
+        return;
+      }
+
+      if (message.content.startsWith(escapeChar)) {
+        return;
+      }
+
+      await message.channel.triggerTyping();
+      final typingTimer = Timer(const Duration(seconds: 10), () async => await message.channel.triggerTyping());
+
+      try {
+        final msgs =
+            (await message.channel.messages.fetchMany(
+              after: Snowflake.fromDateTime(DateTime.now().subtract(const Duration(minutes: 2, seconds: 30))),
+              before: message.id,
+            )).reversed.toList();
+
+        if (msgs.length >= 2 &&
+            msgs.last.webhookId != null &&
+            msgs[msgs.length - 2].webhookId != null &&
+            msgs[msgs.length - 2].content.contains(msgs.last.content)) {
+          unproxiedMessages.add(msgs[msgs.length - 2].id);
+          msgs.removeAt(msgs.length - 2);
         }
 
-        if (message.content.startsWith(escapeChar)) {
-          return;
+        final context = await Future.wait(
+          msgs.where((k) => !k.content.startsWith(escapeChar)).map<Future<ChatCompletionMessage>>((msg) async {
+            if (msg.author.id == msg.manager.client.user.id) {
+              return ChatCompletionMessage.assistant(content: message.content);
+            }
+
+            final member = await event.guild!.members.get(msg.author.id);
+
+            // final roles = await Future.wait(member.roles.map((role) => role.get().then((r) => r.name)));
+
+            return ChatCompletionMessage.user(content: ChatCompletionUserMessageContent.string('${member.nick ?? msg.author.username}: ${msg.content}'));
+          }),
+        );
+
+        if (unproxiedMessages.contains(message.id)) {
+          unproxiedMessages.remove(message.id);
+          throw UnproxiedMessageError();
         }
 
-        await message.channel.triggerTyping();
-        final typingTimer = Timer(const Duration(seconds: 10), () async => await message.channel.triggerTyping());
+        final response = await openai.createChatCompletion(
+          request: CreateChatCompletionRequest(
+            model: ChatCompletionModel.modelId('asha'),
+            messages: [ChatCompletionMessage.system(content: systemMessage), ...context],
+          ),
+        );
 
-        try {
-          final msgs = (await message.channel.messages.fetchMany(
-            after: Snowflake.fromDateTime(
-              DateTime.now().subtract(const Duration(minutes: 2, seconds: 30)),
-            ),
-            before: message.id,
-          ))
-              .reversed
-              .toList();
+        final content = response.choices.first.message.content;
 
-          if (msgs.length >= 2 &&
-              msgs.last.webhookId != null &&
-              msgs[msgs.length - 2].webhookId != null &&
-              msgs[msgs.length - 2].content.contains(msgs.last.content)) {
-            unproxiedMessages.add(msgs[msgs.length - 2].id);
-            msgs.removeAt(msgs.length - 2);
-          }
-
-          final context = await Future.wait(
-            msgs.where((k) => !k.content.startsWith(escapeChar)).map<Future<ChatCompletionMessage>>(
-              (msg) async {
-                if (msg.author.id == msg.manager.client.user.id) {
-                  return ChatCompletionMessage.assistant(
-                    content: message.content,
-                  );
-                }
-
-                final member = await event.guild!.members.get(msg.author.id);
-
-                // final roles = await Future.wait(member.roles.map((role) => role.get().then((r) => r.name)));
-
-                return ChatCompletionMessage.user(
-                  content: ChatCompletionUserMessageContent.string('${member.nick ?? msg.author.username}: ${msg.content}'),
-                );
-              },
-            ),
-          );
-
-          if (unproxiedMessages.contains(message.id)) {
-            unproxiedMessages.remove(message.id);
-            throw UnproxiedMessageError();
-          }
-
-          final response = await openai.createChatCompletion(
-            request: CreateChatCompletionRequest(
-              model: ChatCompletionModel.modelId('asha'),
-              messages: [
-                ChatCompletionMessage.system(
-                  content: systemMessage,
-                ),
-                ...context,
-              ],
+        if (content != null && content.isNotEmpty) {
+          await message.channel.sendMessage(
+            MessageBuilder(
+              content: content,
+              referencedMessage: MessageReferenceBuilder.reply(messageId: message.id),
+              allowedMentions: AllowedMentions(parse: []),
             ),
           );
-
-          final content = response.choices.first.message.content;
-
-          if (content != null && content.isNotEmpty) {
-            await message.channel.sendMessage(MessageBuilder(content: content, replyId: message.id, allowedMentions: AllowedMentions(parse: [])));
-          }
-
-          typingTimer.cancel();
-        } on HttpResponseError catch (e) {
-          typingTimer.cancel();
-
-          if (e.errorCode == 50035) {
-            logger.warning('Unable to reply to message, seems to have been deleted');
-          }
-        } on UnproxiedMessageError {
-          logger.shout('Not replying to ${message.id} because it has been found to be a duplicate');
-        } catch (_) {
-          rethrow;
         }
-      },
-    );
+
+        typingTimer.cancel();
+      } on HttpResponseError catch (e) {
+        typingTimer.cancel();
+
+        if (e.errorCode == 50035) {
+          logger.warning('Unable to reply to message, seems to have been deleted');
+        }
+      } on UnproxiedMessageError {
+        logger.shout('Not replying to ${message.id} because it has been found to be a duplicate');
+      } catch (_) {
+        rethrow;
+      }
+    });
   }
 
   // @override

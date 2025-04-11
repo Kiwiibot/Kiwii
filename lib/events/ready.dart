@@ -20,10 +20,9 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:nyxx/nyxx.dart';
-import 'package:shelf/shelf_io.dart' as io;
+import 'package:nyxx_extensions/nyxx_extensions.dart';
 
-import '../kiwii.dart';
-import '../services/api.dart';
+
 import '../utils/jobs.dart';
 import '../src/settings.dart' as settings;
 
@@ -52,8 +51,4 @@ Future<void> readyEvent(ReadyEvent event) async {
   });
 
   client.logger.info('Connected as ${(await client.user.get()).tag}');
-
-  final apiServer = await api();
-
-  await io.serve(apiServer, 'localhost', 8080);
 }

@@ -4,6 +4,8 @@ analyzer:
   exclude:
     - lib/generated/**
     - "*.g.dart"
+    - "lib/**/*.g.dart"
+    - "lib/translations.g.dart"
   language:
     strict-raw-types: true
     strict-casts: false
@@ -16,7 +18,7 @@ linter:
     - prefer_relative_imports
 
 custom_lint:
-  debug: false
+  debug: true
   rules:
     - mio_header:
       file: ./header.txt
