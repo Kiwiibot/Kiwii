@@ -1,0 +1,2 @@
+# Make github recognize yaml files as programming language
+*.{yml,yaml} text linguist-detectable

@@ -1,0 +1,34 @@
+{
+  "Create a new command": {
+    "prefix": "kiwii",
+    "body": [
+      "import 'package:nyxx/nyxx.dart';",
+      "import 'package:nyxx_commands/nyxx_commands.dart';",
+      "import '../../kiwii.dart';",
+      "",
+      "final _$1CommandPermissions = Permissions.sendMessages | Permissions.viewChannel | $6;",
+      "final _$1CommandClientPermissions = Permissions.sendMessages | Permissions.viewChannel | $7;",
+      "",
+      "final $1Command = ChatCommand(",
+      "  '$1',",
+      "  '$2',",
+      "  id('$1', (ChatContext ctx, ${3:Type} ${4:arg}) async {",
+      "    await ctx.respond(MessageBuilder(content: '$5'));",
+      "  }),",
+      "  checks: [",
+      "    BasePermissionsCheck(_$1CommandPermissions),",
+      "    BaseSelfPermissionsCheck(_$1CommandClientPermissions),",
+      "  ],",
+      "  options: const KiwiiCommandOptions(",
+      "    permissions: _$1CommandPermissions,",
+      "    clientPermissions: _$1CommandClientPermissions,",
+      "    usage: '$8',",
+      "    examples: [",
+      "      (command: '$9', description: '$10')",
+      "    ],",
+      "  ),",
+      ");",
+      ""
+    ]
+  }
+}

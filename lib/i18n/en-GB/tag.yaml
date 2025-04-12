@@ -1,0 +1,15 @@
+alreadyExists: with that name already exists!
+tag: A tag @:tag.alreadyExists
+command: A command @:tag.alreadyExists
+create_error: An error occurred while creating the tag.\n$message.
+created: Tag `$tag` created successfully!
+delete_error: An error occurred while deleting the tag.\n$message.
+deleted: Tag `$tag` deleted successfully.
+edit_error: An error occurred while editing the tag.\n$message.
+edited: Tag `$tag` edited successfully.
+no_tags_found: No tags found.
+tags_in_this_server: Tags in this server
+owner: Owner
+uses: Uses
+created_at: Tag created at
+last_updated: "Last updated:"

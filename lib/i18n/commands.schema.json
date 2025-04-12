@@ -1,0 +1,63 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "additionalProperties": {
+        "$ref": "#/definitions/recursive"
+    },
+    "definitions": {
+        "recursive": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "usage": {
+                    "type": "string"
+                },
+                "examples": {
+                    "type": "object",
+                    "properties": {
+                        "usages": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "descriptions": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "required": [
+                        "usages",
+                        "descriptions"
+                    ]
+                }
+            },
+            "required": [
+                "description",
+                "usage",
+                "examples"
+            ],
+            "additionalProperties": {
+                "anyOf": [
+                    {
+                        "type": [
+                            "string",
+                            "number",
+                            "boolean",
+                            "array",
+                            "object",
+                            "null"
+                        ]
+                    },
+                    {
+                        "$ref": "#/definitions/recursive"
+                    }
+                ]
+            }
+        }
+    }
+}

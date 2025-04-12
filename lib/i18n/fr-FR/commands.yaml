@@ -1,0 +1,48 @@
+# yaml-language-server: $schema=../commands.schema.json
+
+ban:
+  description: Bannir un utilisateur du serveur.
+  usage: "[utilisateur] <raison> <cas-de-référence>"
+  examples:
+    usages:
+      - "@utilisateur"
+      - 123456789012345678 "Il était méchant"
+      - "@utilisateur spamming 1234"
+    descriptions:
+      - Bannir l'utilisateur @utilisateur du serveur.
+      - Bannir l'utilisateur 123456789012345678 du serveur pour avoir été méchant.
+      - Bannir l'@utilisateur du serveur pour spam avec référence au cas 1234.
+ping:
+  pinging: 🏓 Pinging...
+  pong: '🏓 P${o}ng! Le ping est de: `${ping}ms`\nHeartbeat: `${hb}ms`'
+  description: Ping le bot
+  usage: ""
+  examples:
+    usages:
+      - ""
+    descriptions:
+      - ""
+
+help:
+  panel: Panneau d'aide
+  find_more: Trouvez plus d'informations à propos de cette commande ci-dessous.
+  name: Nom
+  category: Catégorie
+  usage_string: Utilisation
+  permissions: Permissions requises
+  client_permissions: Permissions requises du bot
+  description_string: Description
+  examples_string: Exemples
+  no_examples: Aucun exemple fourni.
+  description: Obtenez de l'aide à propos d'une commande spécifique, ou listez les commandes disponibles.
+  usage: <commande>
+  examples:
+    usages:
+      - ban
+      - ""
+    descriptions:
+      - Obtenez de l'aide à propos de la commande ban.
+      - Listez les commandes disponibles.
+
+# settings:
+  # unset:

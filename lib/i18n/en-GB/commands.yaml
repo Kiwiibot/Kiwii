@@ -1,0 +1,70 @@
+# yaml-language-server: $schema=../commands.schema.json
+
+ban:
+  description: Ban a user from the server.
+  usage: "[user] <reason> <reference-case>"
+  examples:
+    usages:
+      - "@user"
+      - 123456789012345678 "They were mean"
+      - "@user Spamming 1234"
+    descriptions:
+      - Ban the user @user from the server.
+      - Ban the user 123456789012345678 from the server for being mean.
+      - Ban the @user from the server for spamming with reference to case 1234.
+
+ping:
+  pinging: 🏓 Pinging...
+  pong: '🏓 P${o}ng! The ping is: `${ping}ms`\nHeartbeat: `${hb}ms`'
+  description: Pings the bot.
+  usage: ""
+  examples:
+    usages:
+      - ""
+    descriptions:
+      - ""
+
+help:
+  panel: Help panel
+  find_more: Find more about this command below.
+  name: Name
+  category: Category
+  usage_string: Usage
+  permissions: Required permissions
+  client_permissions: Required bot's permissions
+  description_string: Description
+  examples_string: Examples
+  no_examples: No examples provided.
+  description: Get help about a provided command, or display the available commands.
+  usage: <command>
+  examples:
+    usages:
+      - ban
+      - ""
+    descriptions:
+      - Get help about the ban command.
+      - Display all the available commands.
+
+settings:
+  description: zz
+  usage: aa
+  examples:
+    usages:
+      - ""
+    descriptions:
+      - ""
+
+  unset:
+    description: "Unset settings"
+    usage: "[subcommand]"
+    examples:
+      usages: []
+      descriptions: []
+    mod-logs:
+      description: Unsets the mod logs channel
+      usage: ""
+      examples:
+        usages:
+          - ""
+        descriptions:
+          - "Unsets the mod logs channels"

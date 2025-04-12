@@ -1,0 +1,14 @@
+set:
+  locale: Langue mise à jour à `$locale`.
+  mod_channel: Salon de journalisation de modération mis sous $channel!
+  mod_channel_removed: Salon de journalisation de modération enlevé!
+  appeals_channel: Salon de réclames mis sous $channel!
+  appeals_channel_removed: Salon de réclames enlevé!
+  logs_channel: Salon de journaux mis sous $channel!
+  logs_channel_removed: Salon de journaux enlevé!
+
+webhook_create_reason: Webhook créé pour journaliser les membres ainsi que les messages.
+
+modules:
+  loaded: Module `$module` chargé!
+  unloaded: Module `$module` déchargé!
