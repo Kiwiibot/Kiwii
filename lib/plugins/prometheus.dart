@@ -98,11 +98,11 @@ void registerEventCollectors(NyxxGateway client) {
 }
 
 class Prometheus extends NyxxPlugin<NyxxGateway> {
-  @override
-  Future<void> afterConnect(client) async {
-    registerEventCollectors(client);
-    registerPeriodicCollectors(client);
-  }
+  // @override
+  // Future<void> afterConnect(client) async {
+  //   // registerEventCollectors(client);
+  //   // registerPeriodicCollectors(client);
+  // }
 }
 
 

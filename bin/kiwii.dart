@@ -160,7 +160,9 @@ Future<void> _main() async {
   GetIt.I.registerSingleton(commands);
   GetIt.I.registerSingleton(logger);
   GetIt.I.registerSingleton(kiwiiCache);
-  // GetIt.I.registerSingleton(openai);
+
+  registerEventCollectors(client);
+  registerPeriodicCollectors(client);
 
   pagination.onDisallowedUse.listen((event) async {
     await event.interaction.respond(MessageBuilder(content: 'This is not for you!'), isEphemeral: true);
@@ -238,6 +240,28 @@ Future<void> _main() async {
     if (error case AutocompleteFailedException(exception: final Error exception)) {
       commands.logger.shout('Autocomplete failed', exception, exception.stackTrace);
       return;
+    }
+
+    if (error case CheckFailedException(:final context, :final failed)) {
+      if (failed case final BasePermissionsCheck failed) {
+        await context.respond(
+          MessageBuilder(
+            content:
+                'Missing permissions!\nYou are missing the following permissions to execute this command: ${translatePermissions(failed.permissions, context.guild.t).map((p) => '`$p`').join(', ')}',
+          ),
+        );
+        return;
+      }
+
+      if (failed case final BaseSelfPermissionsCheck failed) {
+        await context.respond(
+          MessageBuilder(
+            content:
+                'Missing permissions!\nI am missing the following permissions to run this command: ${translatePermissions(failed.permissions, context.guild.t).map((p) => '`$p`').join(', ')}',
+          ),
+        );
+        return;
+      }
     }
 
     commands.logger.shout('Uncaught exception in command\n${error.message}', error, error.stackTrace);

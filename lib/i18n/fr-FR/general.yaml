@@ -9,7 +9,7 @@ buttons:
 
 permissions:
   add_reactions: Ajouter Des Réactions
-  adminstrator: Administrateur
+  administrator: Administrateur
   attach_files: Joindre Des Fichiers
   ban_members: Bannir Des Membres
   change_nickname: Changer Le Pseudo

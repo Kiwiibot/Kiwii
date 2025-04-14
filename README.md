@@ -21,7 +21,10 @@ Note that I absolutely suck at UI design, so it's kinda ugly :3.
 
 ### Locally:
 - Download [Dart](https://dart.dev/get-dart), then clone this repo.
-- Run `dart pub get && dart build_runner build --delete-conflicting-outputs && dart run slang build` to install the required dependencies and files.
+- Run `dart pub get && dart build_runner build --delete-conflicting-outputs && dart run slang build && dart bin/emojis.dart` to install the required dependencies and files.
 - Run `dart bin/migrations.dart upgrade` to apply migrations.
-- Run `dart bin/emojis.dart` to map emojis, and `mv` it to `lib/utils/emojis.dart`.
 - Finally, run `dart run` to start the bot in JIT. Or `dart run nyxx_commands:compile bin/kiwii.dart` for AOT.
+
+### Docker
+- Either use the [prebuilt image](https://ghcr.io/kiwiibot/kiwii) alongside the `docker-compose.prod.yml` or build it yourself.
+- In the container, don't forget to apply migrations.
