@@ -18,9 +18,6 @@
 
 import 'dart:async';
 
-import 'package:get_it/get_it.dart';
-import 'package:postgres/postgres.dart';
-
 import '../../kiwii.dart';
 import '../../src/models/tag.dart';
 import '../../utils/parser.dart';
@@ -28,7 +25,6 @@ import 'package:nyxx/nyxx.dart' hide Connection;
 import 'package:nyxx_commands/nyxx_commands.dart';
 // ignore: implementation_imports
 import 'package:nyxx_commands/src/context/base.dart';
-// import 'package:kiwii/utils/parser.dart';
 import '../../src/settings.dart' as settings;
 
 class ContextBaseWithMessage extends ContextBase {
@@ -59,11 +55,6 @@ class TagPlugin extends NyxxPlugin<NyxxGateway> {
     this.client = client;
 
     onRawMessageCreate.listen(processTag);
-
-    await GetIt.I
-        .get<Connection>()
-        .execute('SELECT * FROM tags;')
-        .then((r) => client.repositories.tags.tags.addAll(r.map((row) => Tag.fromRow(row.toColumnMap()))));
   }
 
   @override

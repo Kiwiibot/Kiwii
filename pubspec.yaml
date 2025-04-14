@@ -44,19 +44,17 @@ dependencies:
   diff_match_patch: ^0.4.1
   openai_dart: ^0.4.5
   archive: ^4.0.2
-  nyxx_utils:
-    path: ../nyxx_utils
   args: ^2.6.0
+  prometheus_client: ^1.0.0+1
+  prometheus_client_shelf: ^1.0.0+1
 dependency_overrides:
   nyxx:
     git:
       url: https://github.com/Lexedia/nyxx.git
       ref: feat/priv-utils
   nyxx_commands:
-    # git:
-    #   url: https://github.com/Lexedia/nyxx_commands.git
-    #   ref: dev
-    path: ../nyxx_commands
+    git:
+      url: https://github.com/Lexedia/nyxx_commands.git
   analyzer: ^6.4.1
 
 dev_dependencies:

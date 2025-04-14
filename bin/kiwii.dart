@@ -23,6 +23,7 @@ import 'dart:io' as io;
 import 'package:kiwii/commands/core/info.dart';
 import 'package:kiwii/events/member_log.dart';
 import 'package:kiwii/plugins/load_modules.dart';
+import 'package:kiwii/plugins/prometheus.dart';
 import 'package:kiwii/plugins/track_presences.dart';
 import 'package:kiwii/services/api.dart';
 import 'package:kiwii/src/converters/converters.dart';
@@ -56,6 +57,7 @@ import 'package:nyxx_extensions/nyxx_extensions.dart';
 import 'package:sentry/sentry_io.dart';
 import 'package:postgres/postgres.dart';
 import 'package:shelf/shelf_io.dart' as io;
+import 'package:prometheus_client/runtime_metrics.dart' as runtime_metrics;
 
 void main() async {
   if (!settings.isDev) {
@@ -76,7 +78,7 @@ void main() async {
 }
 
 Future<void> _main() async {
-  // client.
+  runtime_metrics.register();
 
   final connection = await Connection.open(
     Endpoint(
@@ -138,7 +140,19 @@ Future<void> _main() async {
   final client = await Nyxx.connectGatewayWithOptions(
     GatewayApiOptions(token: settings.token, intents: GatewayIntents.all, payloadFormat: GatewayPayloadFormat.etf, browser: 'Discord Android'),
     GatewayClientOptions(
-      plugins: [logging, TagPlugin(), ModulesPlugin(), TrackPresences(), cliIntegration, commands, pagination, localization, ignoreExceptions, guildJoins],
+      plugins: [
+        logging,
+        TagPlugin(),
+        ModulesPlugin(),
+        TrackPresences(),
+        cliIntegration,
+        commands,
+        pagination,
+        localization,
+        ignoreExceptions,
+        guildJoins,
+        prometheus,
+      ],
     ),
   );
 
@@ -239,5 +253,5 @@ Future<void> _main() async {
 
   final apiServer = await api();
 
-  await io.serve(apiServer, 'localhost', 8080);
+  await io.serve(apiServer, '0.0.0.0', 8080);
 }

@@ -21,6 +21,8 @@ import 'dart:convert';
 
 import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart' hide Request;
+import 'package:prometheus_client_shelf/shelf_handler.dart';
+import 'package:prometheus_client_shelf/shelf_metrics.dart' as shelf_metrics;
 import 'package:shelf/shelf.dart';
 // import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart';
@@ -54,14 +56,10 @@ class Api {
       allPermissions = await (await (await client.guilds.get(Snowflake.parse(gId))).members.get(Snowflake.parse(mId))).computedPermissions;
     } on HttpResponseError catch (e) {
       if (e.statusCode == 404) {
-        return Response.notFound('{"error": "Guild or Member not found"}', headers: {
-          'Content-Type': 'application/json',
-        });
+        return Response.notFound('{"error": "Guild or Member not found"}', headers: {'Content-Type': 'application/json'});
       }
     }
-    return Response.ok('{"permissions": "${allPermissions.value.toString()}"}', headers: {
-      'Content-Type': 'application/json',
-    });
+    return Response.ok('{"permissions": "${allPermissions.value.toString()}"}', headers: {'Content-Type': 'application/json'});
   }
 
   @Route.get('/guilds/<gId>')
@@ -71,14 +69,17 @@ class Api {
       guild = await client.guilds.get(Snowflake.parse(gId));
     } on HttpResponseError catch (e) {
       if (e.statusCode == 404) {
-        return Response.notFound('{"error": "Guild not found"}', headers: {
-          'Content-Type': 'application/json',
-        });
+        return Response.notFound('{"error": "Guild not found"}', headers: {'Content-Type': 'application/json'});
       }
     }
-    return Response.ok(jsonEncode(guild.toJson()), headers: {
-      'Content-Type': 'application/json',
-    });
+    return Response.ok(jsonEncode(guild.toJson()), headers: {'Content-Type': 'application/json'});
+  }
+
+  final _prometheusHandler = prometheusHandler();
+
+  @Route.get('/metrics')
+  Future<Response> metrics(Request request) async {
+    return _prometheusHandler(request);
   }
 
   Router get router => _$ApiRouter(this);
@@ -86,7 +87,7 @@ class Api {
 
 Future<FutureOr<Response> Function(Request)> api() async {
   final service = Service();
-  var handler = const Pipeline().addMiddleware(helmet()).addHandler(service.handler);
+  var handler = const Pipeline().addMiddleware(helmet()).addMiddleware(shelf_metrics.register()).addHandler(service.handler);
 
   return handler;
 }

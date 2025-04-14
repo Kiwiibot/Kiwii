@@ -44,5 +44,59 @@ help:
       - Obtenez de l'aide à propos de la commande ban.
       - Listez les commandes disponibles.
 
-# settings:
-  # unset:
+info:
+  description: Obtenir des informations sur un utilisateur ou le serveur.
+  usage: "[sous-commande]"
+  examples:
+    usages: []
+    descriptions: []
+  user:
+    description: Obtenir des informations sur un utilisateur, vous-même si aucun utilisateur n'est fourni.
+    usage: "<utilisateur>"
+    examples:
+      usages:
+        - "@user"
+        - ""
+      descriptions:
+        - Obtenez des informations sur l'@user.
+        - Obtenez des informations sur vous-même.
+    member: Membre
+    name: Nom
+    nick: Surnom
+    joined_at: A rejoint le serveur à
+    created_at: Créé le
+    status: Statut
+    roles:
+      one: Rôle [$n]
+      other: Rôles [$n]
+    id: "ID : $id"
+    seen_in: Vu dans
+    servers: $n serveurs.
+settings:
+  description: Gérer les paramètres du bot.
+  usage: "[sous-commande]"
+  examples:
+    usages: []
+    descriptions: []
+  unset:
+    description: "Annuler les paramètres"
+    usage: "[sous-commande]"
+    examples:
+      usages: []
+      descriptions: []
+    mod-logs:
+      description: Annule le canal des journaux de modération
+      usage: ""
+      examples:
+        usages:
+          - ""
+        descriptions:
+          - "Annule les canaux de journaux de modération"
+    logs:
+      description: Annule la journalisation du bot
+      usage: ""
+      examples:
+        usages:
+          - ""
+        descriptions:
+          - "Annule la journalisation du bot"

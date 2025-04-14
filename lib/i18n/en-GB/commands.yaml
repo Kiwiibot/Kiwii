@@ -68,3 +68,41 @@ settings:
           - ""
         descriptions:
           - "Unsets the mod logs channels"
+    logs:
+      description: Unsets bot logging
+      usage: ""
+      examples:
+        usages:
+          - ""
+        descriptions:
+          - "Unsets bot logging"
+
+info:
+  description: Get information about a user or the server.
+  usage: "[subcommand]"
+  examples:
+    usages: []
+    descriptions: []
+  user:
+    description: Get information about a user, or you if no user was provided.
+    usage: "<user>"
+    examples:
+      usages:
+        - "@user"
+        - ""
+      descriptions:
+        - Get information about the user @user.
+        - Get information about you.
+    member: Member
+    name: Name
+    nick: Nickname
+    joined_at: Joined At
+    created_at: Created At
+    status: Status
+    roles:
+      one: Role [$n]
+      other: Roles [$n]
+    id: 'ID: $id'
+    seen_in: Seen in
+    servers: $n servers.
+

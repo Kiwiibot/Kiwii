@@ -84,6 +84,7 @@ class CasesService {
 
     final cases = await (client.repositories.connection.execute(
       r'SELECT * FROM cases WHERE guild_id = $1 AND target_id = $2 AND action NOT IN (1, 8) ORDER BY created_at DESC;',
+      parameters: [guildId.value, userId.value],
     )).then((r) => r.map((e) => e.toColumnMap()));
 
     final count = await (client.repositories.connection.execute(
@@ -97,7 +98,22 @@ class CasesService {
       parameters: [guildId.value, userId.value],
     )).then((r) => r.single.single as int);
 
-    return Response.ok(jsonEncode({'cases': cases.toList(), 'count': count, 'user': user.toJson()}), headers: {'Content-Type': 'application/json'});
+    return Response.ok(
+      jsonEncode({
+        'cases': cases.map(
+          (e) => e.map(
+            (k, v) => MapEntry(k, switch (v) {
+              final DateTime time => time.toIso8601String(),
+              final int val => (val > 0xffffffff || val < -0x80000000) ? val.toString() : val,
+              _ => v,
+            }),
+          ),
+        ).toList(),
+        'count': count,
+        'user': user.toJson(),
+      }),
+      headers: {'Content-Type': 'application/json'},
+    );
   }
 
   Router get router => _$CasesServiceRouter(this);

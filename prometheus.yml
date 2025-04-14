@@ -1,13 +1,31 @@
 global:
   scrape_interval: 5s
+  evaluation_interval: "1m"
+  body_size_limit: "0"
+  sample_limit: 0
+  label_limit: 0
+  label_name_length_limit: 0
+  label_value_length_limit: 0
+  target_limit: 0
 
 scrape_configs:
-  - job_name: 'prometheus'
-    scrape_interval: 5s
+  - job_name: prometheus
     static_configs:
-      - targets: ['localhost:9090']
-  - job_name: 'kiwii'
+      - targets: ["localhost:9090"]
+    metrics_path: /metrics
+    honor_labels: false
+    honor_timestamps: true
+    scheme: http
+    follow_redirects: true
+    body_size_limit: "0"
     scrape_interval: 5s
+    sample_limit: 0
+    label_limit: 0
+    label_name_length_limit: 0
+    label_value_length_limit: 0
+    target_limit: 0
+  - job_name: kiwii
     static_configs:
-      - targets: ['kiwii:4242']
-    metrics_path: /analytics
+      - targets: ["kiwii:8080"]
+    metrics_path: /api/metrics
+    scrape_interval: 5s

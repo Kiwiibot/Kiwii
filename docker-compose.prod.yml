@@ -1,24 +1,51 @@
-version: '3.9'
+version: "3.9"
 
 services:
   kiwii:
-    image: ghcr.io/kiwiibot/kiwii:latest
+    image: ghcr.io/kiwiibot/kiwii
     restart: always
     env_file: .env
     container_name: kiwii
-    links:
-      - database
-    depends_on:
-      - database
-    ports:
-      - '8080:8080'
+
+    links: [database]
+    depends_on: [database]
   database:
     image: postgres
     restart: always
     volumes:
-      - data:/var/lib/postgresql/data
+      - db:/var/lib/postgresql/data
     env_file: .env
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+    container_name: database
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    restart: unless-stopped
+    links:
+      - kiwii
+  grafana:
+    image: grafana/grafana-enterprise:latest
+    container_name: grafana
+    ports:
+      - "0.0.0.0:9787:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+    links:
+      - prometheus
+    depends_on:
+      - prometheus
 
 volumes:
-  data:
+  db:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
     driver: local
