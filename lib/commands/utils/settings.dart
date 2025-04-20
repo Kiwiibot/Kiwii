@@ -189,7 +189,7 @@ final _starboardSettingsClientPermissions = Permissions.sendMessages | Permissio
 final starboardSettingsCommand = ChatGroup(
   'starboard',
   'Manages settings for the starboard',
-  checks: [BasePermissionsCheck(_starboardSettingsPermissions), BaseSelfPermissionsCheck(_starboardSettingsClientPermissions)],
+  checks: [BasePermissionsCheck(_starboardSettingsPermissions), BaseSelfPermissionsCheck(_starboardSettingsClientPermissions), GuildCheck.all()],
   options: KiwiiCommandOptions(
     permissions: _starboardSettingsPermissions,
     clientPermissions: _starboardSettingsClientPermissions,
@@ -216,7 +216,7 @@ final starboardSettingsCommand = ChatGroup(
           'threshold',
           'Sets the threshold to trigger a starboard message',
           id('starboard-emoij-threshold', (ChatContext ctx, int threshold) async {
-            await ctx.client.repositories.connection.execute(r'UPDATE starboard SET threshold = $1 WHERE id = $2', parameters: [threshold, ctx.guild!.id]);
+            await ctx.client.repositories.connection.execute(r'UPDATE starboard SET threshold = $1 WHERE id = $2', parameters: [threshold, ctx.guild!.id.value]);
 
             await ctx.respond(MessageBuilder(content: 'Set the threshld to `$threshold`'));
           }),

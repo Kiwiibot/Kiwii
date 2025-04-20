@@ -16,6 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import 'dart:convert';
+
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
@@ -40,11 +42,13 @@ final helpCommand = ChatCommand(
             ..color = DiscordColor(0x00ff00)
             ..footer = EmbedFooterBuilder(text: 'Kiwii', iconUrl: (await ctx.client.user.get()).avatar.url);
 
+      final contents = StringBuffer();
+
       for (final command in commands) {
-        embed.fields!.add(EmbedFieldBuilder(name: command.fullName, value: command.description, isInline: false));
+        contents.writeln('${command.fullName} - ${command.description}');
       }
 
-      await ctx.respond(MessageBuilder(embeds: [embed]));
+      await ctx.respond(MessageBuilder(embeds: [embed], attachments: [AttachmentBuilder(data: utf8.encode(contents.toString()), fileName: 'help.txt')]));
       return;
     } else {
       if (command.options case final KiwiiCommandOptions options) {
@@ -74,8 +78,10 @@ final helpCommand = ChatCommand(
           ctx.guild.t['general.categories.${options.category ?? 'unknown'}'] as String? ?? options.category ?? ctx.guild.t.general.categories.unknown,
         );
 
-        final (realPermissions, realClientPermissions) = digPermissions(command, (options.permissions ?? Permissions(0), options.clientPermissions ?? Permissions(0)));
-
+        final (realPermissions, realClientPermissions) = digPermissions(command, (
+          options.permissions ?? Permissions(0),
+          options.clientPermissions ?? Permissions(0),
+        ));
 
         final permissions = translatePermissions(realPermissions!, ctx.guild.t);
 
@@ -134,14 +140,21 @@ final helpCommand = ChatCommand(
   ),
 );
 
-(Flags<Permissions>?, Flags<Permissions>?) digPermissions(CommandGroup<CommandContext> command, (Flags<Permissions>, Flags<Permissions>) basePermissions) => switch (command) {
-  ChatCommand(:final options, :final parent) => switch (options) {
-    KiwiiCommandOptions(:final permissions?, :final clientPermissions?) => parent != null ? digPermissions(parent, (basePermissions.$1 | permissions, basePermissions.$2 | clientPermissions)) : (basePermissions.$1 | permissions, basePermissions.$2 | clientPermissions),
-    _ => basePermissions,
-  },
-  ChatGroup(:final options, :final parent) => switch (options) {
-    KiwiiCommandOptions(:final permissions?, :final clientPermissions?) => parent != null ? digPermissions(parent, (basePermissions.$1 | permissions, basePermissions.$2 | clientPermissions)) : (basePermissions.$1 | permissions, basePermissions.$2 | clientPermissions),
-    _ => basePermissions,
-  },
-  _ => basePermissions,
-};
+(Flags<Permissions>?, Flags<Permissions>?) digPermissions(CommandGroup<CommandContext> command, (Flags<Permissions>, Flags<Permissions>) basePermissions) =>
+    switch (command) {
+      ChatCommand(:final options, :final parent) => switch (options) {
+        KiwiiCommandOptions(:final permissions?, :final clientPermissions?) =>
+          parent != null
+              ? digPermissions(parent, (basePermissions.$1 | permissions, basePermissions.$2 | clientPermissions))
+              : (basePermissions.$1 | permissions, basePermissions.$2 | clientPermissions),
+        _ => basePermissions,
+      },
+      ChatGroup(:final options, :final parent) => switch (options) {
+        KiwiiCommandOptions(:final permissions?, :final clientPermissions?) =>
+          parent != null
+              ? digPermissions(parent, (basePermissions.$1 | permissions, basePermissions.$2 | clientPermissions))
+              : (basePermissions.$1 | permissions, basePermissions.$2 | clientPermissions),
+        _ => basePermissions,
+      },
+      _ => basePermissions,
+    };

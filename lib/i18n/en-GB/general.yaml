@@ -10,7 +10,7 @@ buttons:
 
 permissions:
   add_reactions: Add Reactions
-  adminstrator: Administrator
+  administrator: Administrator
   attach_files: Attach Files
   ban_members: Ban Members
   change_nickname: Change Nickname

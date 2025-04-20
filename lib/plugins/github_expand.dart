@@ -40,7 +40,7 @@ A module to display lines when a github link has been detected.
 
   @override
   Future<void> onLoad(self, {required guild}) async {
-    _subscriptions[guild.id] = self.on<MessageCreateEvent>((event) async {
+    _subscriptions[guild.id] = self.onMessageCreate.where((e) => e.guild?.id == guild.id).listen((event) async {
       final message = event.message;
 
       if (!githubLink.hasMatch(message.content)) {
@@ -83,20 +83,17 @@ A module to display lines when a github link has been detected.
         await message.edit(MessageUpdateBuilder(suppressEmbeds: true));
         await message.sendReply(
           MessageBuilder(
-            embeds: codeblocks
-                .map(
-                  (block) => EmbedBuilder(
-                    description: codeBlock(block.content, block.language),
-                    author: EmbedAuthorBuilder(name: block.name),
-                    color: DiscordColor(0xa7f3d0),
-                  ),
-                )
-                .toList(),
-            allowedMentions: AllowedMentions(
-              repliedUser: false,
-              roles: [],
-              users: [],
-            ),
+            embeds:
+                codeblocks
+                    .map(
+                      (block) => EmbedBuilder(
+                        description: codeBlock(block.content, block.language),
+                        author: EmbedAuthorBuilder(name: block.name),
+                        color: DiscordColor(0xa7f3d0),
+                      ),
+                    )
+                    .toList(),
+            allowedMentions: AllowedMentions(repliedUser: false, roles: [], users: []),
           ),
         );
       }

@@ -50,6 +50,7 @@ class TagPlugin extends NyxxPlugin<NyxxGateway> {
   final StreamController<Map<String, Object?>?> _onRawMessageCreateController = StreamController.broadcast();
   Stream<Map<String, Object?>?> get onRawMessageCreate => _onRawMessageCreateController.stream;
   late final NyxxGateway client;
+  
   @override
   Future<void> afterConnect(NyxxGateway client) async {
     this.client = client;
