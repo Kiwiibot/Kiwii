@@ -200,7 +200,7 @@ final starboardSettingsCommand = ChatGroup(
       'Sets the starboard channel to the given channel.',
       id('starboard-channel', (ChatContext ctx, GuildTextChannel channel) async {
         await ctx.client.repositories.connection.execute(
-          r'INSERT INTO starboard (guild, channel_id) VALUES ($1, $2) ON CONFLICT (guild) DO UPDATE SET channel_id = $2;',
+          r'INSERT INTO starboard (id, channel_id) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET channel_id = $2;',
           parameters: [ctx.guild!.id.value, channel.id.value],
         );
 
