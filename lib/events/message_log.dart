@@ -180,7 +180,7 @@ Future<void> onMessageUpdate(MessageUpdateEvent event) async {
 
   // final guild = await event.guild!.get();
 
-  final logWebhookId = (await client.repositories.guilds.get(event.guildId!)).guildLogWebhookId;
+  final logWebhookId = (await client.repositories.guilds.getOrNull(event.guildId!))?.guildLogWebhookId;
 
   if (logWebhookId == null) {
     return;
