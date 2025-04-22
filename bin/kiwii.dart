@@ -266,6 +266,11 @@ Future<void> _main() async {
         );
         return;
       }
+
+      if (failed is OwnerCheck) {
+        await context.respond(MessageBuilder(content: 'This command can only be executed by the bot owner!'));
+        return;
+      }
     }
 
     commands.logger.shout('Uncaught exception in command\n${error.message}', error, error.stackTrace);
