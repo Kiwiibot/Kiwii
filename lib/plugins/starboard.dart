@@ -57,7 +57,7 @@ final class StarboardPlugin extends BasePlugin {
     Snowflake guildId = channel.guildId;
 
     final r = await client.repositories.connection.execute(
-      r'SELECT channel_id, threshold, emojis FROM starboard WHERE guild = $1;',
+      r'SELECT channel_id, threshold, emojis FROM starboard WHERE id = $1;',
       parameters: [channel.guildId.value],
     );
 
@@ -167,7 +167,7 @@ RETURNING starrers.entry_id, entry.self_message_id;
     };
 
     final r = await client.repositories.connection.execute(
-      r'SELECT channel_id, threshold, emojis FROM starboard WHERE guild = $1;',
+      r'SELECT channel_id, threshold, emojis FROM starboard WHERE id = $1;',
       parameters: [channel.guildId.value],
     );
 
@@ -269,7 +269,7 @@ RETURNING entry_id;
     if (selfMessageId == null) {
       final msg = await starboardChannel.sendMessage(MessageBuilder(content: content, embeds: [embed]));
       await client.repositories.connection.execute(
-        r'UPDATE starboard_entries SET self_message_id= $1, total= $2 WHERE id= $3;',
+        r'UPDATE starboard_entries SET self_message_id = $1, total = $2 WHERE id = $3;',
         parameters: [msg.id.value, count, entryId],
       );
     } else {

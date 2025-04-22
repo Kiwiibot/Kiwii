@@ -30,7 +30,7 @@ final infoCommand = ChatGroup(
       'Get information about a user',
       id('info-user', (ChatContext ctx, [Member? member]) async {
         member ??= ctx.member ?? await ctx.guild!.members.get(ctx.user.id);
-        final user = await ctx.client.users.get(member.id);
+        final user = await ctx.client.users.fetch(member.id);
 
         final t = ctx.guild.t.commands.info.user;
 

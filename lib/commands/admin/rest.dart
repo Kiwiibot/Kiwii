@@ -10,8 +10,8 @@ final _restCommandClientPermissions = Permissions.sendMessages | Permissions.vie
 final restCommand = ChatCommand(
   'rest',
   'Runs a REST operation with the given data',
-  id('rest', (MessageChatContext ctx, String method, HttpRoute route, Map<String, Object?> data, [bool short = true]) async {
-    final res = await ctx.client.httpHandler.execute(BasicRequest(route, method: method, body: json.encode(data)));
+  id('rest', (MessageChatContext ctx, String method, HttpRoute route, [Map<String, Object?>? data, bool short = true]) async {
+    final res = await ctx.client.httpHandler.execute(BasicRequest(route, method: method, body: (data == null || method == 'GET') ? null : json.encode(data)));
 
     await ctx.respond(
       MessageBuilder(
