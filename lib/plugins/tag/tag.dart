@@ -50,7 +50,7 @@ class TagPlugin extends NyxxPlugin<NyxxGateway> {
   final StreamController<Map<String, Object?>?> _onRawMessageCreateController = StreamController.broadcast();
   Stream<Map<String, Object?>?> get onRawMessageCreate => _onRawMessageCreateController.stream;
   late final NyxxGateway client;
-  
+
   @override
   Future<void> afterConnect(NyxxGateway client) async {
     this.client = client;
@@ -120,7 +120,7 @@ class TagPlugin extends NyxxPlugin<NyxxGateway> {
     }
 
     // Render tag.
-    final renderedTag = await parser.parse(tag.content, tag, args);
+    final renderedTag = await parser.parse(tag.content, tag, StringView(args.join(' ')).toList());
     // Increment usage count.
     await ctx.client.repositories.tags.edit(EditableTag(timesCalled: tag.timesCalled + 1, id: tag.id));
 

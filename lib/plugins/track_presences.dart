@@ -10,7 +10,7 @@ class TrackPresences extends NyxxPlugin<NyxxGateway> {
     presences = client.cache.getCache('presences', CacheConfig<Presence>(maxSize: 1000));
 
     client.onPresenceUpdate.listen((event) async {
-      final user = await event.user?.get();
+      final user = (event.guild?.members.cache[event.user?.id]?.user ?? await event.user?.get());
 
       if (user == null) {
         return;

@@ -20,6 +20,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as io;
 
+import 'package:kiwii/commands/admin/rest.dart';
 import 'package:kiwii/commands/core/info.dart';
 import 'package:kiwii/events/member_log.dart';
 import 'package:kiwii/plugins/load_modules.dart';
@@ -130,12 +131,15 @@ Future<void> _main() async {
   commands.addCommand(userLookupCommand);
   commands.addCommand(caseCommand);
   commands.addCommand(infoCommand);
+  commands.addCommand(restCommand);
 
   commands.addConverter(listConverter);
   commands.addConverter(chatCommandConverter);
   commands.addConverter(basePluginConverter);
   commands.addConverter(tagConverter);
   commands.addConverter(localeConverter);
+  commands.addConverter(mapObjectConverter);
+  commands.addConverter(httpRouteConverter);
 
   final client = await Nyxx.connectGatewayWithOptions(
     GatewayApiOptions(token: settings.token, intents: GatewayIntents.all, payloadFormat: GatewayPayloadFormat.etf, browser: 'Discord Android'),

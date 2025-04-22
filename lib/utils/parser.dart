@@ -26,6 +26,7 @@ import 'package:http/http.dart' as http;
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
 import 'package:nyxx_commands/src/converters/built_in/member.dart';
+import 'package:nyxx_commands/src/converters/built_in/user.dart';
 import 'package:nyxx_commands/src/converters/built_in/snowflake.dart';
 
 import '../plugins/tag/tag.dart';
@@ -49,21 +50,21 @@ class Parser {
     switch (key) {
       case 'user':
       case 'username':
-        final member = rawArgs.isNotEmpty ? await memberFromString(rawArgs) : ctx.member;
-        return member?.user?.username ?? '';
+        final user = rawArgs.isNotEmpty ? await userFromString(rawArgs) : ctx.user;
+        return user?.username ?? '';
 
       case 'id':
       case 'userid':
-        final member = rawArgs.isNotEmpty ? await memberFromString(rawArgs) : ctx.member;
-        return member?.user?.id.toString() ?? '';
+        final user = rawArgs.isNotEmpty ? await userFromString(rawArgs) : ctx.user;
+        return user?.id.toString() ?? '';
 
       case 'avatar':
-        final member = rawArgs.isNotEmpty ? await memberFromString(rawArgs) : ctx.member;
-        return member?.user?.avatar.url.toString();
+        final user = rawArgs.isNotEmpty ? await userFromString(rawArgs) : ctx.user;
+        return user?.avatar.url.toString();
 
       case 'avatarhash':
-        final member = rawArgs.isNotEmpty ? await memberFromString(rawArgs) : ctx.member;
-        return member?.user?.avatar.hash ?? '';
+        final user = rawArgs.isNotEmpty ? await userFromString(rawArgs) : ctx.user;
+        return user?.avatar.hash ?? '';
       case 'randuser':
         final guild = ctx.guild;
 
@@ -131,7 +132,7 @@ class Parser {
         }
 
         final resolved = permissions[permission] ?? (throw Exception('Unknown permission: $permission'));
-        return member.permissions?.has(resolved);
+        return (await member.computedPermissions).has(resolved);
       case 'hasrole':
         if (split.isEmpty || ctx.guild == null) {
           return null;
@@ -305,6 +306,24 @@ class Parser {
 
     member = await snowflakeToMember(snowflake, ctx);
     return member;
+  }
+
+  Future<User?> userFromString(String input) async {
+    var user = await convertUser(StringView(input), ctx);
+
+    if (user != null) {
+      return user;
+    }
+
+    final snowflake = convertSnowflake(StringView(input), ctx);
+
+    if (snowflake == null) {
+      return null;
+    }
+
+    user = await snowflakeToUser(snowflake, ctx);
+
+    return user;
   }
 
   Future<ParserResult> parse(String input, Tag tag, List<String> tagArgs) async {

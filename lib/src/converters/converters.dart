@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:nyxx/nyxx.dart';
@@ -93,8 +94,86 @@ Iterable<CommandOptionChoiceBuilder<dynamic>> autocompleteChatCommands(Autocompl
       .map((e) => CommandOptionChoiceBuilder(name: e is ChatCommand ? e.fullName : e.name, value: e is ChatCommand ? e.fullName : e.name));
 }
 
+/// Parse a JSON code block into a map object.
+Map<String, Object?>? convertMapObject(StringView view, ContextData ctx) {
+  view.skipWhitespace();
+  view.skipFirst(RegExp(r'```(?:json)?\n?'));
+
+  final raw = view.getUntil('```');
+
+  view.skipFirst('```');
+
+  if (raw.isEmpty) return null;
+
+  Map<String, Object?> ret;
+
+  try {
+    ret = json.decode(raw) as Map<String, Object?>;
+  } catch (e) {
+    return null;
+  }
+
+  return ret;
+}
+
+HttpRoute convertHttpRoute(StringView view, ContextData ctx) {
+  String getRoute() {
+    view.skipWhitespace();
+    view.skipPattern('\n');
+
+    int start = view.index;
+
+    while (!view.eof && view.current != '\n') {
+      view.index++;
+    }
+
+    return view.escape(start, view.index);
+  }
+
+  final r = getRoute();
+
+  final rawParts = r.split('/').where((e) => e.isNotEmpty).map((e) => HttpRouteWrapper(route: e)).toList();
+
+  final parts =
+      rawParts.indexed
+          .map((e) {
+            final p = e.$2;
+            final i = e.$1;
+
+            if (p.isDone) {
+              return null;
+            }
+
+            if (p.route case 'guilds' || 'channels') {
+              return HttpRoutePart(p.route, [
+                if (rawParts.elementAtOrNull(i + 1) != null) HttpRouteParam((rawParts[i + 1]..isDone = true).route, isMajor: true),
+              ]);
+            } else {
+              return HttpRoutePart(p.route, [if (rawParts.elementAtOrNull(i + 1) != null) HttpRouteParam((rawParts[i + 1]..isDone = true).route)]);
+            }
+          })
+          .nonNulls
+          .toList();
+
+  final route = HttpRoute();
+
+  parts.forEach(route.add);
+
+  return route;
+}
+
+class HttpRouteWrapper {
+  bool isDone;
+
+  final String route;
+
+  HttpRouteWrapper({required this.route, this.isDone = false});
+}
+
 const localeConverter = SimpleConverter.fixed(elements: [AppLocale.enGb, AppLocale.frFr], stringify: stringifyLocale, reviver: reviverLocale);
 const basePluginConverter = Converter<BasePlugin>(getBasePlugin, autocompleteCallback: autocompleteModules);
 const tagConverter = SimpleConverter(provider: getTags, stringify: stringifyTag);
 const chatCommandConverter = Converter<ChatCommand>(convertChatCommand, autocompleteCallback: autocompleteChatCommands);
 const listConverter = Converter<List<String>>(convertListString);
+const mapObjectConverter = Converter<Map<String, Object?>>(convertMapObject);
+const httpRouteConverter = Converter<HttpRoute>(convertHttpRoute);
