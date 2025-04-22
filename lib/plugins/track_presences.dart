@@ -10,13 +10,12 @@ class TrackPresences extends NyxxPlugin<NyxxGateway> {
     presences = client.cache.getCache('presences', CacheConfig<Presence>(maxSize: 1000));
 
     client.onPresenceUpdate.listen((event) async {
-      final user = (event.guild?.members.cache[event.user?.id]?.user ?? await event.user?.get());
 
-      if (user == null) {
+      if (event.user == null) {
         return;
       }
 
-      presences[user.id] = (status: event.status, activities: event.activities, clientStatus: event.clientStatus);
+      presences[event.user!.id] = (status: event.status, activities: event.activities, clientStatus: event.clientStatus);
     });
   }
 }
