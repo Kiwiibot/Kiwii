@@ -223,14 +223,41 @@ Future<void> _main() async {
 
     if (error case CheckFailedException(:final context, :final failed)) {
       if (failed is SelfPermissionsCheck) {
-        final permissions = await failed.requiredPermissions as Flags<Permissions>;
+        if (context.guild == null) {
+          return;
+        }
+
+        final permissions = failed.permissions;
+        final memberPermissions = await (await context.guild!.me).computePermissionsIn(context.channel as GuildTextChannel);
+
+        final remaining = permissions & ~memberPermissions;
+
         await context.respond(
           MessageBuilder(
             content:
-                'I do not have the required permissions to execute this command\nMissing: ${translatePermissions(permissions, context.guild.t).map((p) => '`$p`')}',
+                'I do not have the required permissions to execute this command\nMissing: ${translatePermissions(remaining, context.guild.t).map((p) => '`$p`')}',
           ),
         );
 
+        return;
+      }
+
+      if (failed is BasePermissionsCheck) {
+        if (context.guild == null) {
+          return;
+        }
+
+        final permissions = failed.permissions;
+
+        final memberPermissions = await context.member!.computePermissionsIn(context.channel as GuildTextChannel);
+        final remaining = permissions & ~memberPermissions;
+
+        await context.respond(
+          MessageBuilder(
+            content:
+                'Missing permissions!\n You are missing the following permissions to run this command: ${translatePermissions(remaining, context.guild.t).map((p) => '`$p`').join(', ')}',
+          ),
+        );
         return;
       }
     }
@@ -252,16 +279,6 @@ Future<void> _main() async {
           MessageBuilder(
             content:
                 'Missing permissions!\nYou are missing the following permissions to execute this command: ${translatePermissions(failed.permissions, context.guild.t).map((p) => '`$p`').join(', ')}',
-          ),
-        );
-        return;
-      }
-
-      if (failed case final BaseSelfPermissionsCheck failed) {
-        await context.respond(
-          MessageBuilder(
-            content:
-                'Missing permissions!\nI am missing the following permissions to run this command: ${translatePermissions(failed.permissions, context.guild.t).map((p) => '`$p`').join(', ')}',
           ),
         );
         return;
