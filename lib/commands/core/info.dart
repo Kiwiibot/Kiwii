@@ -12,7 +12,7 @@ const dndColour = 0xd83a41;
 const offlineColour = 0x82838b;
 
 final _infoCommandPermissions = Permissions.sendMessages | Permissions.viewChannel;
-final _infoCommandClientPermissions = Permissions.sendMessages | Permissions.viewChannel | Permissions.manageGuild;
+final _infoCommandClientPermissions = Permissions.sendMessages | Permissions.viewChannel | Permissions.embedLinks;
 
 final infoCommand = ChatGroup(
   'info',
