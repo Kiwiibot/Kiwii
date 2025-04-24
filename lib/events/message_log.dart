@@ -162,11 +162,18 @@ final cbRegex = RegExp(r'```(?:.*?)```', dotAll: true);
 
 Future<void> onMessageUpdate(MessageUpdateEvent event) async {
   final oldMessage = event.oldMessage;
-  final newMessage = await event.message.get();
 
   final client = event.gateway.client;
 
   if (oldMessage == null) {
+    return;
+  }
+
+  Message newMessage;
+
+  try {
+    newMessage = await event.message.get();
+  } on HttpResponseError {
     return;
   }
 

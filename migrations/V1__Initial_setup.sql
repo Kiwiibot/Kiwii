@@ -5,7 +5,9 @@
 CREATE OR REPLACE FUNCTION set_current_timestamp_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at := NOW();
+    IF NEW.content IS DISTINCT FROM OLD.content THEN
+        NEW.updated_at := NOW();
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -48,8 +50,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS starrers_uniq_idx ON starrers (author_id, entr
 CREATE TABLE IF NOT EXISTS tags (
     id SERIAL PRIMARY KEY,
     content TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'UTC'),
-    updated_at TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at TIMESTAMP WITH TIME ZONE,
     location_id BIGINT NOT NULL,
     name TEXT NOT NULL,
     owner_id BIGINT NOT NULL,

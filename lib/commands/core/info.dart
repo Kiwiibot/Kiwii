@@ -29,8 +29,14 @@ final infoCommand = ChatGroup(
     ChatCommand(
       'user',
       'Get information about a user',
-      id('info-user', (ChatContext ctx, [Member? member]) async {
+      id('info-user', (ChatContext ctx, [Member? member, bool hidden = false]) async {
         final tracking = ctx.client.options.plugins.whereType<Tracking>().single;
+        final level = hidden ? ResponseLevel.private : ResponseLevel.public;
+
+        if (ctx is InteractionChatContext) {
+          await ctx.acknowledge(level: level);
+        }
+
         member ??= ctx.member ?? await ctx.guild!.members.get(ctx.user.id);
         final user = await ctx.client.users.fetch(member.id);
 
@@ -96,7 +102,7 @@ final infoCommand = ChatGroup(
             if (oldUsernames.isNotEmpty) EmbedFieldBuilder(name: t.pastUsernames, value: oldUsernames.take(3).join(', '), isInline: false),
             if (oldGlobalNames.isNotEmpty) EmbedFieldBuilder(name: t.pastGlobalNames, value: oldGlobalNames.take(3).join(', '), isInline: false),
             if (oldNicknames.isNotEmpty) EmbedFieldBuilder(name: t.pastNicknames, value: oldNicknames.take(3).join(', '), isInline: false),
-            // EmbedFieldBuilder(name: t.seenIn, value: (await user.fetchMutualGuilds()).entries.map((e) => e.key.name).join(', '), isInline: true),
+            EmbedFieldBuilder(name: t.seenIn, value: (await user.fetchMutualGuilds()).length.toString(), isInline: true),
             EmbedFieldBuilder(name: t.joinedAt, value: '${member.joinedAt.format()} (${member.joinedAt.format(TimestampStyle.relativeTime)})', isInline: false),
             EmbedFieldBuilder(name: t.createdAt, value: '${user.createdAt.format()} (${user.createdAt.format(TimestampStyle.relativeTime)})', isInline: false),
             EmbedFieldBuilder(
@@ -114,7 +120,11 @@ final infoCommand = ChatGroup(
           embed.image = EmbedImageBuilder(url: member.banner?.get(size: 4096) ?? user.banner!.get(size: 4096));
         }
 
-        await ctx.respond(MessageBuilder(embeds: [embed]));
+        if (ctx is InteractionChatContext) {
+          await ctx.interaction.respond(MessageBuilder(embeds: [embed]), isEphemeral: level.hideInteraction);
+        } else {
+          ctx.respond(MessageBuilder(embeds: [embed]), level: level);
+        }
       }),
       options: KiwiiCommandOptions(
         clientPermissions: Permissions.embedLinks,

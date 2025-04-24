@@ -8,6 +8,7 @@ import 'package:characters/characters.dart';
 typedef PendingEntityUpdate = (SnowflakeEntity, DateTime);
 typedef PendingEntitiesUpdates = List<PendingEntityUpdate>;
 typedef ResolvedEntity = Map<Snowflake, (String, int)>;
+typedef ResolvedGuildEntity = Map<(Snowflake, Snowflake), (String, int)>;
 typedef NamesInserts = List<(int, String, DateTime, int, int?)>;
 
 final tracking = Tracking();
@@ -189,7 +190,7 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
     PendingEntitiesUpdates pendingNames,
     ResolvedEntity currentNames,
     ResolvedEntity currentGlobalNames,
-    ResolvedEntity currentNicknames,
+    ResolvedGuildEntity currentNicknames,
   ) async {
     final NamesInserts nameInserts = [];
     final NamesInserts globalNameInserts = [];
@@ -198,20 +199,21 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
     for (final (member, timestamp) in pendingNames) {
       final (currentName, currentIdx) = currentNames[member.id] ?? (null, 0);
       final (currentGlobalName, currentGlobalIdx) = currentGlobalNames[member.id] ?? (null, 0);
-      final (currentNickname, currentNicknameIdx) = currentNicknames[member.id] ?? (null, 0);
 
       if (member case final User user) {
         if (currentName != user.username) {
           nameInserts.add((user.id.value, user.username, timestamp, currentIdx + 1, null));
         }
 
-        if (user.globalName != null && currentGlobalName?.characters != user.globalName?.characters) {
+        if (user.globalName != null && currentGlobalName?.characters != user.globalName!.characters) {
           globalNameInserts.add((user.id.value, user.globalName!, timestamp, currentGlobalIdx + 1, null));
         }
       }
 
       if (member case final Member member) {
-        if (member.nick != null && currentNickname?.characters != member.nick?.characters) {
+        final (currentNickname, currentNicknameIdx) = currentNicknames[(member.id, member.manager.guildId)] ?? (null, 0);
+
+        if (member.nick != null && currentNickname?.characters != member.nick!.characters) {
           nicknamesInserts.add((member.id.value, member.nick!, timestamp, currentNicknameIdx + 1, member.manager.guildId.value));
         }
       }
@@ -220,7 +222,7 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
     return (nameInserts, globalNameInserts, nicknamesInserts);
   }
 
-  Future<(ResolvedEntity, ResolvedEntity, ResolvedEntity)> batchGetNames(PendingEntitiesUpdates pendingNamesUpdates) async {
+  Future<(ResolvedEntity, ResolvedEntity, ResolvedGuildEntity)> batchGetNames(PendingEntitiesUpdates pendingNamesUpdates) async {
     final usernames = await connection.execute(
       r'SELECT id, name, idx FROM username_changes WHERE id = ANY($1) ORDER BY idx ASC;',
       parameters: [
@@ -249,7 +251,7 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
 
     final foundGlobalNames = {for (final r in globalNames) Snowflake.parse(r.first!): (r[1] as String, r[2] as int)};
 
-    final foundNicknames = {for (final r in nicknames) Snowflake.parse(r.first!): (r[2] as String, r[3] as int)};
+    final foundNicknames = {for (final r in nicknames) (Snowflake.parse(r.first!), Snowflake.parse(r[1] as int)): (r[2] as String, r[3] as int)};
 
     return (foundUsernames, foundGlobalNames, foundNicknames);
   }
