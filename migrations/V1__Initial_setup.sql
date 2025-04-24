@@ -62,7 +62,7 @@ CREATE INDEX IF NOT EXISTS tags_location_id_idx ON tags (location_id);
 CREATE INDEX IF NOT EXISTS tags_name_lower_idx ON tags (LOWER(name));
 CREATE UNIQUE INDEX IF NOT EXISTS tags_uniq_idx ON tags (LOWER(name), location_id);
 
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON tags FOR EACH ROW EXECUTE FUNCTION set_current_timestamp_updated_at();
+CREATE OR REPLACE TRIGGER set_updated_at BEFORE UPDATE ON tags FOR EACH ROW EXECUTE FUNCTION set_current_timestamp_updated_at();
 
 CREATE TABLE IF NOT EXISTS guild_table (
     id BIGINT PRIMARY KEY,
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS appeals (
     PRIMARY KEY (guild_id, appeal_id)
 );
 
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON appeals FOR EACH ROW EXECUTE FUNCTION set_current_timestamp_updated_at();
+CREATE OR REPLACE TRIGGER set_updated_at BEFORE UPDATE ON appeals FOR EACH ROW EXECUTE FUNCTION set_current_timestamp_updated_at();
 
 CREATE FUNCTION next_appeal(BIGINT) RETURNS INTEGER
 		LANGUAGE plpgsql
@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS cases (
 );
 
 
-CREATE FUNCTION next_case(BIGINT) RETURNS INTEGER
+CREATE OR REPLACE FUNCTION next_case(BIGINT) RETURNS INTEGER
 		LANGUAGE plpgsql
 		stable
 		AS $$
@@ -166,10 +166,10 @@ CREATE TABLE IF NOT EXISTS reports (
     context_messages_ids BIGINT[]
 );
 
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON reports FOR EACH ROW EXECUTE FUNCTION set_current_timestamp_updated_at();
+CREATE OR REPLACE TRIGGER set_updated_at BEFORE UPDATE ON reports FOR EACH ROW EXECUTE FUNCTION set_current_timestamp_updated_at();
 
 
-CREATE FUNCTION next_report(BIGINT) RETURNS INTEGER
+CREATE OR REPLACE FUNCTION next_report(BIGINT) RETURNS INTEGER
 		LANGUAGE plpgsql
 		stable
 		AS $$
