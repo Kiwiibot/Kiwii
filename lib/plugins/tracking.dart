@@ -136,9 +136,7 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
   }
 
   Future<void> doBatchNamesUpdate() async {
-    final allNamesUpdates = [
-      ...{...batchNameUpdates},
-    ];
+    final allNamesUpdates = List.of(batchNameUpdates);
     batchNameUpdates.clear();
 
     /// Maximum allowed parameters in an IN/ANY clause.
