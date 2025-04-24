@@ -63,3 +63,8 @@ services.json
 services.md
 revisions.json
 pubspec.lock
+*.jar
+kiwii
+plugins/*
+.wakatime-project
+shell.nix
