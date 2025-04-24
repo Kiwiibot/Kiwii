@@ -18,7 +18,7 @@ final _infoCommandClientPermissions = Permissions.sendMessages | Permissions.vie
 final infoCommand = ChatGroup(
   'info',
   'Get information about a user or the server',
-  checks: [BasePermissionsCheck(_infoCommandPermissions), BaseSelfPermissionsCheck(_infoCommandClientPermissions), GuildCheck.all()],
+  checks: [BasePermissionsCheck(_infoCommandPermissions), BaseSelfPermissionsCheck(_infoCommandClientPermissions)],
   options: KiwiiCommandOptions(
     permissions: _infoCommandPermissions,
     clientPermissions: _infoCommandClientPermissions,
@@ -29,7 +29,7 @@ final infoCommand = ChatGroup(
     ChatCommand(
       'user',
       'Get information about a user',
-      id('info-user', (ChatContext ctx, [Member? member, bool hidden = false]) async {
+      id('info-user', (ChatContext ctx, [User? user, bool hidden = false]) async {
         final tracking = ctx.client.options.plugins.whereType<Tracking>().single;
         final level = hidden ? ResponseLevel.private : ResponseLevel.public;
 
@@ -37,8 +37,17 @@ final infoCommand = ChatGroup(
           await ctx.acknowledge(level: level);
         }
 
-        member ??= ctx.member ?? await ctx.guild!.members.get(ctx.user.id);
-        final user = await ctx.client.users.fetch(member.id);
+        user = await (user ?? ctx.user).fetch();
+
+        Member? member;
+
+        if (ctx.guild != null) {
+          try {
+            member = await ctx.guild!.members.get(user.id);
+          } on HttpResponseError {
+            // do nothing.
+          }
+        }
 
         final t = ctx.guild.t.commands.info.user;
 
@@ -78,22 +87,26 @@ final infoCommand = ChatGroup(
           }
         }
 
-        final roles = await member.roles.get();
-
-        final sortedRoles = roles.where((r) => r.id != ctx.guild?.id).toList().sorted.reversed.toList();
-
+        List<Role>? roles;
+        List<Role>? sortedRoles;
+        List<String>? oldNicknames;
         const threshold = Duration(days: 90);
 
         final oldUsernames = await tracking.namesFor(user, threshold);
         final oldGlobalNames = await tracking.globalNamesFor(user, threshold);
-        final oldNicknames = await tracking.nicknamesFor(member, threshold);
+
+        if (member != null) {
+          roles = await member.roles.get();
+          sortedRoles = roles.where((r) => r.id != ctx.guild?.id).toList().sorted.reversed.toList();
+          oldNicknames = await tracking.nicknamesFor(member, threshold);
+        }
 
         final embed = EmbedBuilder(
           author: EmbedAuthorBuilder(name: user.globalName ?? user.tag, iconUrl: user.avatar.url, url: user.url),
           fields: [
             EmbedFieldBuilder(name: t.member, value: user.mention, isInline: true),
             EmbedFieldBuilder(name: t.name, value: user.tag, isInline: true),
-            if (member.nick != null) EmbedFieldBuilder(name: t.nick, value: member.nick!, isInline: true),
+            if (member?.nick != null) EmbedFieldBuilder(name: t.nick, value: member!.nick!, isInline: true),
             EmbedFieldBuilder(
               name: t.status,
               value: correspondingPlatforms.isEmpty ? emojis['offline_web']! : correspondingPlatforms.join(' '),
@@ -101,23 +114,30 @@ final infoCommand = ChatGroup(
             ),
             if (oldUsernames.isNotEmpty) EmbedFieldBuilder(name: t.pastUsernames, value: oldUsernames.take(3).join(', '), isInline: false),
             if (oldGlobalNames.isNotEmpty) EmbedFieldBuilder(name: t.pastGlobalNames, value: oldGlobalNames.take(3).join(', '), isInline: false),
-            if (oldNicknames.isNotEmpty) EmbedFieldBuilder(name: t.pastNicknames, value: oldNicknames.take(3).join(', '), isInline: false),
+            if (oldNicknames != null && oldNicknames.isNotEmpty)
+              EmbedFieldBuilder(name: t.pastNicknames, value: oldNicknames.take(3).join(', '), isInline: false),
             EmbedFieldBuilder(name: t.seenIn, value: (await user.fetchMutualGuilds()).length.toString(), isInline: true),
-            EmbedFieldBuilder(name: t.joinedAt, value: '${member.joinedAt.format()} (${member.joinedAt.format(TimestampStyle.relativeTime)})', isInline: false),
+            if (member != null)
+              EmbedFieldBuilder(
+                name: t.joinedAt,
+                value: '${member.joinedAt.format()} (${member.joinedAt.format(TimestampStyle.relativeTime)})',
+                isInline: false,
+              ),
             EmbedFieldBuilder(name: t.createdAt, value: '${user.createdAt.format()} (${user.createdAt.format(TimestampStyle.relativeTime)})', isInline: false),
-            EmbedFieldBuilder(
-              name: t.roles(n: sortedRoles.length),
-              value: sortedRoles.sublist(0, sortedRoles.length > 50 ? 50 : sortedRoles.length).map((r) => r.mention).join(' | '),
-              isInline: false,
-            ),
+            if (sortedRoles != null)
+              EmbedFieldBuilder(
+                name: t.roles(n: sortedRoles.length),
+                value: sortedRoles.sublist(0, sortedRoles.length > 50 ? 50 : sortedRoles.length).map((r) => r.mention).join(' | '),
+                isInline: false,
+              ),
           ],
-          thumbnail: EmbedThumbnailBuilder(url: member.avatar?.get(size: 4096) ?? user.avatar.get(size: 4096)),
+          thumbnail: EmbedThumbnailBuilder(url: member?.avatar?.get(size: 4096) ?? user.avatar.get(size: 4096)),
           footer: EmbedFooterBuilder(text: t.id(id: user.id), iconUrl: user.avatar.get(size: 128)),
-          color: user.accentColor ?? sortedRoles.firstOrNull?.color,
+          color: user.accentColor ?? sortedRoles?.firstOrNull?.color,
         );
 
-        if (member.banner?.url != null || user.banner?.url != null) {
-          embed.image = EmbedImageBuilder(url: member.banner?.get(size: 4096) ?? user.banner!.get(size: 4096));
+        if (member?.banner?.url != null || user.banner?.url != null) {
+          embed.image = EmbedImageBuilder(url: member?.banner?.get(size: 4096) ?? user.banner!.get(size: 4096));
         }
 
         if (ctx is InteractionChatContext) {

@@ -6,8 +6,14 @@
     "editor.suggest.insertMode": "replace",
     "editor.defaultFormatter": "Dart-Code.dart-code",
     "editor.inlayHints.enabled": "offUnlessPressed",
-    "editor.rulers": [160],
+    "editor.rulers": [
+      160
+    ],
     "editor.formatOnSave": false
+  },
+  "[json]": {
+    "editor.tabSize": 2,
+    "editor.indentSize": 2,
   },
   "dart.lineLength": 160,
   "editor.hover.enabled": true,

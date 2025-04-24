@@ -37,21 +37,34 @@ Future<void> onGuildMemberAdd(GuildMemberAddEvent event) async {
 
   final currentUser = await client.user.get();
 
-  await webhook.execute(MessageBuilder(embeds: [generateMemberLog(member, member.user ?? await client.users.get(member.id), guild.t, isJoin: true)]), token: webhook.token!, avatarUrl: currentUser.avatar.url.toString(), username: currentUser.username);
+  await webhook.execute(
+    MessageBuilder(embeds: [generateMemberLog(member, member.user ?? await client.users.get(member.id), guild.t, isJoin: true)]),
+    token: webhook.token!,
+    avatarUrl: currentUser.avatar.url.toString(),
+    username: currentUser.username,
+  );
 }
 
 Future<void> onGuildMemberRemove(GuildMemberRemoveEvent event) async {
-
   final guild = await event.guild.get();
-  final member = event.removedMember!;
+  final member = event.removedMember;
+
+  if (member == null) {
+    return;
+  }
+
   final client = event.guild.manager.client;
 
   final logwebhookId = (await client.repositories.guilds.getOrNull(guild.id))?.guildLogWebhookId ?? const Snowflake(1250365441470103573);
-
 
   final webhook = await client.webhooks.get(logwebhookId);
 
   final currentUser = await client.user.get();
 
-  await webhook.execute(MessageBuilder(embeds: [generateMemberLog(member, member.user ?? await client.users.get(member.id), guild.t)]), token: webhook.token!, avatarUrl: currentUser.avatar.url.toString(), username: currentUser.username);
+  await webhook.execute(
+    MessageBuilder(embeds: [generateMemberLog(member, member.user ?? await client.users.get(member.id), guild.t)]),
+    token: webhook.token!,
+    avatarUrl: currentUser.avatar.url.toString(),
+    username: currentUser.username,
+  );
 }

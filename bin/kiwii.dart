@@ -94,7 +94,6 @@ Future<void> _main() async {
   );
   GetIt.I.registerSingleton(connection);
 
-  // final openai = OpenAIClient(apiKey: settings.chatbotToken, baseUrl: settings.chatbotUrl);
   final errFile = io.File('logs/log.err');
   final logFile = io.File('logs/log.log');
   final stderr = settings.isDev ? io.stderr : ioutils.Stderr(errFile, io.stderr);
@@ -297,7 +296,7 @@ Future<void> _main() async {
     }
 
     if (error case CommandInvocationException(:final context)) {
-      await context.respond(MessageBuilder(content: 'An error occurred while executing the command\n${error.message}'));
+      await context.respond(MessageBuilder(content: 'An error occurred while executing the command\n${error.message}'), level: ResponseLevel.hint);
     }
   });
 

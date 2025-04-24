@@ -26,6 +26,7 @@ void registerPeriodicCollectors(NyxxGateway client) {
 
 void registerEventCollectors(NyxxGateway client) {
   final commands = client.options.plugins.whereType<CommandsPlugin>().single;
+
   final totalMessagesSent = Counter(name: 'kiwii_total_messages_sent', help: 'Total messages sent', labelNames: ['guild_id'])..register();
   client.onMessageCreate.listen((event) => totalMessagesSent.labels([event.guild?.id.toString() ?? 'dm']).inc());
 
@@ -38,6 +39,15 @@ void registerEventCollectors(NyxxGateway client) {
   final totalTextCommands = Counter(name: 'kiwii_total_text_commands', help: 'Total text commands executed', labelNames: ['name'])..register();
   final totalUserCommands = Counter(name: 'kiwii_total_user_commands', help: 'Total user commands executed', labelNames: ['name'])..register();
   final totalMessageCommands = Counter(name: 'kiwii_total_message_commands', help: 'Total message commands executed', labelNames: ['name'])..register();
+  final totalCommandsFailed = Counter(name: 'kiwii_total_commands_failed', help: 'Total commands failed', labelNames: ['error', 'name'])..register();
+  final commandExecutionTime = Histogram.exponential(
+    name: 'kiwii_command_execution_time',
+    help: 'The time each command took to execute',
+    labelNames: ['name'],
+    start: 1,
+    factor: pow(const Duration(minutes: 15).inMicroseconds, 0.1).toDouble(),
+    count: 10,
+  )..register();
 
   commands.onPreCall.listen((ctx) {
     final name = ctx.command is ChatCommand ? (ctx.command as ChatCommand).fullName : ctx.command.name;
@@ -52,8 +62,6 @@ void registerEventCollectors(NyxxGateway client) {
       _ => null,
     });
 
-    final totalCommandsFailed = Counter(name: 'kiwii_total_commands_failed', help: 'Total commands failed', labelNames: ['error', 'name'])..register();
-
     commands.onCommandError.listen((error) {
       if (error case final CommandInvocationException error) {
         final ctx = error.context;
@@ -64,15 +72,6 @@ void registerEventCollectors(NyxxGateway client) {
         totalCommandsFailed.labels([errorName, name]).inc();
       }
     });
-
-    final commandExecutionTime = Histogram.exponential(
-      name: 'kiwii_command_execution_time',
-      help: 'The time each command took to execute',
-      labelNames: ['name'],
-      start: 1,
-      factor: pow(const Duration(minutes: 15).inMicroseconds, 0.1).toDouble(),
-      count: 10,
-    )..register();
 
     final ctxStartTime = Expando<DateTime>();
 

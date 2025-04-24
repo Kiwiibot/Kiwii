@@ -23,10 +23,8 @@ import 'package:nyxx_commands/src/util/util.dart';
 import '../../utils/extensions.dart';
 import '../settings.dart';
 
-final adminCheck = Check((ctx) => ctx.user.id == ownerId, name: 'AdminCheck');
-
 class BasePermissionsCheck extends PermissionsCheck {
-  BasePermissionsCheck(super.permissions, {super.name}) : super(allowsDm: false, allowsOverrides: false, requiresAll: true);
+  BasePermissionsCheck(super.permissions, {super.name}) : super(allowsDm: true, allowsOverrides: false, requiresAll: true);
 }
 
 class SelfPermissionsCheck extends Check {
@@ -50,7 +48,7 @@ class SelfPermissionsCheck extends Check {
   final bool requiresAll;
 
   SelfPermissionsCheck(this.permissions, {this.allowsOverrides = true, this.requiresAll = true, String? name, super.allowsDm = false})
-    : super(name: name ?? 'Self permission check on $permissions', requiredPermissions: permissions, (context) async {
+    : super(name: name ?? 'Self permission check on $permissions', requiredPermissions: null, (context) async {
         Guild? guild = context.guild;
 
         if (guild == null) {
@@ -68,7 +66,7 @@ class SelfPermissionsCheck extends Check {
             command = context.commands.registeredCommands.singleWhere(
               (element) => element.id == (context as InteractionCommandContextData).interaction.data.id,
             );
-          } else {
+          } else if (context.command.options.type != CommandType.textOnly) {
             // If the invocation was not from a slash command, try to find a matching slash
             // command and use the overrides from that.
             CommandRegisterable root = context.command;
@@ -86,60 +84,60 @@ class SelfPermissionsCheck extends Check {
             }
 
             command = matchingCommands.first;
-          }
 
-          CommandPermissions overrides = await command.fetchPermissions(context.guild!.id);
+            CommandPermissions overrides = await command.fetchPermissions(context.guild!.id);
 
-          if (overrides.permissions.isEmpty) {
-            overrides = (await context.client.guilds[context.guild!.id].commands.listPermissions()).singleWhere(
-              (overrides) => overrides.command == null,
-              orElse: () => overrides,
-            );
-          }
+            if (overrides.permissions.isEmpty) {
+              overrides = (await context.client.guilds[context.guild!.id].commands.listPermissions()).singleWhere(
+                (overrides) => overrides.command == null,
+                orElse: () => overrides,
+              );
+            }
 
-          bool? def;
-          bool? channelDef;
-          bool? role;
-          bool? channel;
-          bool? user;
+            bool? def;
+            bool? channelDef;
+            bool? role;
+            bool? channel;
+            bool? user;
 
-          int highestRoleIndex = -1;
+            int highestRoleIndex = -1;
 
-          for (final override in overrides.permissions) {
-            if (override.id == context.guild!.id) {
-              def = override.hasPermission;
-            } else if (override.id == Snowflake(context.guild!.id.value - 1)) {
-              channelDef = override.hasPermission;
-            } else if (override.type == CommandPermissionType.channel && override.id == context.channel.id) {
-              channel = override.hasPermission;
-            } else if (override.type == CommandPermissionType.role) {
-              int roleIndex = -1;
+            for (final override in overrides.permissions) {
+              if (override.id == context.guild!.id) {
+                def = override.hasPermission;
+              } else if (override.id == Snowflake(context.guild!.id.value - 1)) {
+                channelDef = override.hasPermission;
+              } else if (override.type == CommandPermissionType.channel && override.id == context.channel.id) {
+                channel = override.hasPermission;
+              } else if (override.type == CommandPermissionType.role) {
+                int roleIndex = -1;
 
-              int i = 0;
-              for (final role in member.roles) {
-                if (role.id == override.id) {
-                  roleIndex = i;
-                  break;
+                int i = 0;
+                for (final role in member.roles) {
+                  if (role.id == override.id) {
+                    roleIndex = i;
+                    break;
+                  }
+
+                  i++;
                 }
 
-                i++;
+                if (highestRoleIndex < roleIndex) {
+                  role = override.hasPermission;
+                  highestRoleIndex = roleIndex;
+                }
+              } else if (override.type == CommandPermissionType.user && override.id == context.user.id) {
+                user = override.hasPermission;
+                // No need to continue if we found an override for the specific user
+                break;
               }
-
-              if (highestRoleIndex < roleIndex) {
-                role = override.hasPermission;
-                highestRoleIndex = roleIndex;
-              }
-            } else if (override.type == CommandPermissionType.user && override.id == context.user.id) {
-              user = override.hasPermission;
-              // No need to continue if we found an override for the specific user
-              break;
             }
-          }
 
-          Iterable<bool> prioritized = [def, channelDef, role, channel, user].whereType<bool>();
+            Iterable<bool> prioritized = [def, channelDef, role, channel, user].whereType<bool>();
 
-          if (prioritized.isNotEmpty) {
-            return prioritized.last;
+            if (prioritized.isNotEmpty) {
+              return prioritized.last;
+            }
           }
         }
 
@@ -149,12 +147,12 @@ class SelfPermissionsCheck extends Check {
           return corresponding == permissions;
         }
 
-        return corresponding != const Permissions(0);
+        return corresponding != Permissions(0);
       });
 }
 
 class BaseSelfPermissionsCheck extends SelfPermissionsCheck {
-  BaseSelfPermissionsCheck(super.permissions, {super.name}) : super(allowsOverrides: false, requiresAll: true);
+  BaseSelfPermissionsCheck(super.permissions, {super.name}) : super(allowsDm: true, allowsOverrides: false, requiresAll: true);
 }
 
 class OwnerCheck extends Check {
