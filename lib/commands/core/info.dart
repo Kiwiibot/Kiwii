@@ -4,6 +4,7 @@ import 'package:nyxx_extensions/nyxx_extensions.dart';
 import '../../kiwii.dart';
 import '../../plugins/localization.dart';
 import '../../plugins/track_presences.dart';
+import '../../plugins/tracking.dart';
 import '../../utils/emojis.dart';
 
 const onlineColour = 0x40a258;
@@ -29,6 +30,7 @@ final infoCommand = ChatGroup(
       'user',
       'Get information about a user',
       id('info-user', (ChatContext ctx, [Member? member]) async {
+        final tracking = ctx.client.options.plugins.whereType<Tracking>().single;
         member ??= ctx.member ?? await ctx.guild!.members.get(ctx.user.id);
         final user = await ctx.client.users.fetch(member.id);
 
@@ -54,11 +56,31 @@ final infoCommand = ChatGroup(
           }
         }
 
-        final correspondingPlatforms = platforms.map((e) => emojis['${e.$2}_${e.$1}']).nonNulls;
+        final hasActivityOnConsole =
+            presence?.activities?.any(
+              (a) => [ActivityPlatform.ps4, ActivityPlatform.ps5, ActivityPlatform.xbox, ActivityPlatform.embedded].contains(a.platform),
+            ) ??
+            false;
+
+        final correspondingPlatforms = platforms.map((e) => emojis['${e.$2}_${e.$1}']).nonNulls.toList();
+
+        if (hasActivityOnConsole) {
+          final emoji = emojis['embedded_${presence?.status?.value}'];
+
+          if (emoji != null) {
+            correspondingPlatforms.add(emoji);
+          }
+        }
 
         final roles = await member.roles.get();
 
         final sortedRoles = roles.where((r) => r.id != ctx.guild?.id).toList().sorted.reversed.toList();
+
+        const threshold = Duration(days: 90);
+
+        final oldUsernames = await tracking.namesFor(user, threshold);
+        final oldGlobalNames = await tracking.globalNamesFor(user, threshold);
+        final oldNicknames = await tracking.nicknamesFor(member, threshold);
 
         final embed = EmbedBuilder(
           author: EmbedAuthorBuilder(name: user.globalName ?? user.tag, iconUrl: user.avatar.url, url: user.url),
@@ -71,6 +93,9 @@ final infoCommand = ChatGroup(
               value: correspondingPlatforms.isEmpty ? emojis['offline_web']! : correspondingPlatforms.join(' '),
               isInline: true,
             ),
+            if (oldUsernames.isNotEmpty) EmbedFieldBuilder(name: t.pastUsernames, value: oldUsernames.take(3).join(', '), isInline: false),
+            if (oldGlobalNames.isNotEmpty) EmbedFieldBuilder(name: t.pastGlobalNames, value: oldGlobalNames.take(3).join(', '), isInline: false),
+            if (oldNicknames.isNotEmpty) EmbedFieldBuilder(name: t.pastNicknames, value: oldNicknames.take(3).join(', '), isInline: false),
             // EmbedFieldBuilder(name: t.seenIn, value: (await user.fetchMutualGuilds()).entries.map((e) => e.key.name).join(', '), isInline: true),
             EmbedFieldBuilder(name: t.joinedAt, value: '${member.joinedAt.format()} (${member.joinedAt.format(TimestampStyle.relativeTime)})', isInline: false),
             EmbedFieldBuilder(name: t.createdAt, value: '${user.createdAt.format()} (${user.createdAt.format(TimestampStyle.relativeTime)})', isInline: false),

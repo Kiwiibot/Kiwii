@@ -192,7 +192,10 @@ RETURNING starrers.entry_id, entry.self_message_id;
     }
 
     if (channel.id == starboardChannelId) {
-      final re = await client.repositories.connection.execute(r'SELECT channel_id, message_id FROM starboard_entries WHERE self_message_id=$1;', parameters: [message.id.value]);
+      final re = await client.repositories.connection.execute(
+        r'SELECT channel_id, message_id FROM starboard_entries WHERE self_message_id=$1;',
+        parameters: [message.id.value],
+      );
 
       if (re.isEmpty) {
         return;
@@ -354,7 +357,7 @@ RETURNING entry_id;
 
     if (message.attachments.isNotEmpty) {
       final attachment = message.attachments.first;
-      if (['png', 'jpg', 'jpeg', 'gif', 'webp'].contains(attachment.fileName.toLowerCase())) {
+      if (['.png', '.jpg', '.jpeg', '.gif', '.webp'].any((e) => attachment.fileName.toLowerCase().endsWith(e))) {
         embed.image = EmbedImageBuilder(url: attachment.url);
       }
     }

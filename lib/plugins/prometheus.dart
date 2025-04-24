@@ -96,14 +96,3 @@ void registerEventCollectors(NyxxGateway client) {
     commands.onCommandError.where((e) => e is CommandInvocationException).cast<CommandInvocationException>().listen((error) => handle(error.context));
   });
 }
-
-class Prometheus extends NyxxPlugin<NyxxGateway> {
-  // @override
-  // Future<void> afterConnect(client) async {
-  //   // registerEventCollectors(client);
-  //   // registerPeriodicCollectors(client);
-  // }
-}
-
-
-final prometheus = Prometheus();

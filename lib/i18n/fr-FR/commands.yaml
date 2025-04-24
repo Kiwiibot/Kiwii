@@ -72,6 +72,10 @@ info:
     id: "ID : $id"
     seen_in: Vu dans
     servers: $n serveurs.
+    past_usernames: Noms d'utilisateurs passés
+    past_global_names: Noms d'affichage passés
+    past_nicknames: Surnoms passés
+
 settings:
   description: Gérer les paramètres du bot.
   usage: "[sous-commande]"

@@ -26,6 +26,7 @@ import 'package:kiwii/events/member_log.dart';
 import 'package:kiwii/plugins/load_modules.dart';
 import 'package:kiwii/plugins/prometheus.dart';
 import 'package:kiwii/plugins/track_presences.dart';
+import 'package:kiwii/plugins/tracking.dart';
 import 'package:kiwii/services/api.dart';
 import 'package:kiwii/src/converters/converters.dart';
 import 'package:get_it/get_it.dart';
@@ -98,7 +99,7 @@ Future<void> _main() async {
   final logFile = io.File('logs/log.log');
   final stderr = settings.isDev ? io.stderr : ioutils.Stderr(errFile, io.stderr);
   final stdout = settings.isDev ? io.stdout : ioutils.Stdout(logFile, io.stdout);
-  final logging = Logging(stderr: stderr, stdout: stdout, logLevel: Level.FINE, censorToken: false, truncateLogsAt: 10000);
+  final logging = Logging(stderr: stderr, stdout: stdout, logLevel: Level.INFO, truncateLogsAt: 10000);
 
   final commands = CommandsPlugin(
     prefix: mentionOr(dmOr((_) => settings.prefix)),
@@ -106,7 +107,6 @@ Future<void> _main() async {
       logErrors: false,
       defaultResponseLevel: ResponseLevel(hideInteraction: false, isDm: false, mention: false, preserveComponentMessages: true),
     ),
-    // guild: settings.isDev ? settings.testGuildId : null,
   );
 
   final logger = Logger('Kiwii');
@@ -149,13 +149,13 @@ Future<void> _main() async {
         TagPlugin(),
         ModulesPlugin(),
         TrackPresences(),
+        tracking,
         cliIntegration,
         commands,
         pagination,
         localization,
         ignoreExceptions,
         guildJoins,
-        prometheus,
       ],
     ),
   );

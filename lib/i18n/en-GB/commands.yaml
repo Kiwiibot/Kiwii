@@ -105,4 +105,7 @@ info:
     id: 'ID: $id'
     seen_in: Seen in
     servers: $n servers.
+    past_usernames: Past usernames
+    past_global_names: Past display names
+    past_nicknames: Past nicknames
 

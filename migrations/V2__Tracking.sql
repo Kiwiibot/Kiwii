@@ -1,0 +1,40 @@
+-- Revises: V1
+-- Creation Date: 2025-04-23 19:53:04.877811Z UTC
+-- Reason: Tracking
+
+CREATE TABLE IF NOT EXISTS last_seen (
+    id BIGINT PRIMARY KEY,
+    date TIMESTAMP WITH TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC') NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS last_spoke (
+    id BIGINT NOT NULL,
+    date TIMESTAMP WITH TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC') NOT NULL,
+    guild_id BIGINT,
+    PRIMARY KEY (id, guild_id)
+);
+
+CREATE TABLE IF NOT EXISTS username_changes (
+    id BIGINT NOT NULL,
+    name TEXT,
+    date TIMESTAMP WITH TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC') NOT NULL,
+    idx INTEGER NOT NULL,
+    PRIMARY KEY (id, idx)
+);
+
+CREATE TABLE IF NOT EXISTS global_name_changes (
+    id BIGINT NOT NULL,
+    name TEXT,
+    date TIMESTAMP WITH TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC') NOT NULL,
+    idx INTEGER DEFAULT 0 NOT NULL,
+    PRIMARY KEY (id, idx)
+);
+
+CREATE TABLE IF NOT EXISTS nickname_changes (
+    id BIGINT NOT NULL,
+    guild_id BIGINT NOT NULL,
+    name TEXT,
+    date TIMESTAMP WITH TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC') NOT NULL,
+    idx INTEGER DEFAULT 0 NOT NULL,
+    PRIMARY KEY (id, guild_id, idx)
+);
