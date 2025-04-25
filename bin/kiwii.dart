@@ -19,8 +19,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as io;
+import 'dart:math';
 
 import 'package:kiwii/commands/admin/rest.dart';
+import 'package:kiwii/commands/admin/stats.dart';
 import 'package:kiwii/commands/core/info.dart';
 import 'package:kiwii/events/member_log.dart';
 import 'package:kiwii/plugins/load_modules.dart';
@@ -130,7 +132,9 @@ Future<void> _main() async {
   commands.addCommand(userLookupCommand);
   commands.addCommand(caseCommand);
   commands.addCommand(infoCommand);
+  commands.addCommand(infoUserCommand);
   commands.addCommand(restCommand);
+  commands.addCommand(statsCommand);
 
   commands.addConverter(listConverter);
   commands.addConverter(chatCommandConverter);
@@ -140,8 +144,20 @@ Future<void> _main() async {
   commands.addConverter(mapObjectConverter);
   commands.addConverter(httpRouteConverter);
 
+  final status = '${settings.prefix}help ─ ${settings.statuses[Random().nextInt(settings.statuses.length)]}';
+
   final client = await Nyxx.connectGatewayWithOptions(
-    GatewayApiOptions(token: settings.token, intents: GatewayIntents.all, payloadFormat: GatewayPayloadFormat.etf, browser: 'Discord Android'),
+    GatewayApiOptions(
+      token: settings.token,
+      intents: GatewayIntents.all,
+      payloadFormat: GatewayPayloadFormat.etf,
+      browser: 'Discord Android',
+      initialPresence: PresenceBuilder(
+        isAfk: false,
+        status: CurrentUserStatus.idle,
+        activities: [ActivityBuilder(type: ActivityType.custom, name: status, state: status)],
+      ),
+    ),
     GatewayClientOptions(
       plugins: [
         logging,

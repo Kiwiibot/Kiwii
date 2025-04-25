@@ -16,7 +16,7 @@ final restCommand = ChatCommand(
     await ctx.respond(
       MessageBuilder(
         content:
-            'REST operation completed with status code ${res.statusCode}${short ? '' : '\n\n```json\n${JsonEncoder.withIndent(' ').convert(res.jsonBody)}\n```'}',
+            'REST operation completed with status code ${res.statusCode}${(short || method != 'GET') ? '' : '\n\n```json\n${JsonEncoder.withIndent(' ').convert(res.jsonBody)}\n```'}',
       ),
     );
   }),

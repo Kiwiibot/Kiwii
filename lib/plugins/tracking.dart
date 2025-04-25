@@ -15,7 +15,15 @@ final tracking = Tracking();
 
 class Tracking extends NyxxPlugin<NyxxGateway> {
   late final PendingEntitiesUpdates batchNameUpdates = [];
-  late final PendingEntitiesUpdates batchNicknamesUpdates = [];
+  late PendingEntitiesUpdates currentBatchNameUpdates = [];
+  late int totalNameUpdates = 0;
+
+  late final Timer doBatchNamesUpdateTask;
+
+  late final StreamSubscription<GuildCreateEvent> _guildCreateSubscription;
+  late final StreamSubscription<UserUpdateEvent> _userUpdateSubscription;
+  late final StreamSubscription<GuildMemberUpdateEvent> _guildMemberUpdateSubscription;
+  late final StreamSubscription<GuildMemberAddEvent> _guildMemberAddSubscription;
 
   final connection = GetIt.I.get<Connection>();
 
@@ -23,11 +31,11 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
   Future<NyxxGateway> doConnect(ApiOptions apiOptions, ClientOptions clientOptions, Future<NyxxGateway> Function() connect) async {
     final client = await super.doConnect(apiOptions, clientOptions, connect);
 
-    Timer.periodic(const Duration(seconds: 30), (_) async {
+    doBatchNamesUpdateTask = Timer.periodic(const Duration(seconds: 30), (_) async {
       await doBatchNamesUpdate();
     });
 
-    client.on<GuildCreateEvent>((event) {
+    _guildCreateSubscription = client.on((event) {
       for (final member in event.members) {
         enqueueName(member);
 
@@ -37,11 +45,11 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
       }
     });
 
-    client.on<UserUpdateEvent>((event) {
+    _userUpdateSubscription = client.on((event) {
       enqueueName(event.user);
     });
 
-    client.on<GuildMemberUpdateEvent>((event) {
+    _guildMemberUpdateSubscription = client.on((event) {
       enqueueName(event.member);
 
       if (event.member.user != null) {
@@ -49,7 +57,7 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
       }
     });
 
-    client.on<GuildMemberAddEvent>((event) {
+    _guildMemberAddSubscription = client.on((event) {
       enqueueName(event.member);
 
       if (event.member.user != null) {
@@ -58,6 +66,20 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
     });
 
     return client;
+  }
+
+  @override
+  Future<void> doClose(client, close) async {
+    await _guildCreateSubscription.cancel();
+    await _guildMemberAddSubscription.cancel();
+    await _guildMemberUpdateSubscription.cancel();
+    await _userUpdateSubscription.cancel();
+
+    doBatchNamesUpdateTask.cancel();
+    currentBatchNameUpdates.clear();
+    batchNameUpdates.clear();
+
+    await super.doClose(client, close);
   }
 
   void enqueueName(SnowflakeEntity entity) {
@@ -145,11 +167,11 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
 
     while (allNamesUpdates.isNotEmpty) {
       final currentChunkSize = allNamesUpdates.length < chunkSize ? allNamesUpdates.length : chunkSize;
-      final chunk = allNamesUpdates.sublist(0, currentChunkSize);
+      currentBatchNameUpdates = allNamesUpdates.sublist(0, currentChunkSize);
 
-      final (currentNames, currentGlobalNames, currentNicknames) = await batchGetNames(chunk);
+      final (currentNames, currentGlobalNames, currentNicknames) = await batchGetNames(currentBatchNameUpdates);
 
-      final (nameInserts, globalNameInserts, nicknameInserts) = await calculateNeededInserts(chunk, currentNames, currentGlobalNames, currentNicknames);
+      final (nameInserts, globalNameInserts, nicknameInserts) = await calculateNeededInserts(currentBatchNameUpdates, currentNames, currentGlobalNames, currentNicknames);
 
       await batchInsertNamesUpdates(nameInserts, globalNameInserts, nicknameInserts);
 
@@ -164,6 +186,7 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
           r'INSERT INTO username_changes (id, name, date, idx) VALUES ($1, $2, $3, $4) ON CONFLICT (id, idx) DO NOTHING;',
           parameters: [id, name, time, idx],
         );
+        totalNameUpdates++;
       }
     }
 
@@ -173,6 +196,7 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
           r'INSERT INTO global_name_changes (id, name, date, idx) VALUES ($1, $2, $3, $4) ON CONFLICT (id, idx) DO NOTHING;',
           parameters: [id, name, time, idx],
         );
+        totalNameUpdates++;
       }
     }
 
@@ -182,6 +206,7 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
           r'INSERT INTO nickname_changes (id, guild_id, name, date, idx) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id, guild_id, idx) DO NOTHING;',
           parameters: [id, guildId, name, time, idx],
         );
+        totalNameUpdates++;
       }
     }
   }

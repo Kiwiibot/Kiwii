@@ -24,9 +24,10 @@ import '../../utils/extensions.dart';
 import '../settings.dart';
 
 class BasePermissionsCheck extends PermissionsCheck {
-  BasePermissionsCheck(super.permissions, {super.name}) : super(allowsDm: true, allowsOverrides: false, requiresAll: true);
+  BasePermissionsCheck(super.permissions, {super.name}) : super(allowsDm: true, allowsOverrides: true, requiresAll: true);
 }
 
+// Copy pasta from nyxx_commands, but from the client perspective.
 class SelfPermissionsCheck extends Check {
   /// The bitfield representing the permissions required by this check.
   ///
@@ -48,6 +49,9 @@ class SelfPermissionsCheck extends Check {
   final bool requiresAll;
 
   SelfPermissionsCheck(this.permissions, {this.allowsOverrides = true, this.requiresAll = true, String? name, super.allowsDm = false})
+      // Forwarding [permissions] to [requiredPermissions] would lead to a promotion or demotion of the command permission
+      // because if a command requires .sendMessages | .manageGuild, but the client only requires .sendMessage, depending on the order of the check, this can lead
+      // to a massive desync between "real" required permissions and client permissions.
     : super(name: name ?? 'Self permission check on $permissions', requiredPermissions: null, (context) async {
         Guild? guild = context.guild;
 
@@ -152,7 +156,7 @@ class SelfPermissionsCheck extends Check {
 }
 
 class BaseSelfPermissionsCheck extends SelfPermissionsCheck {
-  BaseSelfPermissionsCheck(super.permissions, {super.name}) : super(allowsDm: true, allowsOverrides: false, requiresAll: true);
+  BaseSelfPermissionsCheck(super.permissions, {super.name}) : super(allowsDm: true, allowsOverrides: true, requiresAll: true);
 }
 
 class OwnerCheck extends Check {
