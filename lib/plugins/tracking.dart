@@ -17,6 +17,8 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
   late final PendingEntitiesUpdates batchNameUpdates = [];
   late PendingEntitiesUpdates currentBatchNameUpdates = [];
   late int totalNameUpdates = 0;
+  late int totalGlobalNameUpdates = 0;
+  late int totalNicknameUpdates = 0;
 
   late final Timer doBatchNamesUpdateTask;
 
@@ -63,6 +65,53 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
       if (event.member.user != null) {
         enqueueName(event.member.user!);
       }
+    });
+
+    client.on<GuildMemberRemoveEvent>((event) {
+      enqueueName(event.user);
+    });
+
+    client.on<GuildDeleteEvent>((event) {
+      if (event.deletedGuild != null) {
+        for (final member in event.deletedGuild!.members.cache.values) {
+          enqueueName(member);
+
+          if (member.user != null) {
+            enqueueName(member.user!);
+          }
+        }
+      }
+    });
+
+    client.on<GuildMembersChunkEvent>((event) {
+      for (final member in event.members) {
+        enqueueName(member);
+        if (member.user != null) {
+          enqueueName(member.user!);
+        }
+      }
+    });
+
+    client.onGuildUpdate.listen((event) {
+      for (final member in event.guild.members.cache.values) {
+        enqueueName(member);
+
+        if (member.user != null) {
+          enqueueName(member.user!);
+        }
+      }
+    });
+
+    client.onTypingStart.listen((event) async {
+
+
+      final user = await event.user.get();
+
+      if (user.isBot) {
+        return;
+      }
+
+      enqueueName(user);
     });
 
     return client;
@@ -171,7 +220,12 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
 
       final (currentNames, currentGlobalNames, currentNicknames) = await batchGetNames(currentBatchNameUpdates);
 
-      final (nameInserts, globalNameInserts, nicknameInserts) = await calculateNeededInserts(currentBatchNameUpdates, currentNames, currentGlobalNames, currentNicknames);
+      final (nameInserts, globalNameInserts, nicknameInserts) = await calculateNeededInserts(
+        currentBatchNameUpdates,
+        currentNames,
+        currentGlobalNames,
+        currentNicknames,
+      );
 
       await batchInsertNamesUpdates(nameInserts, globalNameInserts, nicknameInserts);
 
@@ -182,31 +236,31 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
   Future<void> batchInsertNamesUpdates(NamesInserts usernamesInserts, NamesInserts globalNamesInserts, NamesInserts nicknamesInserts) async {
     if (usernamesInserts.isNotEmpty) {
       for (final (id, name, time, idx, _) in usernamesInserts) {
-        await connection.execute(
-          r'INSERT INTO username_changes (id, name, date, idx) VALUES ($1, $2, $3, $4) ON CONFLICT (id, idx) DO NOTHING;',
-          parameters: [id, name, time, idx],
-        );
-        totalNameUpdates++;
+        totalNameUpdates +=
+            (await connection.execute(
+              r'INSERT INTO username_changes (id, name, date, idx) VALUES ($1, $2, $3, $4) ON CONFLICT (id, idx) DO NOTHING;',
+              parameters: [id, name, time, idx],
+            )).affectedRows;
       }
     }
 
     if (globalNamesInserts.isNotEmpty) {
       for (final (id, name, time, idx, _) in globalNamesInserts) {
-        await connection.execute(
-          r'INSERT INTO global_name_changes (id, name, date, idx) VALUES ($1, $2, $3, $4) ON CONFLICT (id, idx) DO NOTHING;',
-          parameters: [id, name, time, idx],
-        );
-        totalNameUpdates++;
+        totalGlobalNameUpdates +=
+            (await connection.execute(
+              r'INSERT INTO global_name_changes (id, name, date, idx) VALUES ($1, $2, $3, $4) ON CONFLICT (id, idx) DO NOTHING;',
+              parameters: [id, name, time, idx],
+            )).affectedRows;
       }
     }
 
     if (nicknamesInserts.isNotEmpty) {
       for (final (id, name, time, idx, guildId) in nicknamesInserts) {
-        await connection.execute(
-          r'INSERT INTO nickname_changes (id, guild_id, name, date, idx) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id, guild_id, idx) DO NOTHING;',
-          parameters: [id, guildId, name, time, idx],
-        );
-        totalNameUpdates++;
+        totalNicknameUpdates +=
+            (await connection.execute(
+              r'INSERT INTO nickname_changes (id, guild_id, name, date, idx) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id, guild_id, idx) DO NOTHING;',
+              parameters: [id, guildId, name, time, idx],
+            )).affectedRows;
       }
     }
   }

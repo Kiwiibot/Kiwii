@@ -146,6 +146,7 @@ final infoCommand = ChatGroup(
         }
 
         await userInfoHandler(ctx, user, member, hidden);
+
       }),
       options: KiwiiCommandOptions(
         clientPermissions: Permissions.embedLinks,

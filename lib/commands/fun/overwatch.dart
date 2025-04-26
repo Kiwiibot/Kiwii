@@ -193,7 +193,7 @@ final overwatchCommand = ChatGroup(
               }
 
               embed.addField(name: t.overwatch.role, value: hero.role.name.capitalize, isInline: true);
-              embed.addField(name: t.overwatch.location, value: s(hero.location), isInline: true);
+              embed.addField(name: t.overwatch.location, value: hero.location, isInline: true);
               embed.addField(name: t.overwatch.age, value: hero.age.toString(), isInline: true);
               embed.addField(
                 name: t.overwatch.dateofBirth,

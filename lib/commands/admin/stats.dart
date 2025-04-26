@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
@@ -8,6 +10,14 @@ import '../../plugins/tracking.dart';
 final _statsCommandPermissions = Permissions.sendMessages | Permissions.viewChannel;
 final _statsCommandClientPermissions = Permissions.sendMessages | Permissions.viewChannel;
 
+String stringifyTask(Timer task) => switch (task) {
+  Timer(:final isActive, :final tick) => switch (null) {
+    _ when isActive && tick <= 0 => 'PENDING',
+    _ when isActive => 'ACTIVE',
+    _ => 'CANCELED',
+  },
+};
+
 final statsCommand = ChatCommand(
   'stats',
   '',
@@ -15,16 +25,14 @@ final statsCommand = ChatCommand(
     final tracking = ctx.client.options.plugins.whereType<Tracking>().first;
 
     final rows = [
-      ['TBNU', 'CBNU', 'TNU', 'BNT'],
+      ['TBNU', 'CBNU', 'TUU', 'TGNU', 'TNU', 'BNT'],
       [
         tracking.batchNameUpdates.length,
         tracking.currentBatchNameUpdates.length,
         tracking.totalNameUpdates,
-        tracking.doBatchNamesUpdateTask.isActive && tracking.doBatchNamesUpdateTask.tick <= 0
-            ? 'PENDING'
-            : tracking.doBatchNamesUpdateTask.isActive
-            ? 'ACTIVE'
-            : 'CANCELED',
+        tracking.totalGlobalNameUpdates,
+        tracking.totalNicknameUpdates,
+        stringifyTask(tracking.doBatchNamesUpdateTask),
       ],
     ];
 
