@@ -103,15 +103,23 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
     });
 
     client.onTypingStart.listen((event) async {
-
-
       final user = await event.user.get();
 
-      if (user.isBot) {
-        return;
-      }
-
       enqueueName(user);
+    });
+
+    client.users.cache.onCacheUpdate.listen((user) {
+      enqueueName(user);
+    });
+
+    client.cache.onCachesUpdate.listen((entity) {
+      switch (entity) {
+        case Member():
+          enqueueName(entity);
+          if (entity.user != null) {
+            enqueueName(entity.user!);
+          }
+      }
     });
 
     return client;
@@ -132,6 +140,10 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
   }
 
   void enqueueName(SnowflakeEntity entity) {
+    if (entity case User(isBot: true)) {
+      return;
+    }
+
     batchNameUpdates.add((entity, DateTime.now()));
   }
 

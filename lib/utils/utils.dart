@@ -18,8 +18,8 @@
 
 import 'dart:math';
 
-import 'package:duration/duration.dart' as duration;
-import 'package:duration/locale.dart' as duration;
+import 'package:hourglass/hourglass.dart' as hourglass;
+import 'package:hourglass/locale.dart' as hourglass;
 import 'package:nyxx/nyxx.dart';
 
 import '../kiwii.dart';
@@ -155,11 +155,11 @@ String? pickByWeights(Map<String, int> entries) {
 
 String prettyDuration(Duration amount, [AppLocale locale = AppLocale.enGb]) {
   final map = {
-    AppLocale.enGb: duration.EnglishDurationLocale(),
-    AppLocale.frFr: duration.FrenchDurationLocale(),
+    AppLocale.enGb: hourglass.EnglishDurationLocale(),
+    AppLocale.frFr: hourglass.FrenchDurationLocale(),
   };
 
-  return duration.prettyDuration(amount, locale: map[locale]!);
+  return hourglass.prettyDuration(amount, locale: map[locale]!);
 }
 
 Map<V, K> reverseMap<K, V>(Map<K, V> map) => {for (var e in map.entries) e.value: e.key};

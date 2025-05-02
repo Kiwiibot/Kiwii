@@ -135,6 +135,7 @@ Future<void> _main() async {
   commands.addCommand(infoUserCommand);
   commands.addCommand(restCommand);
   commands.addCommand(statsCommand);
+  commands.addCommand(namesCommand);
 
   commands.addConverter(listConverter);
   commands.addConverter(chatCommandConverter);
@@ -143,6 +144,7 @@ Future<void> _main() async {
   commands.addConverter(localeConverter);
   commands.addConverter(mapObjectConverter);
   commands.addConverter(httpRouteConverter);
+  commands.addConverter(durationConverter);
 
   final status = '${settings.prefix}help ─ ${settings.statuses[Random().nextInt(settings.statuses.length)]}';
 
@@ -289,20 +291,36 @@ Future<void> _main() async {
     }
 
     if (error case CheckFailedException(:final context, :final failed)) {
-      if (failed case final BasePermissionsCheck failed) {
-        await context.respond(
-          MessageBuilder(
-            content:
-                'Missing permissions!\nYou are missing the following permissions to execute this command: ${translatePermissions(failed.permissions, context.guild.t).map((p) => '`$p`').join(', ')}',
-          ),
-        );
-        return;
-      }
-
       if (failed is OwnerCheck) {
         await context.respond(MessageBuilder(content: 'This command can only be executed by the bot owner!'));
         return;
       }
+
+      if (failed is GuildCheck) {
+        // we silently drop.
+        return;
+      }
+    }
+
+    if (error case final NotEnoughArgumentsException exception) {
+      final args = (exception.context as MessageChatContext).command.arguments;
+      final rawArguments = StringView((exception.context as MessageChatContext).rawArguments);
+      final providedArgs =
+          (await args
+                  .map((param) {
+                    if (rawArguments.eof) {
+                      return null;
+                    }
+                    return parse(commands, exception.context, rawArguments, param.type, converterOverride: param.converterOverride).catchError((_) => null);
+                  })
+                  .nonNulls
+                  .wait)
+              .toList();
+      final difference = args.indexed.where((e) => providedArgs.asMap()[e.$1] == null).map((e) => e.$2).toList();
+      await exception.context.respond(
+        MessageBuilder(content: 'Not enough arguments, missing: ${difference.where((e) => !e.isOptional).map((e) => '`${e.name}`').join(', ')}'),
+      );
+      return;
     }
 
     commands.logger.shout('Uncaught exception in command\n${error.message}', error, error.stackTrace);

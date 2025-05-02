@@ -146,13 +146,117 @@ final infoCommand = ChatGroup(
         }
 
         await userInfoHandler(ctx, user, member, hidden);
-
       }),
       options: KiwiiCommandOptions(
         clientPermissions: Permissions.embedLinks,
         examples: [(command: '@user', description: 'Get information about the @user.'), (command: '', description: 'Get information about yourself.')],
         usage: '<user>',
       ),
+    ),
+  ],
+);
+
+String displayNames(List<String> usernames, List<String> globalNames, [List<String>? nicks]) {
+  final sb = StringBuffer();
+
+  if (usernames.isNotEmpty) {
+    sb.writeln('Usernames:');
+    sb.writeAll(usernames, ', ');
+    sb.writeln();
+    sb.writeln();
+  }
+
+  if (globalNames.isNotEmpty) {
+    sb.writeln('Display Names:');
+    sb.writeAll(globalNames, ', ');
+    sb.writeln();
+    sb.writeln();
+  }
+
+  if (nicks != null && nicks.isNotEmpty) {
+    sb.writeln('Nicknames:');
+    sb.writeAll(nicks, ', ');
+    sb.writeln();
+    sb.writeln();
+  }
+
+  return sb.toString();
+}
+
+final namesCommand = ChatGroup(
+  'names',
+  'Get your past usernames, nicknames or display names',
+  children: [
+    ChatCommand(
+      'all',
+      'See all your nicknames, usernames and display names',
+      id('names-all', (ChatContext ctx, [User? user, Duration? since]) async {
+        user ??= ctx.user;
+        final tracking = ctx.client.options.plugins.whereType<Tracking>().first;
+
+        final usernames = await tracking.namesFor(user, since);
+
+        final globalNames = await tracking.globalNamesFor(user, since);
+
+        List<String>? nicknames;
+
+        if (ctx.guild case final guild?) {
+          final member = await guild.members.get(user.id);
+
+          nicknames = await tracking.nicknamesFor(member, since);
+        }
+
+        final s = displayNames(usernames, globalNames, nicknames);
+
+        await ctx.respond(
+          MessageBuilder(content: 'Past usernames, display names and nicknames for ${user.mention}\n${codeBlock(s)}', allowedMentions: AllowedMentions.users()),
+        );
+      }),
+    ),
+    ChatCommand(
+      'usernames',
+      'See all your past usernames',
+      id('names-usernames', (ChatContext ctx, [User? user, Duration? since]) async {
+        user ??= ctx.user;
+        final tracking = ctx.client.options.plugins.whereType<Tracking>().first;
+
+        final usernames = await tracking.namesFor(user, since);
+
+        final s = displayNames(usernames, []);
+
+        await ctx.respond(
+          MessageBuilder(content: 'Past usernames for ${user.mention}\n${codeBlock(s)}', allowedMentions: AllowedMentions.users()),
+        );
+      }),
+    ),
+    ChatCommand(
+      'nicks',
+      'See all your past nicknames',
+      id('names-nicks', (ChatContext ctx, [Member? member, Duration? since]) async {
+        member ??= ctx.member!;
+        final tracking = ctx.client.options.plugins.whereType<Tracking>().first;
+
+        final nicks = await tracking.nicknamesFor(member, since);
+
+        final s = displayNames([], [], nicks);
+
+        await ctx.respond(MessageBuilder(content: 'Past nicknames for ${member.user?.mention}\n${codeBlock(s)}', allowedMentions: AllowedMentions.users()));
+      }),
+      checks: [GuildCheck.all()],
+    ),
+    ChatCommand(
+      'display-names',
+      'See all your past display names',
+      id('names-display-names', (ChatContext ctx, [User? user, Duration? since]) async {
+        user ??= ctx.user;
+        final tracking = ctx.client.options.plugins.whereType<Tracking>().first;
+
+        final globalNames = await tracking.globalNamesFor(user, since);
+
+        final s = displayNames([], globalNames);
+
+        await ctx.respond(MessageBuilder(content: 'Past display names for ${user.mention}\n${codeBlock(s)}', allowedMentions: AllowedMentions.users()));
+      }),
     ),
   ],
 );

@@ -33,7 +33,9 @@ dependencies:
       url: https://git.sr.ht/~lexie/option
 
   dotenv: any
-  duration: ^4.0.3
+  hourglass:
+    git:
+      url: https://github.com/Lexedia/hourglass.git
   sqlite3: ^2.4.2
   string_similarity: ^2.0.0
   style_cron_job: ^1.0.4+2

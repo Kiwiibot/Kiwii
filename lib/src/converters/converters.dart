@@ -19,11 +19,14 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:hourglass/hourglass.dart';
+import 'package:hourglass/locale.dart';
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
 
 import '../../plugins/base.dart';
 import '../../plugins/load_modules.dart';
+import '../../plugins/localization.dart';
 import '../../translations.g.dart';
 import '../../utils/utils.dart';
 import '../models/tag.dart';
@@ -170,6 +173,15 @@ class HttpRouteWrapper {
   HttpRouteWrapper({required this.route, this.isDone = false});
 }
 
+Duration convertDuration(StringView view, ContextData ctx) {
+  final loc = switch (ctx.guild.t.$meta.locale) {
+    AppLocale.enGb => EnglishDurationLocale(),
+    AppLocale.frFr => FrenchDurationLocale(),
+  };
+
+  return parseDuration(view.getQuotedWord(), separator: ', ', language: loc);
+}
+
 const localeConverter = SimpleConverter.fixed(elements: [AppLocale.enGb, AppLocale.frFr], stringify: stringifyLocale, reviver: reviverLocale);
 const basePluginConverter = Converter<BasePlugin>(getBasePlugin, autocompleteCallback: autocompleteModules);
 const tagConverter = SimpleConverter(provider: getTags, stringify: stringifyTag);
@@ -177,3 +189,4 @@ const chatCommandConverter = Converter<ChatCommand>(convertChatCommand, autocomp
 const listConverter = Converter<List<String>>(convertListString);
 const mapObjectConverter = Converter<Map<String, Object?>>(convertMapObject);
 const httpRouteConverter = Converter<HttpRoute>(convertHttpRoute);
+const durationConverter = Converter<Duration>(convertDuration);

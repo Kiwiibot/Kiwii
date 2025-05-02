@@ -21,7 +21,7 @@ import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart' hide Cache;
 import 'package:neat_cache/neat_cache.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
-import 'package:duration/duration.dart';
+import 'package:hourglass/hourglass.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
 
 import '../../kiwii.dart';
