@@ -449,7 +449,7 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
             (await connection.execute(
               InternalQueryDescription.direct(
                 r'INSERT INTO banner_changes (id, hash, banner, date, idx) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id, idx) DO NOTHING;',
-                types: [Type.bigInteger, Type.text, Type.timestampTz, Type.integer],
+                types: [Type.bigInteger, Type.text, Type.byteArray, Type.timestampTz, Type.integer],
               ),
               parameters: [id, hash, banner, time, idx],
             )).affectedRows;
