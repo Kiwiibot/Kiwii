@@ -260,7 +260,7 @@ Future<User?> convertUser(StringView view, ContextData ctx) async {
   String word = view.getQuotedWord();
 
   final users = await waitFor(switch (ctx.guild) {
-    final guild? => (await ctx.client.gateway.listGuildMembers(guild.id).toList()).map((member) => nyxx_commands.memberToUser(member, ctx) as User),
+    final guild? => (await ctx.client.gateway.listGuildMembers(guild.id).toList()).map((member) => nyxx_commands.memberToUser(member, ctx) as FutureOr<User>),
     _ => switch (ctx.channel) {
       DmChannel(:final recipient) => [await ctx.client.user.fetch(), recipient],
       GroupDmChannel(:final recipients) => [await ctx.client.user.fetch(), ...recipients],

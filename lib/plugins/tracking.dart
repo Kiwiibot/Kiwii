@@ -110,12 +110,6 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
       }
     });
 
-    client.onTypingStart.listen((event) async {
-      final user = await event.user.get();
-
-      enqueueName(user);
-    });
-
     client.users.cache.onCacheUpdate.listen((user) {
       enqueueName(user);
     });
@@ -520,7 +514,7 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
           avatarInserts.add((user.id.value, user.avatar.hash, await user.avatar.fetch(size: 4096), timestamp, currentAvatarIdx + 1, null));
         }
 
-        if (await user.get() case User(:final banner?)) {
+        if (user case User(:final banner?)) {
           if (banner.hash != currentBannerHash) {
             bannerInserts.add((user.id.value, banner.hash, await banner.fetch(size: 4096), timestamp, currentAvatarIdx + 1, null));
           }
