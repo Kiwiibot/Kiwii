@@ -143,17 +143,17 @@ final helpCommand = ChatCommand(
 (Flags<Permissions>?, Flags<Permissions>?) digPermissions(CommandGroup<CommandContext> command, (Flags<Permissions>, Flags<Permissions>) basePermissions) =>
     switch (command) {
       ChatCommand(:final options, :final parent) => switch (options) {
-        KiwiiCommandOptions(:final permissions?, :final clientPermissions?) =>
+        KiwiiCommandOptions(:final permissions, :final clientPermissions) =>
           parent != null
-              ? digPermissions(parent, (basePermissions.$1 | permissions, basePermissions.$2 | clientPermissions))
-              : (basePermissions.$1 | permissions, basePermissions.$2 | clientPermissions),
+              ? digPermissions(parent, (basePermissions.$1 | (permissions ?? Permissions(0)), basePermissions.$2 | (clientPermissions ?? Permissions(0))))
+              : (basePermissions.$1 | (permissions ?? Permissions(0)), basePermissions.$2 | (clientPermissions ?? Permissions(0))),
         _ => basePermissions,
       },
       ChatGroup(:final options, :final parent) => switch (options) {
-        KiwiiCommandOptions(:final permissions?, :final clientPermissions?) =>
+        KiwiiCommandOptions(:final permissions, :final clientPermissions) =>
           parent != null
-              ? digPermissions(parent, (basePermissions.$1 | permissions, basePermissions.$2 | clientPermissions))
-              : (basePermissions.$1 | permissions, basePermissions.$2 | clientPermissions),
+              ? digPermissions(parent, (basePermissions.$1 | (permissions ?? Permissions(0)), basePermissions.$2 | (clientPermissions ?? Permissions(0))))
+              : (basePermissions.$1 | (permissions ?? Permissions(0)), basePermissions.$2 | (clientPermissions ?? Permissions(0))),
         _ => basePermissions,
       },
       _ => basePermissions,

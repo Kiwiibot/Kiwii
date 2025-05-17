@@ -224,7 +224,7 @@ Future<String> generateCaseLog(Case ccase, Snowflake logChannelId, Translations 
   }
 
   if (ccase.reportRefId != null) {
-    // TODO: Fetch report
+    // final report = 
   }
 
   return msg;

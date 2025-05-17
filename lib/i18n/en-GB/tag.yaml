@@ -1,4 +1,4 @@
-alreadyExists: with that name already exists!
+already_exists: with that name already exists!
 tag: A tag @:tag.alreadyExists
 command: A command @:tag.alreadyExists
 create_error: An error occurred while creating the tag.\n$message.
@@ -13,3 +13,5 @@ owner: Owner
 uses: Uses
 created_at: Tag created at
 last_updated: "Last updated:"
+claim_member_still_here: You can't claim a tag from a member who's still in the server!
+claim_succesful: Successfully claimed `$tag`!

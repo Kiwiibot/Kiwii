@@ -148,12 +148,14 @@ Future<void> onMessageDelete(MessageDeleteEvent event) async {
 
 bool isImage(List<int> data) {
   final header = data.sublist(0, 4).map((d) => d.toRadixString(16)).join();
+  final webpIdentifierBytes = data.sublist(8, 12).map((d) => d.toRadixString(16)).join();
 
-  // Only gifs, pngs, and jpegs are displayed as images in Discord.
+  // Only gifs, webps, pngs, and jpegs are displayed as images in Discord.
   return switch (header) {
     '89504e47' /* image/gif */ => true,
     '47494638' /* image/png */ => true,
     'ffd8ffe0' || 'ffd8ffe1' || 'ffd8ffe2' || 'ffd8ffe3' || 'ffd8ffe8' /* image/jpeg */ => true,
+    '52494646' when webpIdentifierBytes == '57454250' /* image/webp */ => true,
     _ => false,
   };
 }

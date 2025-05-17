@@ -30,7 +30,7 @@ ban:
     You have been banned from $guildName.
     Case #$caseId
     Reason: $reason
-  dm_appeal: If you believe this ban is unjust, you can appeal it by replying to this message.
+  dm_appeal: If you do believe this ban is unjustified, you can appeal it by replying to this message.
   pending: Do you really want to ban $user?
   success: $user has successfully been banned.
   cancel: Ban cancelled for $user.
@@ -161,3 +161,49 @@ logs:
     footer_accepted: Appeal accepted by $moderator
     footer_rejected: Appeal rejected by $moderator
 
+report:
+  common:
+    errors:
+      bot: You cannot report bots.
+      no_self: You cannot report yourself.
+      recently_reported:
+        message: This message has already been recently reported, thanks for making our community a better place!
+        user: This user has already been recently reported, thanks for making our community a better place!
+      invalid_attachment: Invalid attachment, only images are allowed.
+      timed_out: The report has timed out, please try again.
+      no_attachment_forward: This user has already been recently reported, you must specify an attachment to forward if it helps the context of the report.
+    warnings: |-
+      **Attention:** We **cannot** moderate Trust & Safety issues.
+      If you do believe a user or a message breaks the Discord's Terms of Services, please report them by the appropriate way immediately.
+      **Creating false reports may lead to moderation actions.**
+  post:
+    name: Report $reportId - $user
+    reason: reported by $user
+  buttons:
+    forward: Forward Message.
+    forward_attachment: Forward Attachment.
+    execute: Create Report
+    cancel: Cancel
+    discord_report: Report to Discord
+  user:
+    pending: |-
+      Are you sure you want to report $user to the server moderators?
+      **Reason:** $reason
+    pending_forward: This user has already been reported recently, do you want to forward the attachment to that report?
+    cancel: User Report canceled.
+    success: Successfully reported user, thanks for making our community a better place!
+    success_forward: Successfully forwarded the attachment to existing report, thanks for making our community safer!
+    modal:
+      title: User Report
+    attachment_upsell:
+      base: ℹ️ ***Tip:** If it helps to provide context, you can attach an image to this report using the $reportCommand!*
+      mentions: $reportCommand command
+      option: attachment option
+  message:
+    pending: |-
+      Are you sure you want to report $messageLink to the server moderators?
+      **Reason:** $reason
+    pending_forward: This message has already been reported recently, do you want to forward $messageLink to that report?
+    cancel: Message Report canceled.
+    success: Successfully reported message, thanks for making our community a better place!
+    success_forward: Successfully forwarded the message to the existing report, thanks for making our community safer!

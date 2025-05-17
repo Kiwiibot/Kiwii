@@ -17,24 +17,16 @@
  */
 
 import 'package:nyxx/nyxx.dart';
+import 'package:option/option.dart';
 
 // import '../../../database.dart' hide Guild;
 import '../../../kiwii.dart';
 import '../../models/appeal.dart';
 import '../../models/case.dart';
 import '../appeal/create_appeal.dart';
+import 'update_case.dart';
 
-enum CaseAction {
-  role,
-  unrole,
-  warn,
-  kick,
-  softBan,
-  ban,
-  unban,
-  timeout,
-  timeoutEnd,
-}
+enum CaseAction { role, unrole, warn, kick, softBan, ban, unban, timeout, timeoutEnd }
 
 const reportAutoResolveIgnoreActions = [CaseAction.unban, CaseAction.timeoutEnd];
 
@@ -59,41 +51,19 @@ Future<Case> createCase(Guild guild, CreateCase ccase, {bool skip = false, Membe
         case CaseAction.kick:
           await target!.delete(auditLogReason: reason);
         case CaseAction.softBan:
-          await guild.createBan(
-            ccase.targetId,
-            deleteMessages: Duration(days: deleteMessageDays ?? 1),
-            auditLogReason: reason,
-          );
-          await guild.deleteBan(
-            ccase.targetId,
-            auditLogReason: reason,
-          );
+          await guild.createBan(ccase.targetId, deleteMessages: Duration(days: deleteMessageDays ?? 1), auditLogReason: reason);
+          await guild.deleteBan(ccase.targetId, auditLogReason: reason);
         case CaseAction.ban:
-          await guild.createBan(
-            ccase.targetId,
-            deleteMessages: Duration(days: deleteMessageDays ?? 0),
-            auditLogReason: reason,
-          );
+          await guild.createBan(ccase.targetId, deleteMessages: Duration(days: deleteMessageDays ?? 0), auditLogReason: reason);
 
           if (guildSettings.appealChannelId != null) {
             // Create a pending appeal.
-            await createAppeal(CreateAppeal(
-              guildId: guild.id,
-              targetId: ccase.targetId,
-              targetTag: ccase.targetTag,
-              refId: nextCaseId,
-            ));
+            await createAppeal(CreateAppeal(guildId: guild.id, targetId: ccase.targetId, targetTag: ccase.targetTag, refId: nextCaseId));
           }
         case CaseAction.unban:
-          await guild.deleteBan(
-            ccase.targetId,
-            auditLogReason: reason,
-          );
+          await guild.deleteBan(ccase.targetId, auditLogReason: reason);
         case CaseAction.timeout:
-          await target!.update(
-            MemberUpdateBuilder(communicationDisabledUntil: ccase.actionExpiration?.toUtc()),
-            auditLogReason: reason,
-          );
+          await target!.update(MemberUpdateBuilder(communicationDisabledUntil: ccase.actionExpiration?.toUtc()), auditLogReason: reason);
       }
     }
   } catch (e) {
@@ -106,27 +76,22 @@ Future<Case> createCase(Guild guild, CreateCase ccase, {bool skip = false, Membe
 
   final newCase = await client.repositories.cases.create(caseData);
 
-  // if (!reportAutoResolveIgnoreActions.contains(ccase.action)) {
-    // try {
-  //     final resolvedReports = await resolvePendingReports(
-  //       guild,
-  //       ccase.targetId,
-  //       newCase.caseId,
-  //       await guild.manager.client.users.get(newCase.modId!),
-  //     );
+  if (!reportAutoResolveIgnoreActions.contains(ccase.action)) {
+    try {
+      final resolvedReports = await client.repositories.reports.resolvePendingReports(
+        guild,
+        ccase.targetId,
+        newCase.caseId,
+        await guild.manager.client.users.get(newCase.modId!),
+      );
 
-  //     if (resolvedReports.isNotEmpty && ccase.reportRefId != null) {
-  //       return updateCase(UpdateCase(
-  //         caseId: newCase.caseId,
-  //         guildId: newCase.guildId,
-  //         reportRefId: Some(resolvedReports.last.reportId),
-  //       ));
-  //     }
-  //   } catch (e) {
-  //     print('Failed to resolve reports for case $nextCaseId in guild ${guild.id}');
-  //   }
-  // }
+      if (resolvedReports.isNotEmpty && ccase.reportRefId != null) {
+        return updateCase(UpdateCase(caseId: newCase.caseId, guildId: newCase.guildId, reportRefId: Some(resolvedReports.last.reportId)));
+      }
+    } catch (e) {
+      print('Failed to resolve reports for case $nextCaseId in guild ${guild.id}');
+    }
+  }
 
   return newCase;
 }
-

@@ -44,38 +44,6 @@ help:
       - Obtenez de l'aide à propos de la commande ban.
       - Listez les commandes disponibles.
 
-info:
-  description: Obtenir des informations sur un utilisateur ou le serveur.
-  usage: "[sous-commande]"
-  examples:
-    usages: []
-    descriptions: []
-  user:
-    description: Obtenir des informations sur un utilisateur, vous-même si aucun utilisateur n'est fourni.
-    usage: "<utilisateur>"
-    examples:
-      usages:
-        - "@user"
-        - ""
-      descriptions:
-        - Obtenez des informations sur l'@user.
-        - Obtenez des informations sur vous-même.
-    member: Membre
-    name: Nom
-    nick: Surnom
-    joined_at: A rejoint le serveur à
-    created_at: Créé le
-    status: Statut
-    roles:
-      one: Rôle [$n]
-      other: Rôles [$n]
-    id: "ID : $id"
-    seen_in: Vu dans
-    servers: $n serveurs.
-    past_usernames: Noms d'utilisateurs passés
-    past_global_names: Noms d'affichage passés
-    past_nicknames: Surnoms passés
-
 settings:
   description: Gérer les paramètres du bot.
   usage: "[sous-commande]"
@@ -104,3 +72,55 @@ settings:
           - ""
         descriptions:
           - "Annule la journalisation du bot"
+
+
+info:
+  description: Obtenez des informations sur un utilisateur ou le serveur.
+  usage: "[sous-commande]"
+  examples:
+    usages: []
+    descriptions: []
+  user:
+    description: Obtenez des informations sur un utilisateur, ou sur vous si aucun utilisateur n'a été fourni.
+    usage: "<utilisateur>"
+    examples:
+      usages:
+        - "@utilisateur"
+        - ""
+      descriptions:
+        - Obtenez des informations sur l'utilisateur @utilisateur.
+        - Obtenez des informations sur vous.
+    member: Membre
+    name: Nom
+    nick: Surnom
+    joined_at: A rejoint le
+    created_at: Créé le
+    status: Statut
+    roles:
+      one: Rôle [$n]
+      other: Rôles [$n]
+    id: 'ID: $id'
+    seen_in: Vu dans
+    servers:
+      one: $n serveur.
+      other: $n serveurs.
+    past_usernames: Anciens noms d'utilisateur
+    past_global_names: Anciens noms d'affichage
+    past_nicknames: Anciens surnoms
+
+avatar:
+  description: >-
+    Obtenez l'avatar de l'utilisateur, ou le vôtre si non spécifié, vous pouvez également inclure une taille facultative.
+    La taille sera limitée à la puissance de deux la plus proche disponible ; en cas d'égalité, la plus petite est choisie.
+  usage: "<utilisateur> <taille:16..4096> <serveur>"
+  examples:
+    usages:
+      - "@lexedia"
+      - "@utilisateur 2048"
+      - "@utilisateur 557"
+    descriptions:
+      - "Obtenez l'avatar de @lexedia"
+      - "Obtenez l'avatar d'@utilisateur, avec une taille de 2048"
+      - "Obtenez l'avatar du serveur d'@utilisateur, avec une taille de 512"
+  avatar_of: Avatar de $user
+  display_error: Si l'image ne s'affiche pas, [cliquez ici]($url)

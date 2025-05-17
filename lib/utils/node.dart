@@ -25,28 +25,32 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 /// Run js code on the piston API
-Future<String> runPistonJS(String code, [Map<String, Object?>? context]) async {
+Future<String> runWandboxJS(String code, [Map<String, Object?>? context]) async {
   final preamble = '''
-  const vm = require('node:vm');
+(async () => {
   const dartCtx = ${context != null ? json.encode(context) : '{}'};
-  const context = vm.createContext({...dartCtx});
-  const script = new vm.Script(decodeURIComponent(`${Uri.encodeComponent(code)}`));
-  script.runInContext(context);
-  console.log(JSON.stringify(context));
+  Object.assign(globalThis, dartCtx);
+  globalThis.result = (async () => {
+    $code
+  })();
+  console.log(await result);
+})();
 ''';
 
   final response = await http.post(
-    Uri.parse('https://emkc.org/api/v2/piston/execute'),
+    Uri.parse('https://wandbox.org/api/compile.json'),
     body: json.encode({
-      'language': 'javascript',
-      'files': [
-        {'content': preamble},
-      ],
-      'version': '18.15.0',
+      "compiler": "nodejs-20.17.0",
+      "title": "",
+      "description": "",
+      "code": preamble,
+      "codes": <void>[],
+      "options": "",
+      "stdin": "",
+      "compiler-option-raw": "",
+      "runtime-option-raw": "",
     }),
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: {'Content-Type': 'application/json'},
   );
 
   if (response.statusCode != 200) {
@@ -54,7 +58,7 @@ Future<String> runPistonJS(String code, [Map<String, Object?>? context]) async {
   }
 
   final result = json.decode(response.body);
-  return result['run']['stdout'] as String;
+  return result['program_output'] as String;
 }
 
 Future<String> runSandboxedJS(String code, [Map<String, Object?>? context]) async {
@@ -69,7 +73,7 @@ Future<String> runSandboxedJS(String code, [Map<String, Object?>? context]) asyn
 
 ''';
 
-// await File('preamble.js').writeAsString(preamble);
+  // await File('preamble.js').writeAsString(preamble);
 
   final process = await Process.run('node', ['-e', preamble]);
 

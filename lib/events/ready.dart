@@ -46,9 +46,9 @@ Future<void> readyEvent(ReadyEvent event) async {
     );
   });
 
-  Timer.periodic(const Duration(seconds: 30), (timer) async {
-    await client.httpHandler.httpClient.head(Uri.parse(settings.statusUrl));
-  });
+  // Timer.periodic(const Duration(seconds: 30), (timer) async {
+  //   await client.httpHandler.httpClient.head(Uri.parse(settings.statusUrl));
+  // });
 
   client.logger.info('Connected as ${(await client.user.get()).tag}');
 }

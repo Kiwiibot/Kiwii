@@ -79,7 +79,7 @@ final settingsCommand = ChatGroup(
         ChatCommand(
           'logs',
           'Set the log channel',
-          id('set-settings-logchannel', (ChatContext ctx, GuildTextChannel channel) async {
+          id('settings-set-logchannel', (ChatContext ctx, GuildTextChannel channel) async {
             final webhook = await ctx.client.webhooks.create(
               WebhookBuilder(name: (await ctx.client.user.get()).username, channelId: channel.id),
               auditLogReason: ctx.guild.t.settings.webhookCreateReason,
@@ -88,6 +88,15 @@ final settingsCommand = ChatGroup(
             await ctx.client.repositories.guilds.createOrEdit(EditableGuild(guildId: ctx.guild!.id, guildLogWebhookId: Some(webhook.id)));
 
             await ctx.respond(MessageBuilder(content: ctx.guild.t.settings.set.logsChannel(channel: channel.mention)), level: ResponseLevel.hint);
+          }),
+        ),
+        ChatCommand(
+          'reports-channel',
+          'Sets the reports channel',
+          id('settings-set-reports-channel', (ChatContext ctx, GuildTextChannel channel) async {
+            await ctx.client.repositories.guilds.createOrEdit(EditableGuild(guildId: ctx.guild!.id, reportChannelId: Some(channel.id)));
+
+            await ctx.respond(MessageBuilder(content: 'Set the reports channel to ${channel.mention}'));
           }),
         ),
       ],
@@ -190,10 +199,7 @@ final starboardSettingsCommand = ChatGroup(
   'starboard',
   'Manages settings for the starboard',
   checks: [BasePermissionsCheck(_starboardSettingsPermissions), BaseSelfPermissionsCheck(_starboardSettingsClientPermissions), GuildCheck.all()],
-  options: KiwiiCommandOptions(
-    permissions: _starboardSettingsPermissions,
-    clientPermissions: _starboardSettingsClientPermissions,
-  ),
+  options: KiwiiCommandOptions(permissions: _starboardSettingsPermissions, clientPermissions: _starboardSettingsClientPermissions),
   children: [
     ChatCommand(
       'channel',
@@ -216,7 +222,10 @@ final starboardSettingsCommand = ChatGroup(
           'threshold',
           'Sets the threshold to trigger a starboard message',
           id('starboard-emoij-threshold', (ChatContext ctx, int threshold) async {
-            await ctx.client.repositories.connection.execute(r'UPDATE starboard SET threshold = $1 WHERE id = $2', parameters: [threshold, ctx.guild!.id.value]);
+            await ctx.client.repositories.connection.execute(
+              r'UPDATE starboard SET threshold = $1 WHERE id = $2',
+              parameters: [threshold, ctx.guild!.id.value],
+            );
 
             await ctx.respond(MessageBuilder(content: 'Set the threshld to `$threshold`'));
           }),

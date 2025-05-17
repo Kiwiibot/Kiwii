@@ -23,7 +23,10 @@ import 'dart:math';
 
 import 'package:kiwii/commands/admin/rest.dart';
 import 'package:kiwii/commands/admin/stats.dart';
+import 'package:kiwii/commands/core/avatar.dart';
 import 'package:kiwii/commands/core/info.dart';
+import 'package:kiwii/events/message_reaction_add.dart';
+import 'package:kiwii/commands/moderation/report.dart';
 import 'package:kiwii/events/member_log.dart';
 import 'package:kiwii/plugins/load_modules.dart';
 import 'package:kiwii/plugins/prometheus.dart';
@@ -56,10 +59,12 @@ import 'package:kiwii/utils/io/stderr.dart' as ioutils;
 import 'package:kiwii/utils/io/stdout.dart' as ioutils;
 import 'package:neat_cache/neat_cache.dart';
 import 'package:nyxx/nyxx.dart' hide Cache, Connection;
-import 'package:nyxx_commands/nyxx_commands.dart';
+import 'package:nyxx_commands/nyxx_commands.dart' hide userConverter, memberConverter;
 import 'package:nyxx_extensions/nyxx_extensions.dart';
 import 'package:sentry/sentry_io.dart';
 import 'package:postgres/postgres.dart';
+// ignore: depend_on_referenced_packages
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:prometheus_client/runtime_metrics.dart' as runtime_metrics;
 
@@ -83,6 +88,8 @@ void main() async {
 
 Future<void> _main() async {
   runtime_metrics.register();
+  await initializeDateFormatting('en_GB');
+  await initializeDateFormatting('fr_FR');
 
   final connection = await Connection.open(
     Endpoint(
@@ -136,6 +143,9 @@ Future<void> _main() async {
   commands.addCommand(restCommand);
   commands.addCommand(statsCommand);
   commands.addCommand(namesCommand);
+  commands.addCommand(avatarCommand);
+  // commands.addCommand(avatarsCommand);
+  commands.addCommand(reportCommand);
 
   commands.addConverter(listConverter);
   commands.addConverter(chatCommandConverter);
@@ -145,6 +155,10 @@ Future<void> _main() async {
   commands.addConverter(mapObjectConverter);
   commands.addConverter(httpRouteConverter);
   commands.addConverter(durationConverter);
+  commands.addConverter(userConverter);
+  commands.addConverter(messageConverter);
+  commands.addConverter(memberConverter);
+  commands.addConverter(forumChannelConverter);
 
   final status = '${settings.prefix}help ─ ${settings.statuses[Random().nextInt(settings.statuses.length)]}';
 
@@ -193,6 +207,7 @@ Future<void> _main() async {
 
   client.onAutoModerationActionExecution.listen(onAutoModerationActionExecutionTimeout);
   client.onGuildMemberUpdate.listen(onGuildMemberUpdateTimeout);
+  client.onMessageReactionAdd.where((e) => e.guildId != null).listen(onMessageReactionAdd);
 
   client.onMessageCreate
       .where((e) {
@@ -279,9 +294,12 @@ Future<void> _main() async {
       }
     }
 
-    if (error case ConverterFailedException(:final context)) {
+    if (error case ConverterFailedException(:final context, :final failed)) {
       if (context case InteractiveContext context) {
-        await context.respond(MessageBuilder(content: 'Failed to convert argument\n${error.input.remaining}'));
+        await context.respond(
+          MessageBuilder(content: 'Failed to convert ${inlineCode(error.input.remaining)} to ${inlineCode(failed.output.internalType.toString())}'),
+        );
+        return;
       }
     }
 

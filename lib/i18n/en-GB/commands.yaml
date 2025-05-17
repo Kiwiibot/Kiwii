@@ -104,8 +104,26 @@ info:
       other: Roles [$n]
     id: 'ID: $id'
     seen_in: Seen in
-    servers: $n servers.
+    servers:
+      one: $n server.
+      other: $n servers.
     past_usernames: Past usernames
     past_global_names: Past display names
     past_nicknames: Past nicknames
 
+avatar:
+  description: >-
+    Get the avatar of the user, or yourself if not specified, you can also include an optional size.
+    The size will be clamped to the closest power of two available, if it's a tie, the lowest is chosen.
+  usage: "<user> <size:16..4096> <server>"
+  examples:
+    usages:
+      - "@lexedia"
+      - "@user 2048"
+      - "@user 557 true"
+    descriptions:
+      - "Get the avatar of @lexedia"
+      - "Get the avatar of @user, with a size of 2048"
+      - "Get the guild-avatar of @user, with a size of 512"
+  avatar_of: Avatar of $user
+  display_error: If the image isn't displayed, [click here]($url)

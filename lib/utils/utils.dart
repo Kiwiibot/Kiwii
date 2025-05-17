@@ -18,9 +18,11 @@
 
 import 'dart:math';
 
+import 'package:get_it/get_it.dart';
 import 'package:hourglass/hourglass.dart' as hourglass;
 import 'package:hourglass/locale.dart' as hourglass;
 import 'package:nyxx/nyxx.dart';
+import 'package:postgres/postgres.dart' as pg;
 
 import '../kiwii.dart';
 import '../translations.g.dart';
@@ -154,12 +156,23 @@ String? pickByWeights(Map<String, int> entries) {
 }
 
 String prettyDuration(Duration amount, [AppLocale locale = AppLocale.enGb]) {
-  final map = {
-    AppLocale.enGb: hourglass.EnglishDurationLocale(),
-    AppLocale.frFr: hourglass.FrenchDurationLocale(),
-  };
+  final map = {AppLocale.enGb: hourglass.EnglishDurationLocale(), AppLocale.frFr: hourglass.FrenchDurationLocale()};
 
   return hourglass.prettyDuration(amount, locale: map[locale]!);
+}
+
+String? mimeType(List<int> data) {
+  final header = data.sublist(0, 4).map((d) => d.toRadixString(16)).join();
+  final webpIdentifierBytes = data.sublist(8, 12).map((d) => d.toRadixString(16)).join();
+
+  // Only gifs, webps, pngs, and jpegs are displayed as images in Discord.
+  return switch (header) {
+    '89504e47' /* image/gif */ => 'image/gif',
+    '47494638' /* image/png */ => 'image/png',
+    'ffd8ffe0' || 'ffd8ffe1' || 'ffd8ffe2' || 'ffd8ffe3' || 'ffd8ffe8' /* image/jpeg */ => 'image/jpeg',
+    '52494646' when webpIdentifierBytes == '57454250' /* image/webp */ => 'image/webp',
+    _ => null,
+  };
 }
 
 Map<V, K> reverseMap<K, V>(Map<K, V> map) => {for (var e in map.entries) e.value: e.key};
@@ -191,52 +204,72 @@ EmbedBuilder mergeEmbeds(EmbedBuilder embedBuilder1, EmbedBuilder embedBuilder2)
 }
 
 EmbedBuilder cutEmbed(EmbedBuilder embed) => EmbedBuilder(
-      author: embed.author != null
-          ? EmbedAuthorBuilder(
-              name: cutText(embed.author!.name, embedAuthorNameLimit),
-              iconUrl: embed.author?.iconUrl,
-            )
-          : null,
-      title: embed.title != null ? cutText(embed.title!, embedTitleLimit) : null,
-      description: embed.description != null ? cutText(embed.description!, embedDescriptionLimit) : null,
-      url: embed.url,
-      timestamp: embed.timestamp,
-      color: embed.color,
-      footer: embed.footer != null
-          ? EmbedFooterBuilder(
-              text: cutText(embed.footer!.text, embedFooterLimit),
-              iconUrl: embed.footer?.iconUrl,
-            )
-          : null,
-      image: embed.image,
-      thumbnail: embed.thumbnail,
-      fields: embed.fields
-          ?.map((field) => EmbedFieldBuilder(
-                name: cutText(field.name, embedFieldNameLimit),
-                value: cutText(field.value, embedFieldValueLimit),
-                isInline: field.isInline,
-              ))
+  author: embed.author != null ? EmbedAuthorBuilder(name: cutText(embed.author!.name, embedAuthorNameLimit), iconUrl: embed.author?.iconUrl) : null,
+  title: embed.title != null ? cutText(embed.title!, embedTitleLimit) : null,
+  description: embed.description != null ? cutText(embed.description!, embedDescriptionLimit) : null,
+  url: embed.url,
+  timestamp: embed.timestamp,
+  color: embed.color,
+  footer: embed.footer != null ? EmbedFooterBuilder(text: cutText(embed.footer!.text, embedFooterLimit), iconUrl: embed.footer?.iconUrl) : null,
+  image: embed.image,
+  thumbnail: embed.thumbnail,
+  fields:
+      embed.fields
+          ?.map(
+            (field) =>
+                EmbedFieldBuilder(name: cutText(field.name, embedFieldNameLimit), value: cutText(field.value, embedFieldValueLimit), isInline: field.isInline),
+          )
           .toList(),
-    );
+);
 
 String messageLink(Snowflake messageId, Snowflake channelId, Snowflake guildId) => 'https://discord.com/channels/$guildId/$channelId/$messageId';
 
-List<String> translatePermissions(Flags<Permissions> permissions, Translations t) => permissions
-    .map((p) {
-      final permission = permissionsReversed[p];
+List<String> translatePermissions(Flags<Permissions> permissions, Translations t) =>
+    permissions
+        .map((p) {
+          final permission = permissionsReversed[p];
 
-      if (permission == null) {
-        return null;
-      }
+          if (permission == null) {
+            return null;
+          }
 
-      return t['general.permissions.${screamingCaseToCamelCase(permission)}'] as String? ?? permission;
-    })
-    .whereType<String>()
-    .toList();
+          return t['general.permissions.${screamingCaseToCamelCase(permission)}'] as String? ?? permission;
+        })
+        .whereType<String>()
+        .toList();
 
 String insertEmojiForCategory(String key, String category) => switch (key) {
-      'moderation' => '🛡️ $category',
-      'nsfw' => '🔞 $category',
-      'utility' => '️🗒️ $category',
-      _ => category,
-    };
+  'moderation' => '🛡️ $category',
+  'nsfw' => '🔞 $category',
+  'utility' => '️🗒️ $category',
+  _ => category,
+};
+
+class UserSettingsFlags extends Flags<UserSettingsFlags> {
+  /// This user has legacy rendering enabled (no ComponentsV2).
+  static const legacyRendering = Flag<UserSettingsFlags>.fromOffset(0);
+
+  /// Whether this user has legacy rendering enabled.
+  bool get hasLegacyRendering => has(legacyRendering);
+
+  const UserSettingsFlags(super.value);
+}
+
+/// Converts Cv2 to embeds for older clients (real).
+Future<MessageBuilder> legacyCv2(User user, MessageBuilder builder) async {
+  if (!(builder.flags?.has(MessageFlags.isComponentsV2) ?? false)) {
+    return builder;
+  }
+
+  final connection = GetIt.I.get<pg.Connection>();
+
+  final rawFlags =
+      (await connection.execute(r'SELECT COALESCE((SELECT flags FROM user_settings WHERE id = 1234), 0);', parameters: [user.id.value])).first.first as int;
+  final flags = UserSettingsFlags(rawFlags);
+
+  if (!flags.hasLegacyRendering) {
+    return builder;
+  } else {
+    return builder;
+  }
+}

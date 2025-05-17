@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import 'dart:io';
 import 'dart:math';
 
 import 'package:nyxx/nyxx.dart';
@@ -24,6 +25,7 @@ import 'package:nyxx_extensions/nyxx_extensions.dart';
 
 import '../kiwii.dart';
 import '../plugins/localization.dart';
+import '../plugins/tracking.dart';
 
 
 final _permissions = Permissions.sendMessages | Permissions.viewChannel;

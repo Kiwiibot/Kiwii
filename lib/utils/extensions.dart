@@ -41,6 +41,34 @@ extension PartialGuildExtensions on PartialGuild {
   Map<String, BasePlugin> get modules => guildModules[id] ??= {};
 }
 
+extension MessageAuthorExtensions on MessageAuthor {
+  String get tag => this is User ? (this as User).tag : username;
+}
+
+extension MemberManagerExtensions on MemberManager {
+  Future<Member?> getSafe(Snowflake id) async {
+    try {
+      return get(id);
+    } on HttpResponseError catch (_) {}
+
+    try {
+      if (client case NyxxGateway client) {
+        return client.gateway.listGuildMembers(guildId, limit: 1, userIds: [id]).first;
+      }
+    } catch (_) {}
+
+    try {
+      return query(
+        limit: 1,
+        sort: MemberSortType.userIdDesc,
+        orQuery: MemberFilterBuilder(userId: QueryBuilder(orQuery: [id])),
+      ).then((r) => r.members.first.member);
+    } catch (_) {}
+
+    return null;
+  }
+}
+
 extension GuildExtensions on Guild {
   Future<Member> get me => members.get(manager.client.user.id);
 

@@ -20,3 +20,33 @@ guild_logs:
     footer:
       joined: User joined
       left: User left
+  message_bulk_deleted:
+    log_preamble: "[${createdAt: DateFormat('yyyy/MM/dd HH:mm:ss')} (UTC)] $authorTag ($authorId): $content"
+    attachment: "↳ Attachment: $url"
+    sticker: "↳ Sticker: $name"
+    reply_to: ↳ Replying to $messageId ($messageUrl) by $userTag ($userId)
+    reply_to_mentions: ↳ @Replying to $messageId ($messageUrl) by $userTag ($userId)
+  report_log:
+    author: Reported by $author
+    reason: '**Reason:**\n$reason'
+    target: "**Target:** $target"
+    message: "**Message:** $messageLink ($channel)"
+    case_ref: "**Case Reference:** $ref"
+    statuses:
+      - Pending
+      - Approved
+      - Rejected
+      - "False"
+    status: "**Status:** @:logs.guildLogs.reportLog.statuses[${n: int}]"
+    forward:
+      message: |-
+         **Message report forwarded**
+         • Author: $author
+         • Reason: $reason
+      user: |-
+         **Attachment forwarded**
+         • Author: $author
+         • Reason: $reason
+      errors:
+        generic: There was an error forwarding the report.
+        no_thread: There was an error forwarding the report the associated thread could not be found.

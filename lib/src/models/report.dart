@@ -16,8 +16,8 @@ class CreateReport {
   final Snowflake? logPostId;
   final int? refId;
   final List<Snowflake>? contextMessageIds;
-  final int? type;
-  final int? status;
+  final ReportType type;
+  final ReportStatus? status;
   final Snowflake? messageId;
   final Snowflake? channelId;
 
@@ -27,6 +27,7 @@ class CreateReport {
     required this.targetTag,
     required this.authorId,
     required this.authorTag,
+    required this.type,
     this.modId,
     this.modTag,
     this.reason,
@@ -34,7 +35,6 @@ class CreateReport {
     this.logPostId,
     this.refId,
     this.contextMessageIds,
-    this.type,
     this.status,
     this.messageId,
     this.channelId,
@@ -54,8 +54,8 @@ class CreateReport {
       'log_post_id': logPostId?.value,
       'ref_id': refId,
       'context_messages_ids': contextMessageIds?.map((id) => id.value).toList(),
-      'type': type,
-      'status': status,
+      'type': type.index,
+      'status': status?.index,
       'message_id': messageId?.value,
       'channel_id': channelId?.value,
     };
@@ -71,10 +71,11 @@ class UpdateReport {
   final Option<Snowflake?> logPostId;
   final Option<int?> refId;
   final Option<List<Snowflake>?> contextMessageIds;
-  final Option<int?> type;
-  final Option<int?> status;
+  final Option<ReportType> type;
+  final Option<ReportStatus?> status;
   final Option<Snowflake?> messageId;
   final Option<Snowflake?> channelId;
+  final Option<String?> attachmentUrl;
 
   UpdateReport({
     required this.reportId,
@@ -89,6 +90,7 @@ class UpdateReport {
     this.status = const None(),
     this.messageId = const None(),
     this.channelId = const None(),
+    this.attachmentUrl = const None(),
   });
 
   Map<String, Option<Object?>> toRow() => {
@@ -100,10 +102,11 @@ class UpdateReport {
     'log_post_id': logPostId.map((i) => i?.value),
     'ref_id': refId,
     'context_messages_ids': contextMessageIds.map((ids) => ids?.map((id) => id.value).toList()),
-    'type': type,
-    'status': status,
+    'type': type.map((e) => e.index),
+    'status': status.map((e) => e?.index),
     'message_id': messageId.map((id) => id?.value),
     'channel_id': channelId.map((id) => id?.value),
+    'attachment_url': attachmentUrl,
   };
 }
 

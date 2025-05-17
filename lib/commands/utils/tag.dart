@@ -69,7 +69,7 @@ final tagCommand = ChatCommand(
       id('tag-delete', (MessageChatContext ctx, Tag tag) async {
         bool shouldBypass = ctx.user.id == settings.ownerId || (await ctx.member!.computedPermissions).canManageMessages;
         try {
-          String clause = r'LOWER(name)=$2 AND location_id=$3';
+          String clause = r'LOWER(name)= $2 AND location_id= $3';
 
           if (!shouldBypass) {
             clause += r'AND owner_id = $4';
@@ -89,12 +89,11 @@ final tagCommand = ChatCommand(
       'Edit a tag',
       id('tag-edit', (
         MessageChatContext ctx,
-        @Description('The name of the tag to edit.') String name,
+        @Description('The name of the tag to edit.') Tag existing,
         @Description('The new contents of the tag.') List<String> contents,
       ) async {
         try {
-          final existing = await ctx.client.repositories.tags.find(name, ctx.guild!.id);
-          final tag = EditableTag(name: name, content: contents.join(' '), id: existing.id);
+          final tag = EditableTag(content: contents.join(' '), id: existing.id);
 
           await ctx.client.repositories.tags.edit(tag);
         } catch (e) {
@@ -102,14 +101,34 @@ final tagCommand = ChatCommand(
           return;
         }
 
-        await ctx.respond(MessageBuilder(content: ctx.guild.t.tag.edited(tag: name)));
+        await ctx.respond(MessageBuilder(content: ctx.guild.t.tag.edited(tag: existing.name)));
       }),
     ),
     ChatCommand(
       'raw',
       'See the raw contents of the tag',
       id('tag-raw', (MessageChatContext ctx, Tag tag) async {
-        await ctx.respond(MessageBuilder(content: codeBlock(tag.content)));
+        await ctx.respond(
+          MessageBuilder(
+            content: codeBlock(
+              tag.content.replaceAllMapped(
+                RegExp(r'`{3}', multiLine: true),
+                (m) =>
+                    m[0]!
+                        .split('')
+                        .indexed
+                        .map(
+                          (e) => switch (e.$1) {
+                            0 => '\u200b${e.$2}',
+                            1 => '${e.$2}\u200b',
+                            _ => e.$2,
+                          },
+                        )
+                        .join(),
+              ),
+            ),
+          ),
+        );
       }),
     ),
     ChatCommand(
@@ -147,6 +166,23 @@ final tagCommand = ChatCommand(
         );
 
         await ctx.respond(MessageBuilder(embeds: [embed]));
+      }),
+    ),
+    ChatCommand(
+      'claim',
+      'Claims a tag if the owner isn\'t in the server anymore',
+      id('tag-claim', (ChatContext ctx, Tag tag) async {
+        final owner = await ctx.client.users.get(tag.ownerId);
+
+        final member = await ctx.guild!.members.getSafe(owner.id);
+
+        if (member != null) {
+          return ctx.respond(MessageBuilder(content: ctx.guild.t.tag.claimMemberStillHere));
+        }
+
+        await ctx.client.repositories.tags.edit(EditableTag(id: tag.id, ownerId: ctx.user.id));
+
+        await ctx.respond(MessageBuilder(content: ctx.guild.t.tag.claimSuccesful(tag: tag.name)));
       }),
     ),
   ],

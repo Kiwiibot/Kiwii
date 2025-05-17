@@ -1,3 +1,6 @@
+import 'dart:math';
+import 'dart:typed_data';
+
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
@@ -92,7 +95,7 @@ Future<void> userInfoHandler(CommandContext ctx, User user, [Member? member, boo
       if (oldUsernames.isNotEmpty) EmbedFieldBuilder(name: t.pastUsernames, value: oldUsernames.take(3).join(', '), isInline: false),
       if (oldGlobalNames.isNotEmpty) EmbedFieldBuilder(name: t.pastGlobalNames, value: oldGlobalNames.take(3).join(', '), isInline: false),
       if (oldNicknames != null && oldNicknames.isNotEmpty) EmbedFieldBuilder(name: t.pastNicknames, value: oldNicknames.take(3).join(', '), isInline: false),
-      EmbedFieldBuilder(name: t.seenIn, value: (await user.fetchMutualGuilds()).length.toString(), isInline: true),
+      EmbedFieldBuilder(name: t.seenIn, value: t.servers(n: (await user.fetchMutualGuilds()).length), isInline: true),
       if (member != null)
         EmbedFieldBuilder(name: t.joinedAt, value: '${member.joinedAt.format()} (${member.joinedAt.format(TimestampStyle.relativeTime)})', isInline: false),
       EmbedFieldBuilder(name: t.createdAt, value: '${user.createdAt.format()} (${user.createdAt.format(TimestampStyle.relativeTime)})', isInline: false),
@@ -192,7 +195,6 @@ final namesCommand = ChatGroup(
       'See all your nicknames, usernames and display names',
       id('names-all', (ChatContext ctx, [User? user, Duration? since]) async {
         user ??= ctx.user;
-        final tracking = ctx.client.options.plugins.whereType<Tracking>().first;
 
         final usernames = await tracking.namesFor(user, since);
 
@@ -218,15 +220,12 @@ final namesCommand = ChatGroup(
       'See all your past usernames',
       id('names-usernames', (ChatContext ctx, [User? user, Duration? since]) async {
         user ??= ctx.user;
-        final tracking = ctx.client.options.plugins.whereType<Tracking>().first;
 
         final usernames = await tracking.namesFor(user, since);
 
         final s = displayNames(usernames, []);
 
-        await ctx.respond(
-          MessageBuilder(content: 'Past usernames for ${user.mention}\n${codeBlock(s)}', allowedMentions: AllowedMentions.users()),
-        );
+        await ctx.respond(MessageBuilder(content: 'Past usernames for ${user.mention}\n${codeBlock(s)}', allowedMentions: AllowedMentions.users()));
       }),
     ),
     ChatCommand(
@@ -234,7 +233,6 @@ final namesCommand = ChatGroup(
       'See all your past nicknames',
       id('names-nicks', (ChatContext ctx, [Member? member, Duration? since]) async {
         member ??= ctx.member!;
-        final tracking = ctx.client.options.plugins.whereType<Tracking>().first;
 
         final nicks = await tracking.nicknamesFor(member, since);
 
@@ -249,13 +247,85 @@ final namesCommand = ChatGroup(
       'See all your past display names',
       id('names-display-names', (ChatContext ctx, [User? user, Duration? since]) async {
         user ??= ctx.user;
-        final tracking = ctx.client.options.plugins.whereType<Tracking>().first;
 
         final globalNames = await tracking.globalNamesFor(user, since);
 
         final s = displayNames([], globalNames);
 
         await ctx.respond(MessageBuilder(content: 'Past display names for ${user.mention}\n${codeBlock(s)}', allowedMentions: AllowedMentions.users()));
+      }),
+    ),
+  ],
+);
+
+final avatarsCommand = ChatGroup(
+  'avatars',
+  'Get your past avatars',
+  children: [
+    ChatCommand(
+      'all',
+      'Get all your past avatars',
+      id('avatars-all', (ChatContext ctx, [User? user, Duration? since]) async {
+        user ??= ctx.user;
+
+        final avatars = await tracking.avatarsFor(user, since);
+        final attachmentBuilders = [
+          for (final d in avatars)
+            AttachmentBuilder(
+              data: d.$1,
+              fileName: 'avatar_${user.id}_${Random().nextInt(0xffffff).toRadixString(16)}.${d.$2.startsWith('a_') ? 'gif' : 'png'}',
+            ),
+        ];
+
+        List<(Uint8List, String)>? guildAvatars;
+        List<AttachmentBuilder>? guildAttachmentBuilders;
+
+        if (ctx.guild case final guild?) {
+          guildAvatars = await tracking.guildAvatarsFor(await guild.members.get(user.id));
+          guildAttachmentBuilders = [
+            for (final d in guildAvatars)
+              AttachmentBuilder(
+                data: d.$1,
+                fileName: 'avatar_${guild.id}_${user.id}_${Random().nextInt(0xffffff).toRadixString(16)}.${d.$2.startsWith('a_') ? 'gif' : 'png'}',
+              ),
+          ];
+        }
+
+        // final builder = MessageBuilder(
+        //   flags: MessageFlags.isComponentsV2,
+        //   components: [
+        //     SectionComponentBuilder(
+        //       accessory: ThumbnailComponentBuilder(media: UnfurledMediaItemBuilder(url: user.avatar.url)),
+        //       components: [TextDisplayComponentBuilder(content: "Past Avatars and Server Avatars for ${user.mention}")],
+        //     ),
+        //     ContainerComponentBuilder(
+        //       components: [
+        //         TextDisplayComponentBuilder(content: "Past Avatars"),
+        //         MediaGalleryComponentBuilder(
+        //           items: [
+        //             for (final builder in attachmentBuilders)
+        //               MediaGalleryItemBuilder(media: UnfurledMediaItemBuilder(url: Uri(scheme: 'attachment', host: builder.fileName))),
+        //           ],
+        //         ),
+        //         if (guildAvatars != null && guildAvatars.isNotEmpty) ...[
+        //           SeparatorComponentBuilder(isDivider: true, spacing: SeparatorSpacingSize.small),
+        //           TextDisplayComponentBuilder(content: "Past Guild Avatars"),
+        //           MediaGalleryComponentBuilder(
+        //             items: [
+        //               for (final builder in guildAttachmentBuilders!)
+        //                 MediaGalleryItemBuilder(media: UnfurledMediaItemBuilder(url: Uri(scheme: 'attachment', host: builder.fileName))),
+        //             ],
+        //           ),
+        //         ],
+        //       ],
+        //     ),
+        //   ],
+        //   attachments: [...attachmentBuilders, if (guildAttachmentBuilders case final guildAttachmentBuilders?) ...guildAttachmentBuilders],
+        // );
+
+        final builder = MessageBuilder(embeds: [EmbedBuilder(author: EmbedAuthorBuilder(name: user.globalName ?? user.tag, iconUrl: user.avatar.url), )]);
+
+        await ctx.respond(builder);
       }),
     ),
   ],

@@ -29,117 +29,95 @@ import '../../src/moderation/case/create_case.dart';
 import '../../src/moderation/replies/acknowledge_case.dart';
 import '../../src/moderation/utils/generate.dart';
 
+final _permissions = Permissions.viewChannel | Permissions.sendMessages | Permissions.moderateMembers;
+
+final _clientPermissions = Permissions.viewChannel | Permissions.sendMessages | Permissions.moderateMembers;
+
 final warnCommand = ChatCommand(
   'warn',
   'Warn somebody',
-  id(
-    'warn',
-    (
-      ChatContext ctx,
-      @Description('The member to warn') Member member, [
-      @Description('The reason of this action') @Autocomplete(reasonAutoComplete) String? reason,
-      @Name('reference-case') @Description('The reference case') @Autocomplete(caseAutoCompleteNoHistory) int? caseId,
-      @Name('report-reference') @Description('The reference report') int? reportId,
-    ]) async {
-      final guildSettings = await ctx.client.repositories.guilds.getOrNull(ctx.guild!.id);
+  id('warn', (
+    ChatContext ctx,
+    @Description('The member to warn') Member member, [
+    @Description('The reason of this action') @Autocomplete(reasonAutoComplete) String? reason,
+    @Name('reference-case') @Description('The reference case') @Autocomplete(caseAutoCompleteNoHistory) int? caseId,
+    @Name('report-reference') @Description('The reference report') int? reportId,
+  ]) async {
+    final guildSettings = await ctx.client.repositories.guilds.getOrNull(ctx.guild!.id);
 
-      final modLogChannel = guildSettings?.modLogChannelId;
+    final modLogChannel = guildSettings?.modLogChannelId;
 
-      if (modLogChannel == null) {
-        await ctx.send(ctx.guild.t.general.errors.noModChannel);
-        return;
-      }
+    if (modLogChannel == null) {
+      await ctx.send(ctx.guild.t.general.errors.noModChannel);
+      return;
+    }
 
-      final warnId = ComponentId.generate(allowedUser: ctx.user.id);
-      final cancelId = ComponentId.generate(allowedUser: ctx.user.id);
+    final warnId = ComponentId.generate(allowedUser: ctx.user.id);
+    final cancelId = ComponentId.generate(allowedUser: ctx.user.id);
 
-      final warnButton = ButtonBuilder.danger(
-        customId: warnId.toString(),
-        label: ctx.guild.t.moderation.buttons.warn,
-      );
+    final warnButton = ButtonBuilder.danger(customId: warnId.toString(), label: ctx.guild.t.moderation.buttons.warn);
 
-      final cancelButton = ButtonBuilder.secondary(
-        customId: cancelId.toString(),
-        label: ctx.guild.t.general.buttons.cancel,
-      );
+    final cancelButton = ButtonBuilder.secondary(customId: cancelId.toString(), label: ctx.guild.t.general.buttons.cancel);
 
-      final user = await ctx.client.users.get(member.id);
+    final user = await ctx.client.users.get(member.id);
 
-      final embed = cutEmbed(await generateHistory((member: member, user: user), ctx.guild!.id, ctx.guild.t));
+    final embed = cutEmbed(await generateHistory((member: member, user: user), ctx.guild!.id, ctx.guild.t));
 
-      if (ctx is InteractionChatContext) {
-        await ctx.acknowledge();
-      }
+    if (ctx is InteractionChatContext) {
+      await ctx.acknowledge();
+    }
 
-      final msg = await ctx.respond(
-        MessageBuilder(
-          content: ctx.guild.t.moderation.warn.pending(user: '${user.mention} ${user.tag} (${user.id})'),
-          components: [
-            ActionRowBuilder(
-              components: [
-                warnButton,
-                cancelButton,
-              ],
-            ),
-          ],
-          embeds: [embed],
+    final msg = await ctx.respond(
+      MessageBuilder(
+        content: ctx.guild.t.moderation.warn.pending(user: '${user.mention} ${user.tag} (${user.id})'),
+        components: [
+          ActionRowBuilder(components: [warnButton, cancelButton]),
+        ],
+        embeds: [embed],
+      ),
+    );
+
+    final buttonCtx = await ctx.getButtonPress(msg);
+
+    if (buttonCtx.parsedComponentId == warnId) {
+      final case_ = await createCase(
+        buttonCtx.guild!,
+        CreateCase(
+          action: CaseAction.warn,
+          reason: reason,
+          targetId: member.id,
+          targetTag: user.tag,
+          modId: buttonCtx.user.id,
+          modTag: buttonCtx.user.tag,
+          guildId: ctx.guild!.id,
+          refId: caseId,
         ),
+        target: member,
       );
 
-      final buttonCtx = await ctx.getButtonPress(msg);
+      await acknowledgeCase(ctx.guild!, case_, ctx.realPrefix, buttonCtx.user);
 
-      if (buttonCtx.parsedComponentId == warnId) {
-        final case_ = await createCase(
-          buttonCtx.guild!,
-          CreateCase(
-            action: CaseAction.warn,
-            reason: reason,
-            targetId: member.id,
-            targetTag: user.tag,
-            modId: buttonCtx.user.id,
-            modTag: buttonCtx.user.tag,
-            guildId: ctx.guild!.id,
-            refId: caseId,
-          ),
-          target: member,
-        );
-
-        await acknowledgeCase(ctx.guild!, case_, ctx.realPrefix, buttonCtx.user);
-
-        await buttonCtx.interaction.respond(
-          MessageUpdateBuilder(
-            content: ctx.guild.t.moderation.warn.success(user: '${user.mention} ${user.tag} (${user.id})'),
-            components: [],
-            embeds: [],
-          ),
-          updateMessage: true,
-        );
-      } else if (buttonCtx.parsedComponentId == cancelId) {
-        await buttonCtx.interaction.respond(
-          MessageUpdateBuilder(
-            content: ctx.guild.t.moderation.warn.cancel(user: '${user.mention} ${user.tag} (${user.id})'),
-            components: [],
-            embeds: [],
-          ),
-          updateMessage: true,
-        );
-      }
-    },
+      await buttonCtx.interaction.respond(
+        MessageUpdateBuilder(content: ctx.guild.t.moderation.warn.success(user: '${user.mention} ${user.tag} (${user.id})'), components: [], embeds: []),
+        updateMessage: true,
+      );
+    } else if (buttonCtx.parsedComponentId == cancelId) {
+      await buttonCtx.interaction.respond(
+        MessageUpdateBuilder(content: ctx.guild.t.moderation.warn.cancel(user: '${user.mention} ${user.tag} (${user.id})'), components: [], embeds: []),
+        updateMessage: true,
+      );
+    }
+  }),
+  options: KiwiiCommandOptions(
+    defaultResponseLevel: ResponseLevel.hint,
+    permissions: _permissions,
+    clientPermissions: _clientPermissions,
+    usage: '[member] <reason> <reference-case> <reference-report>',
+    examples: [
+      (command: '@user', description: 'Warns the @user'),
+      (command: '@user "I don\'t really like you"', description: 'Warns the @user with reason "I don\'t really like you"'),
+      (command: '@user "Following #3" 3', description: 'Warns the user with a reference to the case #3'),
+    ],
   ),
-  options: CommandOptions(
-    defaultResponseLevel: ResponseLevel(
-      isDm: false,
-      hideInteraction: true,
-      mention: false,
-      preserveComponentMessages: true,
-    ),
-  ),
-  checks: [
-    PermissionsCheck(
-      Permissions.moderateMembers,
-      allowsOverrides: false,
-      allowsDm: false,
-    ),
-    GuildCheck.all(),
-  ],
+  checks: [BasePermissionsCheck(_permissions), BaseSelfPermissionsCheck(_clientPermissions), GuildCheck.all()],
 );

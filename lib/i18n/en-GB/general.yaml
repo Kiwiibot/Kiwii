@@ -63,3 +63,6 @@ categories:
   nsfw: NSFW
   unknown: Unknown
 
+common:
+  no_content: <No message content>
+  message_reference: Original message

@@ -56,9 +56,18 @@ dependency_overrides:
     git:
       url: https://github.com/Lexedia/nyxx.git
       ref: feat/priv-utils
+  nyxx_extensions:
+    git:
+      url: https://github.com/nyxx-discord/nyxx_extensions.git
+      ref: feat/escapers
   nyxx_commands:
     git:
       url: https://github.com/Lexedia/nyxx_commands.git
+  slang:
+    git:
+      url: https://github.com/Lexedia/slang.git
+      ref: feat/allow-indexing-on-lists
+      path: slang
   analyzer: ^6.4.1
 
 dev_dependencies:

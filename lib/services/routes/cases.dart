@@ -34,45 +34,77 @@ class CasesService {
   Future<Response> listCases(Request request, String gId) async {
     final guildId = Snowflake.parse(gId);
 
-    final cases = await (client.repositories.connection.execute(
-      '''
-      SELECT target_id, target_tag, count(*) cases_count
-      FROM cases
-      WHERE guild_id = \$1
-      AND action not in (1, 8)
-      GROUP BY target_id, target_tag
-      ORDER BY MAX(created_at) DESC
-      limit 50;
-      ''',
+    // final cases = await (client.repositories.connection.execute(
+    //   '''
+    //   SELECT target_id, target_tag, count(*) cases_count
+    //   FROM cases
+    //   WHERE guild_id = \$1
+    //   AND action not in (1, 8)
+    //   GROUP BY target_id, target_tag
+    //   ORDER BY MAX(created_at) DESC
+    //   limit 50;
+    //   ''',
+    //   parameters: [guildId.value],
+    // ));
+
+    // final count = await (client.repositories.connection.execute(
+    //   '''
+    //   SELECT count(*) as total_cases
+    //   FROM cases
+    //   WHERE guild_id = \$1
+    //   AND action not in (1, 8);
+    //   ''',
+    //   parameters: [guildId.value],
+    // )).then((r) => r.single.first as int);
+
+    final result = await (client.repositories.connection.execute(
+      r'''
+    SELECT
+      jsonb_build_object(
+        'cases',
+        COALESCE(
+          (
+            SELECT
+              jsonb_agg(
+                jsonb_build_object(
+                  'target_id', sub.target_id::text,
+                  'target_tag', sub.target_tag,
+                  'cases_count', sub.cases_count
+                )
+              )
+            FROM (
+              SELECT
+                target_id,
+                target_tag,
+                COUNT(*) AS cases_count
+              FROM cases
+              WHERE guild_id = $1
+                AND action NOT IN (1, 8)
+              GROUP BY
+                target_id,
+                target_tag
+              ORDER BY
+                MAX(created_at) DESC
+              LIMIT 50
+            ) AS sub
+          ),
+          '[]'::jsonb
+        ),
+        'count',
+        (
+          SELECT COUNT(*)
+          FROM cases
+          WHERE guild_id = $1
+            AND action NOT IN (1, 8)
+        )
+      )::text AS result_json;
+    ''',
       parameters: [guildId.value],
     ));
 
-    final count = await (client.repositories.connection.execute(
-      '''
-      SELECT count(*) as total_cases
-      FROM cases
-      WHERE guild_id = \$1
-      AND action not in (1, 8);
-      ''',
-      parameters: [guildId.value],
-    )).then((r) => r.single.first as int);
+    final jsonString = result.single.first as String;
 
-    return Response.ok(
-      jsonEncode({
-        'cases':
-            cases
-                .map(
-                  (e) => Map.fromEntries(
-                    e.toColumnMap().entries.map(
-                      (e) => e.value is int && (e.value > 0xffffffff || e.value < -0x80000000) ? MapEntry(e.key, e.value.toString()) : MapEntry(e.key, e.value),
-                    ),
-                  ),
-                )
-                .toList(),
-        'count': count,
-      }),
-      headers: {'Content-Type': 'application/json'},
-    );
+    return Response.ok(jsonString, headers: {'Content-Type': 'application/json'});
   }
 
   @Route.get('/<gId>/<uId>')
@@ -82,38 +114,68 @@ class CasesService {
 
     final user = await client.users.fetch(userId);
 
-    final cases = await (client.repositories.connection.execute(
-      r'SELECT * FROM cases WHERE guild_id = $1 AND target_id = $2 AND action NOT IN (1, 8) ORDER BY created_at DESC;',
-      parameters: [guildId.value, userId.value],
-    )).then((r) => r.map((e) => e.toColumnMap()));
-
-    final count = await (client.repositories.connection.execute(
-      '''
-      SELECT count(*)
-      FROM cases
-      WHERE guild_id = \$1
-      AND target_id = \$2
-      AND action not in (1, 8);
-      ''',
-      parameters: [guildId.value, userId.value],
-    )).then((r) => r.single.single as int);
-
-    return Response.ok(
-      jsonEncode({
-        'cases': cases.map(
-          (e) => e.map(
-            (k, v) => MapEntry(k, switch (v) {
-              final DateTime time => time.toIso8601String(),
-              final int val => (val > 0xffffffff || val < -0x80000000) ? val.toString() : val,
-              _ => v,
-            }),
+    final result = await (client.repositories.connection.execute(
+      r'''
+    SELECT
+      jsonb_build_object(
+        'cases',
+        COALESCE(
+          (
+            SELECT
+              jsonb_agg(
+                jsonb_build_object(
+                  'guild_id', c.guild_id::text,
+                  'log_message_id', c.log_message_id::text,
+                  'case_id', c.case_id,
+                  'ref_id', c.ref_id,
+                  'target_id', c.target_id::text,
+                  'target_tag', c.target_tag,
+                  'mod_id', c.mod_id::text,
+                  'mod_tag', c.mod_tag,
+                  'action', c.action,
+                  'reason', c.reason,
+                  'action_expiration', c.action_expiration::text,
+                  'action_processed', c.action_processed,
+                  'created_at', c.created_at::text,
+                  'context_message_id', c.context_message_id::text,
+                  'role_id', c.role_id::text,
+                  'multi', c.multi,
+                  'report_ref_id', c.report_ref_id,
+                  'appeal_ref_id', c.appeal_ref_id,
+                  'log_dm_message_id', c.log_dm_message_id::text
+                ) ORDER BY c.created_at DESC
+              )
+            FROM cases AS c
+            WHERE c.guild_id = $1
+              AND c.target_id = $2
+              AND c.action NOT IN (1, 8)
           ),
-        ).toList(),
-        'count': count,
-        'user': user.toJson(),
-      }),
-      headers: {'Content-Type': 'application/json'},
-    );
+          '[]'::jsonb
+        ),
+        'count',
+        (
+          SELECT COUNT(*)
+          FROM cases
+          WHERE guild_id = $1
+            AND target_id = $2
+            AND action NOT IN (1, 8)
+        )
+      )::text AS result_json;
+    ''',
+      parameters: [guildId.value, userId.value],
+    ));
+
+    // The query returns a single row with a single column 'result_json'
+    final jsonString = result.single.first as String;
+
+    // Decode the JSON string into a Dart Map
+    final Map<String, dynamic> responseData = jsonDecode(jsonString);
+
+    // 3. Add the 'user' data fetched separately to the response map
+    responseData['user'] = user.toJson();
+
+    // Encode the combined Map back to a JSON string for the HTTP response body.
+    return Response.ok(jsonEncode(responseData), headers: {'Content-Type': 'application/json'});
   }
 
   Router get router => _$CasesServiceRouter(this);

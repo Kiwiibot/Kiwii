@@ -269,7 +269,7 @@ class Parser {
         //     onMatch = splitPart.join(':');
         //   } else {
         //     onNoMatch = splitPart.join(':');
-        //   }
+        //   }amog
         // }
 
         // TODO
@@ -279,9 +279,7 @@ class Parser {
         return escapeTag(rawArgs);
       case 'js':
         final parsed = await subParse(rawArgs.replaceAll('\x00', ''), tag, args);
-        final code = 'globalThis.result = (() => {$parsed})();';
-        final raw = await runPistonJS(code, {'message': ctx.rawMessage});
-        final result = json.decode(raw)['result'];
+        final result = await runWandboxJS(parsed, {'message': ctx.rawMessage});
         return result;
       case 'download':
         final url = Uri.parse(split.first);

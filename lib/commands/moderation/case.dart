@@ -30,117 +30,63 @@ final _clientPermissions = Permissions.manageMessages | Permissions.viewChannel 
 final caseCommand = ChatCommand(
   'case',
   'Lookup a moderation case.',
-  id(
-    'case',
-    (
-      ChatContext ctx,
-      @Autocomplete(caseAutoCompleteWithHistory) String phrase, [
-      bool hideReply = false,
-    ]) async {
-      if (ctx is InteractionChatContext) {
-        await ctx.acknowledge(level: hideReply ? ResponseLevel.hint : null);
-      }
+  id('case', (ChatContext ctx, @Autocomplete(caseAutoCompleteWithHistory) String phrase, [bool hideReply = false]) async {
+    await ctx.acknowledge(level: hideReply ? ResponseLevel.hint : null);
 
-      final s = phrase.split(';');
+    final s = phrase.split(';');
 
-      if (s.length != 2) {
-        final n = int.tryParse(phrase);
+    if (s.length != 2) {
+      final n = int.tryParse(phrase);
 
-        if (n == null) {
-          return;
-        }
-
-        final ccase = await ctx.client.repositories.cases.get(n, ctx.guild!.id);
-
-        final guildSettings = await ctx.client.repositories.guilds.get(ctx.guild!.id);
-
-        if (guildSettings.modLogChannelId == null) {
-          await ctx.send(ctx.guild.t.general.errors.noModChannel);
-          return;
-        }
-
-        final modChannel = await ctx.client.channels.get(guildSettings.modLogChannelId!);
-
-        final mod = await ctx.client.users.get(ccase.modId!);
-
-        final goTo = ButtonBuilder.link(
-          url: Uri.parse(
-            messageLink(
-              ccase.logMessageId!,
-              modChannel.id,
-              ctx.guild!.id,
-            ),
-          ),
-          label: ctx.guild.t.moderation.history.cases.goto(
-            ccase: ccase.caseId,
-          ),
-        );
-
-        await ctx.respond(
-          MessageBuilder(
-            embeds: [
-              cutEmbed(
-                await generateCaseEmbed(
-                  ctx.guild!.id,
-                  modChannel.id,
-                  ccase,
-                  ctx.guild.t,
-                  ctx.realPrefix,
-                  mod,
-                ),
-              ),
-            ],
-            components: [
-              ActionRowBuilder(
-                components: [goTo],
-              ),
-            ],
-          ),
-          level: hideReply ? ResponseLevel.hint : null,
-        );
+      if (n == null) {
         return;
       }
 
-      final [op, id] = s;
+      final ccase = await ctx.client.repositories.cases.get(n, ctx.guild!.id);
 
-      if (op == 'history') {
-        final tuple = (
-          member: await ctx.guild!.members.get(
-            Snowflake.parse(id),
-          ),
-          user: await ctx.client.users.get(
-            Snowflake.parse(id),
-          ),
-        );
+      final guildSettings = await ctx.client.repositories.guilds.get(ctx.guild!.id);
 
-        final embed = cutEmbed(
-          await generateHistory(
-            tuple,
-            ctx.guild!.id,
-            ctx.guild.t,
-          ),
-        );
-
-        await ctx.respond(
-          MessageBuilder(
-            embeds: [embed],
-          ),
-          level: hideReply ? ResponseLevel.hint : null,
-        );
+      if (guildSettings.modLogChannelId == null) {
+        await ctx.send(ctx.guild.t.general.errors.noModChannel);
+        return;
       }
-    },
-  ),
-  checks: [
-    BasePermissionsCheck(_permissions),
-    SelfPermissionsCheck(_clientPermissions),
-    GuildCheck.all(),
-  ],
+
+      final modChannel = await ctx.client.channels.get(guildSettings.modLogChannelId!);
+
+      final mod = await ctx.client.users.get(ccase.modId!);
+
+      final goTo = ButtonBuilder.link(
+        url: Uri.parse(messageLink(ccase.logMessageId!, modChannel.id, ctx.guild!.id)),
+        label: ctx.guild.t.moderation.history.cases.goto(ccase: ccase.caseId),
+      );
+
+      await ctx.respond(
+        MessageBuilder(
+          embeds: [cutEmbed(await generateCaseEmbed(ctx.guild!.id, modChannel.id, ccase, ctx.guild.t, ctx.realPrefix, mod))],
+          components: [
+            ActionRowBuilder(components: [goTo]),
+          ],
+        ),
+        level: hideReply ? ResponseLevel.hint : null,
+      );
+      return;
+    }
+
+    final [op, id] = s;
+
+    if (op == 'history') {
+      final tuple = (member: await ctx.guild!.members.get(Snowflake.parse(id)), user: await ctx.client.users.get(Snowflake.parse(id)));
+
+      final embed = cutEmbed(await generateHistory(tuple, ctx.guild!.id, ctx.guild.t));
+
+      await ctx.respond(MessageBuilder(embeds: [embed]), level: hideReply ? ResponseLevel.hint : null);
+    }
+  }),
+  checks: [BasePermissionsCheck(_permissions), SelfPermissionsCheck(_clientPermissions), GuildCheck.all()],
   options: KiwiiCommandOptions(
     category: 'moderation',
     usage: '[case number] <hide reply>',
-    examples: [
-      (command: '123', description: 'Lookup case 123'),
-    ],
+    examples: [(command: '123', description: 'Lookup case 123')],
     permissions: _permissions,
     clientPermissions: _clientPermissions,
   ),

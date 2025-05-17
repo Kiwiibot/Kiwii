@@ -93,7 +93,7 @@ class TagPlugin extends NyxxPlugin<NyxxGateway> {
     }
     final user = event.message.author as User;
     final member = await event.member?.get();
-    final guild = await event.guild?.fetch(withCounts: true);
+    final guild = await event.guild?.get();
     if (guild == null) {
       return;
     }
@@ -124,11 +124,13 @@ class TagPlugin extends NyxxPlugin<NyxxGateway> {
     // Increment usage count.
     await ctx.client.repositories.tags.edit(EditableTag(timesCalled: tag.timesCalled + 1, id: tag.id));
 
+    final refMsg = (message.reference?.type == MessageReferenceType.defaultType ? message.reference?.messageId : message.id) ?? message.id;
+
     await message.channel.sendMessage(
       MessageBuilder(
         content: renderedTag.result,
         allowedMentions: AllowedMentions.roles() & AllowedMentions.users(),
-        referencedMessage: MessageReferenceBuilder.reply(messageId: message.id),
+        referencedMessage: MessageReferenceBuilder.reply(messageId: refMsg),
       ),
     );
   }
