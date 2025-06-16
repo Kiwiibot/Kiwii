@@ -27,6 +27,9 @@ const requiresAtLeast1Image = {
   'think-what',
   'bubble-tea',
   'bite',
+  'arona-throw',
+  'capoo-draw',
+  'capoo-point',
 };
 const requiresAtLeast1Text = {'illegal', 'ace-attorney', 'blamed-mahiro'};
 
@@ -94,6 +97,7 @@ class ImagesPlugin extends NyxxPlugin<NyxxGateway> {
           Message(:final attachments, :final referencedMessage, :final embeds, :final stickers, :final content) =>
             referencedMessage?.attachments.firstOrNull?.url ??
                 referencedMessage?.embeds.where((e) => e.image != null).firstOrNull?.image?.url ??
+                referencedMessage?.embeds.where((e) => e.thumbnail != null).firstOrNull?.thumbnail?.proxiedUrl ??
                 (switch (guildEmojiRegex.firstMatch(referencedMessage?.content ?? '')) {
                   final match? => Uri(host: 'cdn.discordapp.com', path: '/emojis/${match[3]}.${match[1]?.isNotEmpty == true ? 'gif' : 'png'}', scheme: 'https'),
                   _ => null,
@@ -108,6 +112,7 @@ class ImagesPlugin extends NyxxPlugin<NyxxGateway> {
                 }) ??
                 attachments.firstOrNull?.url ??
                 embeds.where((e) => e.image != null).firstOrNull?.image?.url ??
+                embeds.where((e) => e.thumbnail != null).firstOrNull?.thumbnail?.proxiedUrl ??
                 (switch (guildEmojiRegex.firstMatch(content)) {
                   final match? => Uri(host: 'cdn.discordapp.com', path: '/emojis/${match[3]}.${match[1]?.isNotEmpty == true ? 'gif' : 'png'}', scheme: 'https'),
                   _ => null,
@@ -120,8 +125,8 @@ class ImagesPlugin extends NyxxPlugin<NyxxGateway> {
                   ),
                   _ => null,
                 }) ??
-                referencedMessage?.author.avatar?.get(size: 4096) ??
-                author.avatar.get(size: 4096),
+                ctx.member?.avatar?.get(size: 4096) ??
+                ctx.user.avatar.get(size: 4096),
         },
       };
 
@@ -132,6 +137,21 @@ class ImagesPlugin extends NyxxPlugin<NyxxGateway> {
 
       final (name, res) =
           await switch (image) {
+            'arona-throw' => () async {
+              final (_, r) = await apiClient.aronaThrow(url);
+
+              return ('arona-throw.gif', r);
+            },
+            'capoo-point' => () async {
+              final (_, r) = await apiClient.capooPoint(url);
+
+              return ('capoo-point.gif', r);
+            },
+            'capoo-draw' => () async {
+              final (_, r) = await apiClient.capooDraw(url);
+
+              return ('capoo-draw.gif', r);
+            },
             'always' => () async {
               final mode =
                   arg is String

@@ -32,7 +32,6 @@ import 'package:nyxx_commands/src/converters/built_in/string.dart' as nyxx_comma
 import 'package:nyxx_commands/src/converters/built_in/bool.dart' as nyxx_commands;
 import 'package:nyxx_commands/src/converters/built_in/snowflake.dart' as nyxx_commands;
 
-
 import 'package:nyxx_extensions/nyxx_extensions.dart';
 
 import '../../plugins/base.dart';
@@ -506,7 +505,10 @@ Future<Object?> convertAnyToPrimitive(StringView view, ContextData ctx) async {
 
               return switch (nyxx_commands.convertSnowflake(view, ctx)) {
                 final snowflake? => nyxx_commands.snowflakeToUser(snowflake, ctx),
-                _ => null,
+                _ =>
+                  (() {
+                    view.undo();
+                  })(),
               };
             })(),
         };

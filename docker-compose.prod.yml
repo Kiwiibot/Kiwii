@@ -41,6 +41,13 @@ services:
       - prometheus
     depends_on:
       - prometheus
+  api:
+    image: ghcr.io/kiwiibot/api:latest
+    container_name: kiwii_api
+    ports:
+      - "5555:5555"
+    volumes:
+      - ./data:/data
 
 volumes:
   db:

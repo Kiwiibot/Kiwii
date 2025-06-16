@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
       target: kiwii
     restart: always
-    env_file: .env
+    env_file: .env.dev
     container_name: kiwii
 
     links: [database]
@@ -48,6 +48,13 @@ services:
       - prometheus
     depends_on:
       - prometheus
+  api:
+    image: ghcr.io/kiwiibot/api:latest
+    container_name: kiwii_api
+    ports:
+      - "5555:5555"
+    volumes:
+      - ./data:/data
 
 volumes:
   db:

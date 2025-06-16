@@ -31,6 +31,10 @@ class ApiClient {
     },
   );
   Future<(String, Uint8List)> anyaSuki(Object image, [String? text]) => post('/image/anya_suki', images: [image], texts: [if (text != null) text]);
+  Future<(String, Uint8List)> aronaThrow(Object image) => post('/image/arona_throw', images: [image]);
+  Future<(String, Uint8List)> capooDraw(Object image) => post('/image/capoo_draw', images: [image]);
+  Future<(String, Uint8List)> capooPoint(Object image) => post('/image/capoo_point', images: [image]);
+
   Future<(String, Uint8List)> bite(Object image) => post('/image/bite', images: [image]);
   Future<(String, Uint8List)> blamedMahiro(String text) => post('/image/blamed_mahiro', texts: [text]);
   Future<(String, Uint8List)> bounce(Object image) => post('/image/bounce', images: [image]);
