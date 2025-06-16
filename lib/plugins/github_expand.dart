@@ -31,8 +31,6 @@ final class GithubExpand extends BasePlugin {
   @override
   String get name => 'GithubExpand';
 
-  late final Map<Snowflake, StreamSubscription<MessageCreateEvent>> _subscriptions = {};
-
   @override
   String helpText(self) => '''
 A module to display lines when a github link has been detected.
@@ -40,7 +38,7 @@ A module to display lines when a github link has been detected.
 
   @override
   Future<void> onLoad(self, {required guild}) async {
-    _subscriptions[guild.id] = self.onMessageCreate.where((e) => e.guild?.id == guild.id).listen((event) async {
+    self.onMessageCreate.where((e) => e.guild?.id == guild.id).listen((event) async {
       final message = event.message;
 
       if (!githubLink.hasMatch(message.content)) {
@@ -101,7 +99,5 @@ A module to display lines when a github link has been detected.
   }
 
   @override
-  Future<void> onUnload(self, {required guild}) async {
-    await _subscriptions[guild.id]?.cancel();
-  }
+  Future<void> onUnload(self, {required guild}) async {}
 }

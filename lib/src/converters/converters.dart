@@ -28,13 +28,18 @@ import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
 import 'package:nyxx_commands/src/converters/built_in/user.dart' as nyxx_commands;
 import 'package:nyxx_commands/src/converters/built_in/member.dart' as nyxx_commands;
+import 'package:nyxx_commands/src/converters/built_in/string.dart' as nyxx_commands;
+import 'package:nyxx_commands/src/converters/built_in/bool.dart' as nyxx_commands;
+import 'package:nyxx_commands/src/converters/built_in/snowflake.dart' as nyxx_commands;
+
+
 import 'package:nyxx_extensions/nyxx_extensions.dart';
 
 import '../../plugins/base.dart';
 import '../../plugins/load_modules.dart';
 import '../../plugins/localization.dart';
+import '../../plugins/tag/tag.dart';
 import '../../translations.g.dart';
-import '../../utils/extensions/iterable.dart';
 import '../../utils/utils.dart';
 import '../models/tag.dart';
 
@@ -259,6 +264,12 @@ String _stringify(dynamic t) => t.toString();
 Future<User?> convertUser(StringView view, ContextData ctx) async {
   String word = view.getQuotedWord();
 
+  final m = userMentionRegex.firstMatch(word);
+
+  if (m?[1] case final m?) {
+    return ctx.client.users.get(Snowflake.parse(m));
+  }
+
   final users = await waitFor(switch (ctx.guild) {
     final guild? => (await ctx.client.gateway.listGuildMembers(guild.id).toList()).map((member) => nyxx_commands.memberToUser(member, ctx) as FutureOr<User>),
     _ => switch (ctx.channel) {
@@ -481,6 +492,50 @@ Future<Member?> convertMember(StringView view, ContextData ctx) async {
   return null;
 }
 
+Future<Object?> convertAnyToPrimitive(StringView view, ContextData ctx) async {
+  final user = switch (await convertUser(view, ctx)) {
+    final value? => value,
+    _ =>
+      await (() async {
+        view.undo();
+        return switch (await nyxx_commands.convertUser(view, ctx)) {
+          final value? => value,
+          _ =>
+            (() {
+              view.undo();
+
+              return switch (nyxx_commands.convertSnowflake(view, ctx)) {
+                final snowflake? => nyxx_commands.snowflakeToUser(snowflake, ctx),
+                _ => null,
+              };
+            })(),
+        };
+      })(),
+  };
+
+  if (user != null) {
+    return user;
+  }
+
+  final b = nyxx_commands.convertBool(view, ctx);
+
+  if (b != null) {
+    return b;
+  }
+
+  view.undo();
+
+  final string = nyxx_commands.convertString(view, ctx);
+
+  if (string != null) {
+    return string;
+  }
+
+  view.undo();
+
+  return null;
+}
+
 const imageSizeConverter = ChoicedConverter<int>(convertImageSize, choicesList: powersOfTwo, type: CommandOptionType.integer);
 const localeConverter = SimpleConverter.fixed(elements: [AppLocale.enGb, AppLocale.frFr], stringify: stringifyLocale, reviver: reviverLocale);
 const basePluginConverter = Converter<BasePlugin>(getBasePlugin, autocompleteCallback: autocompleteModules);
@@ -508,3 +563,4 @@ const memberConverter = FallbackConverter(
   toSelectMenuOption: nyxx_commands.memberToSelectMenuOption,
 );
 const forumChannelConverter = GuildChannelConverter<ForumChannel>([ChannelType.guildForum]);
+const primitiveConverter = Converter<Object>(convertAnyToPrimitive);

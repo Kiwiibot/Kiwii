@@ -256,7 +256,7 @@ class UserSettingsFlags extends Flags<UserSettingsFlags> {
 }
 
 /// Converts Cv2 to embeds for older clients (real).
-Future<MessageBuilder> legacyCv2(User user, MessageBuilder builder) async {
+Future<MessageBuilder> legacyCv2(User user, MessageBuilder builder, [MessageBuilder? fallback]) async {
   if (!(builder.flags?.has(MessageFlags.isComponentsV2) ?? false)) {
     return builder;
   }
@@ -264,12 +264,12 @@ Future<MessageBuilder> legacyCv2(User user, MessageBuilder builder) async {
   final connection = GetIt.I.get<pg.Connection>();
 
   final rawFlags =
-      (await connection.execute(r'SELECT COALESCE((SELECT flags FROM user_settings WHERE id = 1234), 0);', parameters: [user.id.value])).first.first as int;
+      (await connection.execute(r'SELECT COALESCE((SELECT flags FROM user_settings WHERE id = $1), 0);', parameters: [user.id.value])).first.first as int;
   final flags = UserSettingsFlags(rawFlags);
 
   if (!flags.hasLegacyRendering) {
     return builder;
   } else {
-    return builder;
+    return fallback ?? builder;
   }
 }

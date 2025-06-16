@@ -13,7 +13,7 @@ const greenCircle = '🟢';
 
 Future<void> onMessageReactionAdd(MessageReactionAddEvent event) async {
   final client = event.channel.manager.client;
-  final channel = await event.channel.get() as GuildTextChannel;
+  final channel = await event.channel.get() as GuildChannel;
 
   final guildSettings = await client.repositories.guilds.getOrNull(event.guildId!);
 

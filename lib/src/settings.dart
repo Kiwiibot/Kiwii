@@ -87,6 +87,11 @@ final postgresPort = int.parse(fromEnvironment('POSTGRES_PORT', '5432'));
 /// The status url to periodically update the status of the bot.
 final statusUrl = fromEnvironment('STATUS_URL');
 
+final apiHost = fromEnvironment('API_HOST', 'localhost');
+final apiPort = int.parse(fromEnvironment('API_PORT', '5555'));
+
+final apiUrl = Uri(scheme: 'http', host: apiHost, port: apiPort);
+
 /// The statuses of the bot.
 const statuses = [
   "DM me if you've found the meaning of life..",

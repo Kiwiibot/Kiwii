@@ -27,6 +27,15 @@ import '../utils/utils.dart';
 import '../utils/extensions.dart';
 import 'message_create.dart';
 
+EmbedBuilder makeEmbed(AttachmentBuilder attachment, bool first, Channel channel, [EmbedBuilder? builder]) {
+  builder ??= EmbedBuilder();
+  final url = first ? channel.url : channel.url.replace(queryParameters: {'somerandomstring': 'toseparateimages'});
+
+  return builder
+    ..image = EmbedImageBuilder(url: Uri.parse('attachment://${attachment.fileName}'))
+    ..url = url;
+}
+
 Future<void> onMessageDelete(MessageDeleteEvent event) async {
   final client = event.gateway.client;
   final self = await client.user.get();
@@ -129,19 +138,16 @@ Future<void> onMessageDelete(MessageDeleteEvent event) async {
     ];
   }
 
-  EmbedBuilder makeEmbed(AttachmentBuilder attachment, bool first) {
-    final url = first ? channel.url : channel.url.replace(queryParameters: {'somerandomstring': 'toseparateimages'});
-
-    return EmbedBuilder(color: DiscordColor(0xb75cff), image: EmbedImageBuilder(url: Uri.parse('attachment://${attachment.fileName}')), url: url);
-  }
-
   for (final part in parts) {
     embed.addField(name: part.$1, value: part.$2);
   }
 
   final attachedImages = attachments.where((a) => isImage(a.data));
 
-  final payload = MessageBuilder(embeds: [embed, ...attachedImages.indexed.map((a) => makeEmbed(a.$2, a.$1 < 4))], attachments: attachments);
+  final payload = MessageBuilder(
+    embeds: [embed, ...attachedImages.indexed.map((a) => makeEmbed(a.$2, a.$1 < 4, channel, EmbedBuilder(color: const DiscordColor(0xb75cff))))],
+    attachments: attachments,
+  );
 
   await webhook.execute(payload, token: webhook.token!, username: self.username, avatarUrl: self.avatar.url.toString());
 }

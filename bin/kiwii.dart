@@ -28,6 +28,7 @@ import 'package:kiwii/commands/core/info.dart';
 import 'package:kiwii/events/message_reaction_add.dart';
 import 'package:kiwii/commands/moderation/report.dart';
 import 'package:kiwii/events/member_log.dart';
+import 'package:kiwii/plugins/images_plugin.dart';
 import 'package:kiwii/plugins/load_modules.dart';
 import 'package:kiwii/plugins/prometheus.dart';
 import 'package:kiwii/plugins/track_presences.dart';
@@ -144,7 +145,7 @@ Future<void> _main() async {
   commands.addCommand(statsCommand);
   commands.addCommand(namesCommand);
   commands.addCommand(avatarCommand);
-  // commands.addCommand(avatarsCommand);
+  commands.addCommand(avatarsCommand);
   commands.addCommand(reportCommand);
 
   commands.addConverter(listConverter);
@@ -180,6 +181,7 @@ Future<void> _main() async {
         TagPlugin(),
         ModulesPlugin(),
         TrackPresences(),
+        ImagesPlugin(),
         tracking,
         cliIntegration,
         commands,

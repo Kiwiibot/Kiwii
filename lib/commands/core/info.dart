@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
+import '../../events/message_log.dart';
 import '../../kiwii.dart';
 import '../../plugins/localization.dart';
 import '../../plugins/track_presences.dart';
@@ -286,47 +287,83 @@ final avatarsCommand = ChatGroup(
             for (final d in guildAvatars)
               AttachmentBuilder(
                 data: d.$1,
-                fileName: 'avatar_${guild.id}_${user.id}_${Random().nextInt(0xffffff).toRadixString(16)}.${d.$2.startsWith('a_') ? 'gif' : 'png'}',
+                fileName: 'guild_avatar_${guild.id}_${user.id}_${Random().nextInt(0xffffff).toRadixString(16)}.${d.$2.startsWith('a_') ? 'gif' : 'png'}',
               ),
           ];
         }
 
-        // final builder = MessageBuilder(
-        //   flags: MessageFlags.isComponentsV2,
-        //   components: [
-        //     SectionComponentBuilder(
-        //       accessory: ThumbnailComponentBuilder(media: UnfurledMediaItemBuilder(url: user.avatar.url)),
-        //       components: [TextDisplayComponentBuilder(content: "Past Avatars and Server Avatars for ${user.mention}")],
-        //     ),
-        //     ContainerComponentBuilder(
-        //       components: [
-        //         TextDisplayComponentBuilder(content: "Past Avatars"),
-        //         MediaGalleryComponentBuilder(
-        //           items: [
-        //             for (final builder in attachmentBuilders)
-        //               MediaGalleryItemBuilder(media: UnfurledMediaItemBuilder(url: Uri(scheme: 'attachment', host: builder.fileName))),
-        //           ],
-        //         ),
-        //         if (guildAvatars != null && guildAvatars.isNotEmpty) ...[
-        //           SeparatorComponentBuilder(isDivider: true, spacing: SeparatorSpacingSize.small),
-        //           TextDisplayComponentBuilder(content: "Past Guild Avatars"),
-        //           MediaGalleryComponentBuilder(
-        //             items: [
-        //               for (final builder in guildAttachmentBuilders!)
-        //                 MediaGalleryItemBuilder(media: UnfurledMediaItemBuilder(url: Uri(scheme: 'attachment', host: builder.fileName))),
-        //             ],
-        //           ),
-        //         ],
-        //       ],
-        //     ),
-        //   ],
-        //   attachments: [...attachmentBuilders, if (guildAttachmentBuilders case final guildAttachmentBuilders?) ...guildAttachmentBuilders],
-        // );
+        MessageBuilder builder;
 
-        final builder = MessageBuilder(embeds: [EmbedBuilder(author: EmbedAuthorBuilder(name: user.globalName ?? user.tag, iconUrl: user.avatar.url), )]);
-
-        await ctx.respond(builder);
+        builder = await legacyCv2(
+          ctx.user,
+          MessageBuilder(
+            flags: MessageFlags.isComponentsV2,
+            components: [
+              SectionComponentBuilder(
+                accessory: ThumbnailComponentBuilder(media: UnfurledMediaItemBuilder(url: user.avatar.url)),
+                components: [TextDisplayComponentBuilder(content: "Past Avatars and Server Avatars for ${user.mention}")],
+              ),
+              ContainerComponentBuilder(
+                components: [
+                  TextDisplayComponentBuilder(content: "Past Avatars"),
+                  MediaGalleryComponentBuilder(
+                    items: [
+                      for (final builder in attachmentBuilders)
+                        MediaGalleryItemBuilder(media: UnfurledMediaItemBuilder(url: Uri(scheme: 'attachment', host: builder.fileName))),
+                    ],
+                  ),
+                  if (guildAvatars != null && guildAvatars.isNotEmpty) ...[
+                    SeparatorComponentBuilder(isDivider: true, spacing: SeparatorSpacingSize.small),
+                    TextDisplayComponentBuilder(content: "Past Guild Avatars"),
+                    MediaGalleryComponentBuilder(
+                      items: [
+                        for (final builder in guildAttachmentBuilders!)
+                          MediaGalleryItemBuilder(media: UnfurledMediaItemBuilder(url: Uri(scheme: 'attachment', host: builder.fileName))),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ],
+            attachments: [...attachmentBuilders, ...?guildAttachmentBuilders],
+          ),
+          MessageBuilder(
+            embeds: [
+              EmbedBuilder(
+                author: EmbedAuthorBuilder(name: user.globalName ?? user.tag, iconUrl: user.avatar.url),
+                title: 'Past Avatars and Server Avatars for ${user.tag}',
+              ),
+              ...attachmentBuilders.indexed.map((e) => makeEmbed(e.$2, true, ctx.channel)),
+              ...?guildAttachmentBuilders?.indexed.map((e) => makeEmbed(e.$2, false, ctx.channel)),
+            ],
+            attachments: [...attachmentBuilders, ...?guildAttachmentBuilders],
+          ),
+        );
+        final msg = await ctx.respond(builder);
+        if (msg.embeds.isNotEmpty) {
+          final avatars = msg.embeds.skip(1).toList();
+          final updatedEmbed = msg.embeds.first.toEmbedBuilder();
+          final sb = StringBuffer();
+          for (int i = 0; i < avatars.length; i++) {
+            final avatar = avatars[i];
+            sb.write(
+              '${i == 0 ? '' : ' '}[${avatar.image?.proxiedUrl.toString().contains('guild_avatar') ?? false ? ' Guild Avatar' : 'Avatar'} #${i + 1}](${avatar.image?.proxiedUrl ?? avatar.image?.url})',
+            );
+          }
+          updatedEmbed.description = sb.toString();
+          final avatarsEmbeds = avatars.map((e) => e.toEmbedBuilder()).toList();
+          final m = await msg.edit(MessageUpdateBuilder(embeds: [updatedEmbed, ...avatarsEmbeds]));
+          final images = m.attachments;
+          for (final (i, image) in images.indexed) {
+            avatarsEmbeds[i].image = EmbedImageBuilder(url: Uri(scheme: 'attachment', host: image.fileName));
+          }
+          await m.edit(MessageUpdateBuilder(embeds: [updatedEmbed, ...avatarsEmbeds]));
+        }
       }),
     ),
   ],
 );
+
+final serverInfoCommand = ChatCommand('server', 'Get information about the current server', id('info-guild', (ChatContext ctx) async {
+  
+}));

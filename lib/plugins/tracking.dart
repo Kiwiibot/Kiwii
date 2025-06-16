@@ -41,7 +41,7 @@ class Tracking extends NyxxPlugin<NyxxGateway> {
   Future<NyxxGateway> doConnect(ApiOptions apiOptions, ClientOptions clientOptions, Future<NyxxGateway> Function() connect) async {
     final client = await super.doConnect(apiOptions, clientOptions, connect);
 
-    doBatchNamesUpdateTask = Timer.periodic(const Duration(seconds: 30), (_) async {
+    doBatchNamesUpdateTask = Timer.periodic(const Duration(seconds: 1), (_) async {
       await doBatchUpdate();
     });
 

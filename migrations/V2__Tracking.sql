@@ -83,14 +83,11 @@ CREATE TABLE IF NOT EXISTS user_settings (
     flags INTEGER
 );
 
--- Function for cleaning up global tables (avatar_changes, banner_changes, username_changes, global_name_changes)
--- These tables only have 'id' to identify the user.
 CREATE OR REPLACE FUNCTION cleanup_global_changes()
 RETURNS TRIGGER AS $$
 DECLARE
     sql TEXT;
 BEGIN
-    -- Construct the SQL statement using TG_TABLE_NAME
     sql := 'DELETE FROM ONLY ' || quote_ident(TG_TABLE_NAME) || ' 
             WHERE id = $1
             AND idx NOT IN (
@@ -101,21 +98,17 @@ BEGIN
                 LIMIT 5
             )';
 
-    -- Execute the constructed SQL statement
     EXECUTE sql USING NEW.id;
 
-    RETURN NEW; -- Return the new row for AFTER INSERT triggers
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Function for cleaning up guild-specific tables (nickname_changes, guild_avatar_changes, guild_banner_changes)
--- These tables have 'id' (user_id) and 'guild_id' to identify the context.
 CREATE OR REPLACE FUNCTION cleanup_guild_changes()
 RETURNS TRIGGER AS $$
 DECLARE
     sql TEXT;
 BEGIN
-    -- Construct the SQL statement using TG_TABLE_NAME
     sql := 'DELETE FROM ONLY ' || quote_ident(TG_TABLE_NAME) || ' 
             WHERE id = $1
             AND guild_id = $2
@@ -127,21 +120,15 @@ BEGIN
                 LIMIT 5
             )';
 
-    -- Execute the constructed SQL statement
     EXECUTE sql USING NEW.id, NEW.guild_id;
 
-    RETURN NEW; -- Return the new row for AFTER INSERT triggers
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 
--- Triggers for tables that need cleanup based on 'id' and 'idx' (global)
-CREATE OR REPLACE TRIGGER cleanup_username_trigger AFTER INSERT ON username_changes FOR EACH ROW EXECUTE FUNCTION cleanup_global_changes();
-CREATE OR REPLACE TRIGGER cleanup_global_name_trigger AFTER INSERT ON global_name_changes FOR EACH ROW EXECUTE FUNCTION cleanup_global_changes();
 CREATE OR REPLACE TRIGGER cleanup_avatar_trigger AFTER INSERT ON avatar_changes FOR EACH ROW EXECUTE FUNCTION cleanup_global_changes();
 CREATE OR REPLACE TRIGGER cleanup_banner_trigger AFTER INSERT ON banner_changes FOR EACH ROW EXECUTE FUNCTION cleanup_global_changes();
 
--- Triggers for tables that need cleanup based on 'id', 'guild_id', and 'idx' (guild-specific)
-CREATE OR REPLACE TRIGGER cleanup_nickname_trigger AFTER INSERT ON nickname_changes FOR EACH ROW EXECUTE FUNCTION cleanup_guild_changes();
 CREATE OR REPLACE TRIGGER cleanup_guild_avatar_trigger AFTER INSERT ON guild_avatar_changes FOR EACH ROW EXECUTE FUNCTION cleanup_guild_changes();
 CREATE OR REPLACE TRIGGER cleanup_guild_banner_trigger AFTER INSERT ON guild_banner_changes FOR EACH ROW EXECUTE FUNCTION cleanup_guild_changes();
