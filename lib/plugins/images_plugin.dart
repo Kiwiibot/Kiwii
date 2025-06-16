@@ -97,7 +97,15 @@ class ImagesPlugin extends NyxxPlugin<NyxxGateway> {
           Message(:final attachments, :final referencedMessage, :final embeds, :final stickers, :final content) =>
             referencedMessage?.attachments.firstOrNull?.url ??
                 referencedMessage?.embeds.where((e) => e.image != null).firstOrNull?.image?.url ??
-                referencedMessage?.embeds.where((e) => e.thumbnail != null).firstOrNull?.thumbnail?.proxiedUrl ??
+                (switch (referencedMessage?.embeds.where((e) => e.thumbnail != null).firstOrNull) {
+                  Embed(:final type, :final provider?, thumbnail: EmbedThumbnail(:final url)) when type == EmbedType.gifv && provider.name == 'Tenor' => Uri(
+                    scheme: 'https',
+                    host: 'media1.tenor.com',
+                    path: '/m${url.path.replaceAll('.png', '').replaceAll('e/', 'd/')}.gif',
+                  ),
+                  Embed(:final url?) => url,
+                  _ => null,
+                }) ??
                 (switch (guildEmojiRegex.firstMatch(referencedMessage?.content ?? '')) {
                   final match? => Uri(host: 'cdn.discordapp.com', path: '/emojis/${match[3]}.${match[1]?.isNotEmpty == true ? 'gif' : 'png'}', scheme: 'https'),
                   _ => null,
@@ -112,7 +120,15 @@ class ImagesPlugin extends NyxxPlugin<NyxxGateway> {
                 }) ??
                 attachments.firstOrNull?.url ??
                 embeds.where((e) => e.image != null).firstOrNull?.image?.url ??
-                embeds.where((e) => e.thumbnail != null).firstOrNull?.thumbnail?.proxiedUrl ??
+                (switch (embeds.where((e) => e.thumbnail != null).firstOrNull) {
+                  Embed(:final type, :final provider?, thumbnail: EmbedThumbnail(:final url)) when type == EmbedType.gifv && provider.name == 'Tenor' => Uri(
+                    scheme: 'https',
+                    host: 'media1.tenor.com',
+                    path: '/m${url.path.replaceAll('.png', '').replaceAll('e/', 'd/')}.gif',
+                  ),
+                  Embed(:final url?) => url,
+                  _ => null,
+                }) ??
                 (switch (guildEmojiRegex.firstMatch(content)) {
                   final match? => Uri(host: 'cdn.discordapp.com', path: '/emojis/${match[3]}.${match[1]?.isNotEmpty == true ? 'gif' : 'png'}', scheme: 'https'),
                   _ => null,
