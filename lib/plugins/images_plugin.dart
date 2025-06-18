@@ -30,8 +30,17 @@ const requiresAtLeast1Image = {
   'arona-throw',
   'capoo-draw',
   'capoo-point',
+  'colour-cycle',
+  'rotating-globe',
+  'pixelate',
+  'random-block-shuffle',
+  'wave',
+  'prism',
+  'jitter',
+  'scanlines',
+  'gif',
 };
-const requiresAtLeast1Text = {'illegal', 'ace-attorney', 'blamed-mahiro'};
+const requiresAtLeast1Text = {'illegal', 'ace-attorney', 'blamed-mahiro', 'atri-pillow'};
 
 const allImages = {...requiresAtLeast1Image, ...requiresAtLeast1Text, 'eject'};
 
@@ -103,7 +112,7 @@ class ImagesPlugin extends NyxxPlugin<NyxxGateway> {
                     host: 'media1.tenor.com',
                     path: '/m${url.path.replaceAll('.png', '').replaceAll('e/', 'd/')}.gif',
                   ),
-                  Embed(:final url?) => url,
+                  Embed(thumbnail: EmbedThumbnail(:final url)) => url,
                   _ => null,
                 }) ??
                 (switch (guildEmojiRegex.firstMatch(referencedMessage?.content ?? '')) {
@@ -126,7 +135,7 @@ class ImagesPlugin extends NyxxPlugin<NyxxGateway> {
                     host: 'media1.tenor.com',
                     path: '/m${url.path.replaceAll('.png', '').replaceAll('e/', 'd/')}.gif',
                   ),
-                  Embed(:final url?) => url,
+                  Embed(thumbnail: EmbedThumbnail(:final url)) => url,
                   _ => null,
                 }) ??
                 (switch (guildEmojiRegex.firstMatch(content)) {
@@ -288,14 +297,71 @@ class ImagesPlugin extends NyxxPlugin<NyxxGateway> {
               return ('illegal.gif', r);
             },
             'caption' => () async {
-              final text = switch (arg) {
-                final String val => val,
-                _ => 'A Caption',
-              };
+              final text =
+                  arg is User
+                      ? (() {
+                        final caption = view.getQuotedWord();
+                        view.undo();
+                        return caption;
+                      })()
+                      : arg as String;
               final font = view.eof ? null : view.getQuotedWord();
               final (ext, r) = await apiClient.caption(url, text, font: font);
 
               return ('caption.$ext', r);
+            },
+            'atri-pillow' => () async {
+              final text = arg is User ? arg.mention : arg as String;
+              final mode = view.eof ? null : view.getQuotedWord();
+
+              final (ext, r) = await apiClient.atriPillow(text, mode: mode);
+
+              return ('atri-pillow.$ext', r);
+            },
+            'rotating-globe' => () async {
+              final (_, r) = await apiClient.rotatingGlobe(url);
+
+              return ('rotating-globe.gif', r);
+            },
+            'colour-cycle' => () async {
+              final (_, r) = await apiClient.colourCycle(url);
+
+              return ('colour-cycle.gif', r);
+            },
+            'wave' => () async {
+              final (_, r) = await apiClient.wave(url);
+
+              return ('wave.gif', r);
+            },
+            'pixelate' => () async {
+              final (_, r) = await apiClient.pixelate(url);
+
+              return ('pixelate.gif', r);
+            },
+            'prism' => () async {
+              final (_, r) = await apiClient.prism(url);
+
+              return ('prism.gif', r);
+            },
+            'jitter' => () async {
+              final (_, r) = await apiClient.jitter(url);
+
+              return ('jitter.gif', r);
+            },
+            'scanlines' => () async {
+              final (_, r) = await apiClient.scanlines(url);
+
+              return ('scanlines.gif', r);
+            },
+            'random-block-shuffle' => () async {
+              final (_, r) = await apiClient.randomBlockShuffle(url);
+
+              return ('random-block-shuffle.gif', r);
+            },
+            'gif' => () async {
+              final content = await apiClient.client.get(url);
+
+              return ('attachment.gif', content.bodyBytes);
             },
             _ => () async => ('', Uint8List.fromList([])),
           }();

@@ -25,6 +25,7 @@ import 'package:kiwii/commands/admin/rest.dart';
 import 'package:kiwii/commands/admin/stats.dart';
 import 'package:kiwii/commands/core/avatar.dart';
 import 'package:kiwii/commands/core/info.dart';
+import 'package:kiwii/commands/fun/images.dart';
 import 'package:kiwii/events/message_reaction_add.dart';
 import 'package:kiwii/commands/moderation/report.dart';
 import 'package:kiwii/events/member_log.dart';
@@ -147,6 +148,7 @@ Future<void> _main() async {
   commands.addCommand(avatarCommand);
   commands.addCommand(avatarsCommand);
   commands.addCommand(reportCommand);
+  commands.addCommand(imagesCommand);
 
   commands.addConverter(listConverter);
   commands.addConverter(chatCommandConverter);

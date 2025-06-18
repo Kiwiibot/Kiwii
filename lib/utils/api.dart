@@ -96,5 +96,30 @@ class ApiClient {
     return (ext ?? 'png', response.bodyBytes);
   }
 
+  Future<(String, Uint8List)> preview(String route) async {
+    final response = await client.get(baseUri.replace(path: '/image/$route/preview'));
+
+    final ext = response.headers['content-type']?.split(';').first.split('/').last;
+
+    return (ext ?? 'png', response.bodyBytes);
+  }
+
   Future<(String, Uint8List)> rotate3d(Object image) => post('/image/rotate_3d', images: [image]);
+  Future<(String, Uint8List)> rotatingGlobe(Object image) => post('image/rotating_globe', images: [image]);
+  Future<(String, Uint8List)> colourCycle(Object image) => post('image/colour_cycle', images: [image]);
+  Future<(String, Uint8List)> wave(Object image) => post('image/wave', images: [image]);
+  Future<(String, Uint8List)> pixelate(Object image) => post('image/pixelate', images: [image]);
+  Future<(String, Uint8List)> prism(Object image) => post('image/prism', images: [image]);
+  Future<(String, Uint8List)> jitter(Object image) => post('image/jitter', images: [image]);
+  Future<(String, Uint8List)> scanlines(Object image) => post('image/scanlines', images: [image]);
+  Future<(String, Uint8List)> randomBlockShuffle(Object image) => post('image/random_block_shuffle', images: [image]);
+
+
+  Future<(String, Uint8List)> atriPillow(String text, {String? mode}) => post(
+    'image/rotating_globe',
+    texts: [text],
+    options: {
+      if (mode != null && ['yes', 'no'].contains(mode)) 'mode': mode,
+    },
+  );
 }
