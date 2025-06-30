@@ -122,8 +122,9 @@ class ImagesPlugin extends NyxxPlugin<NyxxGateway> {
                 (switch (referencedMessage?.stickers.firstOrNull) {
                   final sticker? => Uri(
                     scheme: 'https',
-                    host: 'cdn.discordapp.com',
-                    path: '/stickers/${sticker.id}.${sticker.formatType == StickerFormatType.gif ? 'gif' : 'png'}',
+                    host: 'media.discordapp.com',
+                    path: '/stickers/${sticker.id}.${sticker.formatType == StickerFormatType.gif ? 'gif' : 'png'}`}',
+                    queryParameters: {'size': 4096, 'quality': 'lossless'},
                   ),
                   _ => null,
                 }) ??
@@ -145,8 +146,9 @@ class ImagesPlugin extends NyxxPlugin<NyxxGateway> {
                 (switch (stickers.firstOrNull) {
                   final sticker? => Uri(
                     scheme: 'https',
-                    host: 'cdn.discordapp.com',
+                    host: 'media.discordapp.com',
                     path: '/stickers/${sticker.id}.${sticker.formatType == StickerFormatType.gif ? 'gif' : 'png'}',
+                    queryParameters: {'size': 4096, 'quality': 'lossless'},
                   ),
                   _ => null,
                 }) ??

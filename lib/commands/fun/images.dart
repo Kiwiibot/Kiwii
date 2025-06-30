@@ -54,7 +54,7 @@ Iterable<CommandOptionChoiceBuilder<dynamic>> autocompleteCallback(AutocompleteC
 final imagesCommand = ChatCommand(
   'images',
   'Show the images to use (idk im so done)',
-  id('images', (ChatContext ctx, @Autocomplete(autocompleteCallback) @Description('The image to get info of') String image) async {
+  id('images', (InteractionChatContext ctx, @Autocomplete(autocompleteCallback) @Description('The image to get info of') String image) async {
     final img = imgs[image]!;
     final (ext, preview) = await apiClient.preview(image.replaceAll('-', '_'));
     final filename = '$image.$ext';

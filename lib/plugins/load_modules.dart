@@ -24,6 +24,7 @@ import '../kiwii.dart';
 import 'base.dart';
 import 'github_expand.dart';
 import 'overwatch.dart';
+import 'notifications.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
 
 import 'starboard.dart';
@@ -32,6 +33,7 @@ final modules = <String, BasePlugin>{
   'Overwatch': OverwatchPlugin(),
   'GithubExpand': GithubExpand(),
   'Starboard': StarboardPlugin(),
+  'Notifications': NotificationsPlugin(),
 };
 
 class ModulesPlugin extends NyxxPlugin<NyxxGateway> {

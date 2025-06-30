@@ -17,12 +17,9 @@
  */
 
 import 'dart:io';
-import 'package:dotenv/dotenv.dart';
 import 'package:nyxx/nyxx.dart';
 
-final dotenv = DotEnv()..load(['.env${Platform.environment['DEV'] == 'true' ? '.dev' : ''}']);
-
-String? getEnv(String key) => Platform.environment[key] ?? dotenv[key] ?? (!bool.hasEnvironment(key) ? null : String.fromEnvironment(key));
+String? getEnv(String key) => Platform.environment[key] ?? (!bool.hasEnvironment(key) ? null : String.fromEnvironment(key));
 
 const version = '0.1.0';
 

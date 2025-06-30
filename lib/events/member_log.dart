@@ -55,7 +55,11 @@ Future<void> onGuildMemberRemove(GuildMemberRemoveEvent event) async {
 
   final client = event.guild.manager.client;
 
-  final logwebhookId = (await client.repositories.guilds.getOrNull(guild.id))?.guildLogWebhookId ?? const Snowflake(1250365441470103573);
+  final logwebhookId = (await client.repositories.guilds.getOrNull(guild.id))?.guildLogWebhookId;
+
+  if (logwebhookId == null) {
+    return;
+  }
 
   final webhook = await client.webhooks.get(logwebhookId);
 

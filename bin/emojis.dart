@@ -2,10 +2,13 @@ import 'dart:io';
 
 import 'package:kiwii/src/settings.dart' as settings;
 import 'package:nyxx/nyxx.dart';
+import 'package:nyxx_extensions/nyxx_extensions.dart';
 import 'package:path/path.dart' as path;
 
 void main(List<String> args) async {
   final client = await Nyxx.connectRest(settings.token, options: RestClientOptions(plugins: [Logging(logLevel: Level.FINE)]));
+
+  client.logger.info("Registered as ${(await client.user.get()).tag}");
 
   final baseFile = File('lib/utils/emojis.dart');
   final contents = StringBuffer('const emojis = {');
