@@ -35,6 +35,12 @@ extension ContextExtension on ChatContext {
 
   /// Returns the bot's prefix or '/' if this was invoked from an interaction.
   String get realPrefix => this is InteractionChatContext ? '/' : (this as MessageChatContext).prefix;
+
+  Future<Message> reply(String content, {ResponseLevel? level}) {
+    final builder = MessageBuilder(content: content);
+
+    return respond(builder, level: level);
+  }
 }
 
 extension PartialGuildExtensions on PartialGuild {

@@ -17,9 +17,12 @@
  */
 
 import 'dart:io';
+import 'package:dotenv/dotenv.dart';
 import 'package:nyxx/nyxx.dart';
 
-String? getEnv(String key) => Platform.environment[key] ?? (!bool.hasEnvironment(key) ? null : String.fromEnvironment(key));
+final dotenv = DotEnv()..load(['.env${Platform.environment['DEV'] == 'true' ? '.dev' : ''}']);
+
+String? getEnv(String key) => Platform.environment[key] ?? dotenv[key] ?? (!bool.hasEnvironment(key) ? null : String.fromEnvironment(key));
 
 const version = '0.1.0';
 
@@ -88,6 +91,8 @@ final apiHost = fromEnvironment('API_HOST', 'localhost');
 final apiPort = int.parse(fromEnvironment('API_PORT', '5555'));
 
 final apiUrl = Uri(scheme: 'http', host: apiHost, port: apiPort);
+
+final redditCookie = fromEnvironment('REDDIT_COOKIE');
 
 /// The statuses of the bot.
 const statuses = [

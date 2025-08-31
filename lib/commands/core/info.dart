@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
+import 'package:unicode_data/unicode_data.dart' as unicode_data;
 import '../../events/message_log.dart';
 import '../../kiwii.dart';
 import '../../plugins/localization.dart';
@@ -125,7 +126,7 @@ Future<void> userInfoHandler(CommandContext ctx, User user, [Member? member, boo
 
 final infoCommand = ChatGroup(
   'info',
-  'Get information about a user or the server',
+  'Get information about a user, the server, or a character.',
   checks: [BasePermissionsCheck(_infoCommandPermissions), BaseSelfPermissionsCheck(_infoCommandClientPermissions)],
   options: KiwiiCommandOptions(
     permissions: _infoCommandPermissions,
@@ -133,6 +134,7 @@ final infoCommand = ChatGroup(
     usage: '',
     examples: [(command: '', description: '')],
   ),
+  aliases: ['i'],
   children: [
     ChatCommand(
       'user',
@@ -156,7 +158,22 @@ final infoCommand = ChatGroup(
         examples: [(command: '@user', description: 'Get information about the @user.'), (command: '', description: 'Get information about yourself.')],
         usage: '<user>',
       ),
+      aliases: ['u'],
     ),
+    ChatCommand('character', aliases: ['char', 'c'], 'Get information about a character', id('info-character', (ChatContext ctx, List<String> characters) async {
+      String toString(String c) {
+        int codePoint = c.runes.first;
+        String digit = codePoint.toRadixString(16).padLeft(8, '0').toUpperCase();
+        final name = unicode_data.name(codePoint, 'Name not found');
+        if (c == '`') {
+          c = r'\`';
+        }
+        return '[`U+$digit`](http://www.fileformat.info/info/unicode/char/$digit): $name **—** $c';
+      }
+
+      final msg = characters.map(toString).join('\n');
+      await ctx.respond(MessageBuilder(content: msg, flags: MessageFlags.suppressEmbeds));
+    })),
   ],
 );
 
@@ -364,6 +381,4 @@ final avatarsCommand = ChatGroup(
   ],
 );
 
-final serverInfoCommand = ChatCommand('server', 'Get information about the current server', id('info-guild', (ChatContext ctx) async {
-  
-}));
+final serverInfoCommand = ChatCommand('server', 'Get information about the current server', id('info-guild', (ChatContext ctx) async {}));

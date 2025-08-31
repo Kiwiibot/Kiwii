@@ -538,6 +538,43 @@ Future<Object?> convertAnyToPrimitive(StringView view, ContextData ctx) async {
   return null;
 }
 
+Future<Emoji?> convertEmoji(StringView view, ContextData ctx) async {
+  final word = view.getQuotedWord();
+
+  final match = guildEmojiRegex.firstMatch(word);
+
+  if (match?[3] case final m?) {
+    final em =
+        ctx.client.guilds.cache.values.where((g) => g.emojis.cache.containsKey(Snowflake.parse(m))).map((g) => g.emojis.cache[Snowflake.parse(m)]).firstOrNull;
+
+    if (em != null) {
+      return em;
+    }
+
+    return GuildEmoji(
+      id: Snowflake.parse(m),
+      manager: ctx.client.guilds[Snowflake.zero].emojis,
+      name: match![2],
+      roleIds: [],
+      user: null,
+      requiresColons: false,
+      isManaged: false,
+      isAnimated: match[1]?.isNotEmpty == true,
+      isAvailable: false,
+    );
+  }
+
+  if (word.isEmpty) {
+    return null;
+  }
+
+  if (RegExp(r'\p{Extended_Pictographic}', unicode: true).hasMatch(word)) {
+    return ctx.client.getTextEmoji(word);
+  }
+
+  return null;
+}
+
 const imageSizeConverter = ChoicedConverter<int>(convertImageSize, choicesList: powersOfTwo, type: CommandOptionType.integer);
 const localeConverter = SimpleConverter.fixed(elements: [AppLocale.enGb, AppLocale.frFr], stringify: stringifyLocale, reviver: reviverLocale);
 const basePluginConverter = Converter<BasePlugin>(getBasePlugin, autocompleteCallback: autocompleteModules);
@@ -566,3 +603,4 @@ const memberConverter = FallbackConverter(
 );
 const forumChannelConverter = GuildChannelConverter<ForumChannel>([ChannelType.guildForum]);
 const primitiveConverter = Converter<Object>(convertAnyToPrimitive);
+const emojiConverter = Converter<Emoji?>(convertEmoji);

@@ -22,12 +22,15 @@ dependencies:
   stdlibc: ^0.1.4
   sentry: ^8.3.0
   nyxx: ^6.4.3
-  overfast_api:
+  # overfast_api:
+  #   git:
+  #     url: https://git.lexedia.moe/Lexedia/overfast_api.git
+  # perspective_api:
+  #   git:
+  #     url: https://git.lexedia.moe/Lexedia/perspective_api.git
+  unicode_data:
     git:
-      url: https://git.lexedia.moe/Lexedia/overfast_api.git
-  perspective_api:
-    git:
-      url: https://git.lexedia.moe/Lexedia/perspective_api.git
+      url: https://github.com/Lexedia/unicode_data.git
   option:
     git:
       url: https://git.sr.ht/~lexie/option
@@ -51,6 +54,9 @@ dependencies:
   prometheus_client_shelf: ^1.0.0+1
   characters: ^1.4.0
   tabular: ^0.6.3+1
+  xml: ^6.5.0
+  lavalink: ^1.0.0
+  nyxx_lavalink: 4.0.0-dev.1
 dependency_overrides:
   nyxx:
     git:

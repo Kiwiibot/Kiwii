@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 
 import 'package:nyxx/nyxx.dart';
 
+import '../../src/settings.dart';
 import '../../utils/extensions.dart';
 import 'notifier.dart';
 import 'subscription.dart';
@@ -13,6 +14,8 @@ final _fetcherClient = http.Client();
 
 final class RedditNotifier extends Notifier {
   final StreamController<Map<String, dynamic>> _newPostsController = StreamController.broadcast();
+
+  final logger = Logger('Kiwii.RedditNotifier');
 
   RedditNotifier({required super.guild});
 
@@ -126,9 +129,12 @@ final class RedditNotifier extends Notifier {
   }
 
   Future<List<Map<String, dynamic>>?> fetchLatestPostsFromSubreddit(String subredditName) async {
-    final url = 'https://www.reddit.com/r/$subredditName/new.json';
+    final url = 'https://old.reddit.com/r/$subredditName/new.json';
 
-    final response = await _fetcherClient.get(Uri.parse(url));
+    final response = await _fetcherClient.get(
+      Uri.parse(url),
+      headers: {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:139.0) Gecko/20100101 Firefox/139.0', 'Accept': 'application/json', 'Cookie': redditCookie},
+    );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -148,7 +154,7 @@ final class RedditNotifier extends Notifier {
         final String text = post['data']['selftext'] as String;
         final String? mediaUrl =
             post['data']['is_video']
-                ? (() async {
+                ? await (() async {
                   final response = await http.get(Uri.parse('https://www.reddit.com/${post['permalink']}'));
                   final s = response.body;
                   final i = s.indexOf('packaged-media-json');
@@ -188,7 +194,7 @@ final class RedditNotifier extends Notifier {
 
       return posts;
     } else {
-      print('Failed to fetch posts from subreddit: $subredditName');
+      logger.warning('Failed to fetch posts from $url Response code: ${response.statusCode}');
       return null;
     }
   }

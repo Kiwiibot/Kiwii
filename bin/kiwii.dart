@@ -25,6 +25,7 @@ import 'package:kiwii/commands/admin/rest.dart';
 import 'package:kiwii/commands/admin/stats.dart';
 import 'package:kiwii/commands/core/avatar.dart';
 import 'package:kiwii/commands/core/info.dart';
+import 'package:kiwii/commands/fun/emoji.dart';
 import 'package:kiwii/commands/fun/images.dart';
 import 'package:kiwii/events/message_reaction_add.dart';
 import 'package:kiwii/commands/moderation/report.dart';
@@ -149,6 +150,7 @@ Future<void> _main() async {
   commands.addCommand(avatarsCommand);
   commands.addCommand(reportCommand);
   commands.addCommand(imagesCommand);
+  commands.addCommand(emojiCommand);
 
   commands.addConverter(listConverter);
   commands.addConverter(chatCommandConverter);
@@ -162,6 +164,7 @@ Future<void> _main() async {
   commands.addConverter(messageConverter);
   commands.addConverter(memberConverter);
   commands.addConverter(forumChannelConverter);
+  commands.addConverter(emojiConverter);
 
   final status = '${settings.prefix}help ─ ${settings.statuses[Random().nextInt(settings.statuses.length)]}';
 
