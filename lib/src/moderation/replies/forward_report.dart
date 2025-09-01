@@ -25,7 +25,7 @@ Future<Uri?> forwardReport(({User author, String reason}) data, Guild guild, /* 
   Uint8List? fetchedAttachment;
 
   if (payload is Message) {
-    await updateReport(UpdateReport(reportId: report.reportId, guildId: guild.id, contextMessageIds: Some([...?report.contextMessageIds, payload.id])));
+    await updateReport(UpdateReport(reportId: report.reportId, guildId: guild.id, contextMessageIds: Some([...?report.contextMessageIds, payload.id]), updatedAt: Some(DateTime.now())));
 
     embeds.add(await formatMessageToEmbed(payload, guild.t));
   } else {

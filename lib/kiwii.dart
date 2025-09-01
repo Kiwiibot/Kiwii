@@ -26,5 +26,5 @@ export 'src/checks/checks.dart';
 export 'commands/admin/run_as.dart';
 export 'commands/core/help.dart';
 export 'commands/fun/markov.dart';
-export 'commands/fun/overwatch.dart' hide client;
+// export 'commands/fun/overwatch.dart' hide client;
 export 'commands/fun/uwurandom.dart';

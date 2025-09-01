@@ -50,7 +50,7 @@ Future<void> onMessageReactionAdd(MessageReactionAddEvent event) async {
 
   var report = Report.fromRow(rawReport.toColumnMap());
 
-  report = await updateReport(UpdateReport(reportId: report.reportId, guildId: report.guildId, status: Some(op)));
+  report = await updateReport(UpdateReport(reportId: report.reportId, guildId: report.guildId, status: Some(op), updatedAt: Some(DateTime.now())));
 
   await acknowledgeReport(await event.guild!.get(), report);
 }

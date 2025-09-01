@@ -32,6 +32,7 @@ class ReportRepository extends Repository {
           status: Some(ReportStatus.approved),
           modId: Some(moderator.id),
           modTag: Some(moderator.tag),
+          updatedAt: Some(DateTime.now()),
         ),
       );
 

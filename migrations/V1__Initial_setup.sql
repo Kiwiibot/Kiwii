@@ -96,8 +96,6 @@ CREATE TABLE IF NOT EXISTS appeals (
     PRIMARY KEY (guild_id, appeal_id)
 );
 
-CREATE OR REPLACE TRIGGER set_updated_at BEFORE UPDATE ON appeals FOR EACH ROW EXECUTE FUNCTION set_current_timestamp_updated_at();
-
 CREATE FUNCTION next_appeal(BIGINT) RETURNS INTEGER
 		LANGUAGE plpgsql
 		stable
@@ -167,9 +165,6 @@ CREATE TABLE IF NOT EXISTS reports (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     context_messages_ids BIGINT[]
 );
-
-CREATE OR REPLACE TRIGGER set_updated_at BEFORE UPDATE ON reports FOR EACH ROW EXECUTE FUNCTION set_current_timestamp_updated_at();
-
 
 CREATE OR REPLACE FUNCTION next_report(BIGINT) RETURNS INTEGER
 		LANGUAGE plpgsql

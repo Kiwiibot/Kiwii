@@ -43,15 +43,6 @@ final warnCommand = ChatCommand(
     @Name('reference-case') @Description('The reference case') @Autocomplete(caseAutoCompleteNoHistory) int? caseId,
     @Name('report-reference') @Description('The reference report') int? reportId,
   ]) async {
-    final guildSettings = await ctx.client.repositories.guilds.getOrNull(ctx.guild!.id);
-
-    final modLogChannel = guildSettings?.modLogChannelId;
-
-    if (modLogChannel == null) {
-      await ctx.send(ctx.guild.t.general.errors.noModChannel);
-      return;
-    }
-
     final warnId = ComponentId.generate(allowedUser: ctx.user.id);
     final cancelId = ComponentId.generate(allowedUser: ctx.user.id);
 
@@ -119,5 +110,5 @@ final warnCommand = ChatCommand(
       (command: '@user "Following #3" 3', description: 'Warns the user with a reference to the case #3'),
     ],
   ),
-  checks: [BasePermissionsCheck(_permissions), BaseSelfPermissionsCheck(_clientPermissions), GuildCheck.all()],
+  checks: [BasePermissionsCheck(_permissions), BaseSelfPermissionsCheck(_clientPermissions), GuildCheck.all(), HasModChannelCheck()],
 );

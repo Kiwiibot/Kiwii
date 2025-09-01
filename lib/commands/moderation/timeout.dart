@@ -66,15 +66,6 @@ final timeoutCommand = ChatCommand(
       @Name('reference-case') @Description('The reference case') @Autocomplete(caseAutoCompleteNoHistory) int? caseId,
       @Name('report-reference') @Description('The reference report') int? reportId,
     ]) async {
-      final guildSettings = await ctx.client.repositories.guilds.getOrNull(ctx.guild!.id);
-
-      final modLogChannel = guildSettings?.modLogChannelId;
-
-      if (modLogChannel == null) {
-        await ctx.send(ctx.guild.t.general.errors.noModChannel);
-        return;
-      }
-
       if (member.communicationDisabledUntil != null && DateTime.now() < member.communicationDisabledUntil!) {
         await ctx.send(ctx.guild.t.moderation.timeout.alreadyTimedOut);
         return;
@@ -175,5 +166,6 @@ final timeoutCommand = ChatCommand(
       requiresAll: true,
     ),
     GuildCheck.all(),
+    HasModChannelCheck(),
   ],
 );

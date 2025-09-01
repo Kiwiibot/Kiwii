@@ -299,6 +299,11 @@ Future<void> _main() async {
         );
         return;
       }
+
+      if (failed is HasModChannelCheck) {
+        await context.respond(MessageBuilder(content: context.guild.t.general.errors.noModChannel));
+        return;
+      }
     }
 
     if (error case ConverterFailedException(:final context, :final failed)) {

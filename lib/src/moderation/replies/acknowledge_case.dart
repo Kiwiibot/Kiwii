@@ -19,7 +19,6 @@
 import 'package:nyxx/nyxx.dart';
 import 'package:option/option.dart';
 
-// import '../../../database.dart' hide Guild;
 import '../../../kiwii.dart';
 import '../../../plugins/localization.dart';
 import '../../models/case.dart';

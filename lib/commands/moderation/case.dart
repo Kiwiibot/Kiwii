@@ -46,11 +46,6 @@ final caseCommand = ChatCommand(
 
       final guildSettings = await ctx.client.repositories.guilds.get(ctx.guild!.id);
 
-      if (guildSettings.modLogChannelId == null) {
-        await ctx.send(ctx.guild.t.general.errors.noModChannel);
-        return;
-      }
-
       final modChannel = await ctx.client.channels.get(guildSettings.modLogChannelId!);
 
       final mod = await ctx.client.users.get(ccase.modId!);
@@ -82,7 +77,7 @@ final caseCommand = ChatCommand(
       await ctx.respond(MessageBuilder(embeds: [embed]), level: hideReply ? ResponseLevel.hint : null);
     }
   }),
-  checks: [BasePermissionsCheck(_permissions), SelfPermissionsCheck(_clientPermissions), GuildCheck.all()],
+  checks: [BasePermissionsCheck(_permissions), SelfPermissionsCheck(_clientPermissions), GuildCheck.all(), HasModChannelCheck()],
   options: KiwiiCommandOptions(
     category: 'moderation',
     usage: '[case number] <hide reply>',

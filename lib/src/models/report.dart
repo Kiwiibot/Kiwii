@@ -76,6 +76,7 @@ class UpdateReport {
   final Option<Snowflake?> messageId;
   final Option<Snowflake?> channelId;
   final Option<String?> attachmentUrl;
+  final Option<DateTime?> updatedAt;
 
   UpdateReport({
     required this.reportId,
@@ -91,6 +92,7 @@ class UpdateReport {
     this.messageId = const None(),
     this.channelId = const None(),
     this.attachmentUrl = const None(),
+    this.updatedAt = const None(),
   });
 
   Map<String, Option<Object?>> toRow() => {
@@ -106,6 +108,7 @@ class UpdateReport {
     'status': status.map((e) => e?.index),
     'message_id': messageId.map((id) => id?.value),
     'channel_id': channelId.map((id) => id?.value),
+    'updated_at': updatedAt,
     'attachment_url': attachmentUrl,
   };
 }

@@ -24,12 +24,13 @@ FROM debian:buster-slim AS runner
 
 WORKDIR /app
 
-RUN apt update && apt install -y libssl-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y libssl-dev && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /bot/kiwii /app/kiwii
 COPY --from=builder /bot/migrations /app/migrations
 COPY --from=builder /bot/run-migrations /usr/local/bin
 COPY --from=builder /bot/logs /app/logs
+COPY --from=builder /bot/lib/utils/metadata.json /app/lib/utils/metadata.json
 
 RUN truncate -s 0 logs/log.log && truncate -s 0 logs/log.err
 

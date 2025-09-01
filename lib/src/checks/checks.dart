@@ -49,9 +49,9 @@ class SelfPermissionsCheck extends Check {
   final bool requiresAll;
 
   SelfPermissionsCheck(this.permissions, {this.allowsOverrides = true, this.requiresAll = true, String? name, super.allowsDm = false})
-      // Forwarding [permissions] to [requiredPermissions] would lead to a promotion or demotion of the command permission
-      // because if a command requires .sendMessages | .manageGuild, but the client only requires .sendMessage, depending on the order of the check, this can lead
-      // to a massive desync between "real" required permissions and client permissions.
+    // Forwarding [permissions] to [requiredPermissions] would lead to a promotion or demotion of the command permission
+    // because if a command requires .sendMessages | .manageGuild, but the client only requires .sendMessage, depending on the order of the check, this can lead
+    // to a massive desync between "real" required permissions and client permissions.
     : super(name: name ?? 'Self permission check on $permissions', requiredPermissions: null, (context) async {
         Guild? guild = context.guild;
 
@@ -161,4 +161,24 @@ class BaseSelfPermissionsCheck extends SelfPermissionsCheck {
 
 class OwnerCheck extends Check {
   OwnerCheck() : super((ctx) => ctx.user.id == ownerId, name: 'OwnerCheck');
+}
+
+class HasModChannelCheck extends Check {
+  HasModChannelCheck()
+    : super(
+        (ctx) async {
+          if (ctx.guild == null) {
+            return false;
+          }
+          final guildSettings = await ctx.client.repositories.guilds.getOrNull(ctx.guild!.id);
+
+          if (guildSettings?.modLogChannelId == null) {
+            return false;
+          }
+
+          return true;
+        },
+        name: 'ModChannelCheck',
+        allowsDm: false,
+      );
 }

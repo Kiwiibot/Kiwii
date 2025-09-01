@@ -121,7 +121,7 @@ Future<void> userReport(
     if (pendingReport != null) {
       final attachmentUrl = await forwardReport((author: ctx.user, reason: trimmedReason), guild!, attachment, pendingReport);
 
-      await updateReport(UpdateReport(reportId: pendingReport.reportId, guildId: ctx.guild!.id, attachmentUrl: Option.fromNullable(attachmentUrl?.toString())));
+      await updateReport(UpdateReport(reportId: pendingReport.reportId, guildId: ctx.guild!.id, attachmentUrl: Option.fromNullable(attachmentUrl?.toString()), updatedAt: Some(DateTime.now())));
     } else {
       if (await cache[key].get() != null) {
         await buttonContext.interaction.respond(

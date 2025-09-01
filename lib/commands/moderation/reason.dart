@@ -57,12 +57,7 @@ final reasonCommand = ChatCommand(
   ]) async {
     final guildSettings = await ctx.client.repositories.guilds.getOrNull(ctx.guild!.id);
 
-    final modLogChannel = guildSettings?.modLogChannelId;
-
-    if (modLogChannel == null) {
-      await ctx.send(ctx.guild.t.general.errors.noModChannel);
-      return;
-    }
+    final modLogChannel = guildSettings!.modLogChannelId!;
 
     final low = min(caseId, lastCaseId ?? caseId);
     final up = max(caseId, lastCaseId ?? caseId);
@@ -154,5 +149,5 @@ final reasonCommand = ChatCommand(
   }),
   localizedNames: {Locale.fr: 'raison', Locale.de: 'grund'},
   localizedDescriptions: {Locale.fr: "Définit la raison de l'action de modération.", Locale.de: 'Legt den Grund der Moderationsaktion fest.'},
-  checks: [GuildCheck.all(), PermissionsCheck(Permissions.manageMessages, allowsDm: false, allowsOverrides: false)],
+  checks: [GuildCheck.all(), PermissionsCheck(Permissions.manageMessages, allowsDm: false, allowsOverrides: false), HasModChannelCheck()],
 );
