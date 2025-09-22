@@ -22,9 +22,7 @@ import 'package:nyxx/nyxx.dart';
 // ignore: implementation_imports
 import 'package:nyxx/src/utils/to_string_helper/to_string_helper.dart';
 import 'package:nyxx_commands/nyxx_commands.dart';
-import 'package:nyxx_extensions/nyxx_extensions.dart';
 
-import 'converters/converters.dart';
 
 typedef Example = ({String command, String description});
 

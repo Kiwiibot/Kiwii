@@ -23,6 +23,7 @@ import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart' hide Connection;
 import 'package:nyxx_extensions/nyxx_extensions.dart';
 import 'package:postgres/postgres.dart';
+import 'package:sentry/sentry.dart';
 // import 'package:style_cron_job/style_cron_job.dart';
 
 // import '../database.dart';
@@ -33,14 +34,13 @@ import '../src/moderation/replies/acknowledge_case.dart';
 Future<void> registerJobs() async {
   final client = GetIt.I.get<NyxxGateway>();
   final connection = GetIt.I.get<Connection>();
-  final logger = GetIt.I.get<Logger>();
 
   Timer.periodic(const Duration(minutes: 1), (time) async {
-    await modActionTimers(connection, client, logger);
+    await modActionTimers(connection, client);
   });
 }
 
-Future<void> modActionTimers(Connection connection, NyxxGateway client, Logger logger) async {
+Future<void> modActionTimers(Connection connection, NyxxGateway client) async {
   final currentCases = await connection
       .execute(r'SELECT guild_id, case_id, action_expiration FROM cases WHERE action_expiration IS NOT NULL AND action_processed = false;')
       .then(
@@ -65,7 +65,7 @@ Future<void> modActionTimers(Connection connection, NyxxGateway client, Logger l
         );
         await acknowledgeCase(guild, newCase, '/', await client.user.get());
       } catch (e) {
-        logger.warning('Failed to delete case ${ccase.caseId}', e);
+        Sentry.logger.fmt.warn('Failed to process mod action timer for case %s in guild %s', [ccase.caseId, ccase.guildId]);
       }
     }
   }

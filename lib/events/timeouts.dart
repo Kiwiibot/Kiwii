@@ -17,9 +17,9 @@
  */
 
 import 'package:darq/darq.dart';
-import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart' hide Cache;
 import 'package:nyxx_extensions/nyxx_extensions.dart';
+import 'package:sentry/sentry.dart';
 
 import '../kiwii.dart';
 import '../plugins/localization.dart';
@@ -67,9 +67,12 @@ Future<void> onAutoModerationActionExecutionTimeout(AutoModerationActionExecutio
     );
 
     await acknowledgeCase(guild, ccase, '/', await guild.manager.client.user.get());
-  } catch (e, st) {
-    final logger = GetIt.I.get<Logger>();
-    logger.warning('Failed create case for timeout action', e, st);
+  } catch (e) {
+    Sentry.logger.fmt.warn(
+      'Failed create case for timeout action',
+      [],
+      attributes: {'guildId': SentryLogAttribute.string(event.guildId.toString()), 'userId': SentryLogAttribute.string(event.userId.toString())},
+    );
   }
 }
 
@@ -112,8 +115,10 @@ Future<void> onGuildMemberUpdateTimeout(GuildMemberUpdateEvent event) async {
 
     final auditLogs = await event.guild.auditLogs.list(limit: 10, type: AuditLogEvent.memberUpdate);
 
-    final logs = auditLogs.firstWhereOrDefault((e) => e.targetId == newMember.id && e.changes?.any((c) => c.key == 'communication_disabled_until') == true,
-        defaultValue: null);
+    final logs = auditLogs.firstWhereOrDefault(
+      (e) => e.targetId == newMember.id && e.changes?.any((c) => c.key == 'communication_disabled_until') == true,
+      defaultValue: null,
+    );
 
     if (logs == null || logs.changes == null || logs.changes?.isEmpty == true) {
       return;
@@ -136,39 +141,43 @@ Future<void> onGuildMemberUpdateTimeout(GuildMemberUpdateEvent event) async {
       target = await client.users.get(logs.targetId!);
     }
 
-    final ccase = hasTimeoutEnded
-        ? await deleteCase(
-            DeleteCase(
-              guildId: event.guildId,
-              modId: logs.userId,
-              modTag: user?.tag,
-              targetId: logs.targetId,
-              targetTag: target?.tag,
-              reason: logs.reason,
-              action: CaseAction.timeout,
-            ),
-            await event.guild.get(),
-            isManual: true,
-            shouldSkip: true,
-          )
-        : await createCase(
-            (await event.guild.get()),
-            CreateCase(
-              guildId: event.guildId,
-              action: CaseAction.timeout,
-              targetId: target!.id,
-              targetTag: target.tag,
-              duration: (newMember.communicationDisabledUntil ?? DateTime.now()).difference(DateTime.now()),
-              modId: logs.userId,
-              modTag: user?.tag,
-              reason: logs.reason,
-            ),
-            skip: true,
-          );
+    final ccase =
+        hasTimeoutEnded
+            ? await deleteCase(
+              DeleteCase(
+                guildId: event.guildId,
+                modId: logs.userId,
+                modTag: user?.tag,
+                targetId: logs.targetId,
+                targetTag: target?.tag,
+                reason: logs.reason,
+                action: CaseAction.timeout,
+              ),
+              await event.guild.get(),
+              isManual: true,
+              shouldSkip: true,
+            )
+            : await createCase(
+              (await event.guild.get()),
+              CreateCase(
+                guildId: event.guildId,
+                action: CaseAction.timeout,
+                targetId: target!.id,
+                targetTag: target.tag,
+                duration: (newMember.communicationDisabledUntil ?? DateTime.now()).difference(DateTime.now()),
+                modId: logs.userId,
+                modTag: user?.tag,
+                reason: logs.reason,
+              ),
+              skip: true,
+            );
 
     await acknowledgeCase(guild, ccase, '/', user);
-  } catch (e, st) {
-    final logger = GetIt.I.get<Logger>();
-    logger.warning('Failed to update timeout', e, st);
+  } catch (e) {
+    Sentry.logger.fmt.warn(
+      'Failed to update timeout for user %s',
+      [event.member.id],
+      attributes: {'guildId': SentryLogAttribute.string(event.guildId.toString()), 'userId': SentryLogAttribute.string(event.member.id.toString())},
+    );
   }
 }

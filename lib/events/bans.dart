@@ -22,6 +22,7 @@ import 'package:neat_cache/neat_cache.dart';
 import 'package:nyxx/nyxx.dart' hide Cache;
 import 'package:nyxx_extensions/nyxx_extensions.dart';
 import 'package:option/option.dart';
+import 'package:sentry/sentry.dart';
 
 import '../src/models/appeal.dart';
 import '../src/models/case.dart';
@@ -34,7 +35,6 @@ import '../utils/extensions.dart';
 
 Future<void> onGuildBanAdd(GuildBanAddEvent event) async {
   final cache = GetIt.I.get<Cache<String>>();
-  final logger = GetIt.I.get<Logger>();
 
   try {
     final user = event.user;
@@ -77,15 +77,13 @@ Future<void> onGuildBanAdd(GuildBanAddEvent event) async {
     );
 
     await acknowledgeCase(await event.guild.get(), newCase, '/', await logs.user?.get());
-  } catch (e, st) {
-    logger.warning('Failed to create case for user ${event.user.id}', e, st);
+  } catch (e) {
+    Sentry.logger.fmt.warn('Failed to create case for user %s', [event.user.id], attributes: {'exception': SentryLogAttribute.string(e.toString())});
   }
 }
 
 Future<void> onGuildBanRemove(GuildBanRemoveEvent event) async {
   final cache = GetIt.I.get<Cache<String>>();
-  final logger = GetIt.I.get<Logger>();
-
   try {
     final user = event.user;
 
@@ -142,7 +140,7 @@ Future<void> onGuildBanRemove(GuildBanRemoveEvent event) async {
         ),
       );
     }
-  } catch (e, st) {
-    logger.warning('Failed to create case for user ${event.user.id}', e, st);
+  } catch (e) {
+    Sentry.logger.fmt.warn('Failed to create case for user %s', [event.user.id], attributes: {'exception': SentryLogAttribute.string(e.toString())});
   }
 }

@@ -18,53 +18,29 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' as io;
-import 'dart:math';
 
-import 'package:kiwii/commands/admin/rest.dart';
-import 'package:kiwii/commands/admin/stats.dart';
-import 'package:kiwii/commands/core/avatar.dart';
-import 'package:kiwii/commands/core/info.dart';
-import 'package:kiwii/commands/fun/emoji.dart';
-import 'package:kiwii/commands/fun/images.dart';
-import 'package:kiwii/events/message_reaction_add.dart';
-import 'package:kiwii/commands/moderation/report.dart';
-import 'package:kiwii/events/member_log.dart';
-import 'package:kiwii/plugins/images_plugin.dart';
-import 'package:kiwii/plugins/load_modules.dart';
-import 'package:kiwii/plugins/prometheus.dart';
-import 'package:kiwii/plugins/track_presences.dart';
-import 'package:kiwii/plugins/tracking.dart';
-import 'package:kiwii/services/api.dart';
-import 'package:kiwii/src/converters/converters.dart';
 import 'package:get_it/get_it.dart';
-import 'package:kiwii/commands/moderation/ban.dart';
-import 'package:kiwii/commands/moderation/case.dart';
-import 'package:kiwii/commands/moderation/lookup.dart';
-import 'package:kiwii/commands/moderation/reason.dart';
-import 'package:kiwii/commands/moderation/timeout.dart';
-import 'package:kiwii/commands/moderation/warn.dart';
-import 'package:kiwii/commands/ping.dart';
-import 'package:kiwii/commands/utils/tag.dart';
-import 'package:kiwii/commands/utils/settings.dart';
-import 'package:kiwii/commands/utils/source.dart';
 import 'package:kiwii/events/appeal.dart';
 import 'package:kiwii/events/bans.dart';
+import 'package:kiwii/events/member_log.dart';
 import 'package:kiwii/events/message_create.dart';
 import 'package:kiwii/events/message_log.dart';
+import 'package:kiwii/events/message_reaction_add.dart';
 import 'package:kiwii/events/ready.dart';
 import 'package:kiwii/events/timeouts.dart';
 import 'package:kiwii/kiwii.dart';
 import 'package:kiwii/plugins/localization.dart';
-import 'package:kiwii/plugins/tag/tag.dart';
+import 'package:kiwii/plugins/prometheus.dart';
+import 'package:kiwii/services/api.dart';
 import 'package:kiwii/src/settings.dart' as settings;
-import 'package:kiwii/utils/io/stderr.dart' as ioutils;
-import 'package:kiwii/utils/io/stdout.dart' as ioutils;
+import 'package:kiwii/src/structs/kiwii.dart';
+
 import 'package:neat_cache/neat_cache.dart';
 import 'package:nyxx/nyxx.dart' hide Cache, Connection;
 import 'package:nyxx_commands/nyxx_commands.dart' hide userConverter, memberConverter;
 import 'package:nyxx_extensions/nyxx_extensions.dart';
 import 'package:sentry/sentry_io.dart';
+import 'package:sentry_logging/sentry_logging.dart';
 import 'package:postgres/postgres.dart';
 // ignore: depend_on_referenced_packages
 import 'package:intl/date_symbol_data_local.dart';
@@ -72,27 +48,24 @@ import 'package:shelf/shelf_io.dart' as io;
 import 'package:prometheus_client/runtime_metrics.dart' as runtime_metrics;
 
 void main() async {
-  if (!settings.isDev) {
+  runZonedGuarded(() async {
     await Sentry.init((options) {
       options.dsn = settings.dsn;
       options.tracesSampleRate = 1.0;
       options.environment = settings.isDev ? 'debug' : 'production';
+      options.enableLogs = true;
+      options.addIntegration(LoggingIntegration());
     });
 
-    try {
-      await _main();
-    } catch (e, stackTrace) {
-      await Sentry.captureException(e, stackTrace: stackTrace);
-    }
-  } else {
     await _main();
-  }
+  }, (error, stackTrace) async {
+    await Sentry.captureException(error, stackTrace: stackTrace);
+  });
 }
 
 Future<void> _main() async {
   runtime_metrics.register();
-  await initializeDateFormatting('en_GB');
-  await initializeDateFormatting('fr_FR');
+  await initializeDateFormatting();
 
   final connection = await Connection.open(
     Endpoint(
@@ -106,12 +79,6 @@ Future<void> _main() async {
   );
   GetIt.I.registerSingleton(connection);
 
-  final errFile = io.File('logs/log.err');
-  final logFile = io.File('logs/log.log');
-  final stderr = settings.isDev ? io.stderr : ioutils.Stderr(errFile, io.stderr);
-  final stdout = settings.isDev ? io.stdout : ioutils.Stdout(logFile, io.stdout);
-  final logging = Logging(stderr: stderr, stdout: stdout, logLevel: Level.INFO, truncateLogsAt: 10000);
-
   final commands = CommandsPlugin(
     prefix: mentionOr(dmOr((_) => settings.prefix)),
     options: CommandsOptions(
@@ -120,87 +87,14 @@ Future<void> _main() async {
     ),
   );
 
-  final logger = Logger('Kiwii');
-
   final cacheProvider = Cache.inMemoryCacheProvider(1000);
   final cache = Cache(cacheProvider);
   final kiwiiCache = cache.withPrefix('kiwii').withCodec(utf8);
 
-  commands.addCommand(ping);
-  commands.addCommand(markov);
-  commands.addCommand(uwurandom);
-  commands.addCommand(tagCommand);
-  commands.addCommand(helpCommand);
-  commands.addCommand(sourceCommand);
-  commands.addCommand(settingsCommand);
-  commands.addCommand(runAsCommand);
-  commands.addCommand(warnCommand);
-  commands.addCommand(timeoutCommand);
-  commands.addCommand(reasonCommand);
-  commands.addCommand(banCommand);
-  commands.addCommand(lookupCommand);
-  commands.addCommand(userLookupCommand);
-  commands.addCommand(caseCommand);
-  commands.addCommand(infoCommand);
-  commands.addCommand(infoUserCommand);
-  commands.addCommand(restCommand);
-  commands.addCommand(statsCommand);
-  commands.addCommand(namesCommand);
-  commands.addCommand(avatarCommand);
-  commands.addCommand(avatarsCommand);
-  commands.addCommand(reportCommand);
-  commands.addCommand(imagesCommand);
-  commands.addCommand(emojiCommand);
-
-  commands.addConverter(listConverter);
-  commands.addConverter(chatCommandConverter);
-  commands.addConverter(basePluginConverter);
-  commands.addConverter(tagConverter);
-  commands.addConverter(localeConverter);
-  commands.addConverter(mapObjectConverter);
-  commands.addConverter(httpRouteConverter);
-  commands.addConverter(durationConverter);
-  commands.addConverter(userConverter);
-  commands.addConverter(messageConverter);
-  commands.addConverter(memberConverter);
-  commands.addConverter(forumChannelConverter);
-  commands.addConverter(emojiConverter);
-
-  final status = '${settings.prefix}help ─ ${settings.statuses[Random().nextInt(settings.statuses.length)]}';
-
-  final client = await Nyxx.connectGatewayWithOptions(
-    GatewayApiOptions(
-      token: settings.token,
-      intents: GatewayIntents.all,
-      payloadFormat: GatewayPayloadFormat.etf,
-      browser: 'Discord Android',
-      initialPresence: PresenceBuilder(
-        isAfk: false,
-        status: CurrentUserStatus.idle,
-        activities: [ActivityBuilder(type: ActivityType.custom, name: status, state: status)],
-      ),
-    ),
-    GatewayClientOptions(
-      plugins: [
-        logging,
-        TagPlugin(),
-        ModulesPlugin(),
-        TrackPresences(),
-        ImagesPlugin(),
-        tracking,
-        cliIntegration,
-        commands,
-        pagination,
-        localization,
-        ignoreExceptions,
-        guildJoins,
-      ],
-    ),
-  );
+  final client = await Kiwii.connect();
 
   GetIt.I.registerSingleton(client);
   GetIt.I.registerSingleton(commands);
-  GetIt.I.registerSingleton(logger);
   GetIt.I.registerSingleton(kiwiiCache);
 
   registerEventCollectors(client);

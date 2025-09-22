@@ -21,6 +21,7 @@ import 'dart:math';
 import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
+import 'package:sentry/sentry.dart';
 
 import '../../../kiwii.dart';
 import '../../../translations.g.dart';
@@ -183,8 +184,6 @@ EmbedBuilder generateUserInfo(({Member? member, User user}) target, Translations
 
 Future<String> generateCaseLog(Case ccase, Snowflake logChannelId, Translations t, String prefix) async {
   final client = GetIt.I.get<NyxxGateway>();
-  final logger = GetIt.I.get<Logger>();
-
   var action = formatCaseAction(ccase.action, t);
 
   if (ccase.action case CaseAction.role || CaseAction.unrole when ccase.roleId != null) {
@@ -194,7 +193,7 @@ Future<String> generateCaseLog(Case ccase, Snowflake logChannelId, Translations 
 
       action += ' `@${role.name}` (${role.id})';
     } catch (e) {
-      logger.warning('Failed to fetch role for case ${ccase.caseId}', e);
+      Sentry.logger.fmt.warn('Failed to fetch role for case %s', [ccase.caseId], attributes: {'exception': SentryLogAttribute.string(e.toString())});
     }
   }
 

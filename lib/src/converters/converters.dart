@@ -37,7 +37,6 @@ import 'package:nyxx_extensions/nyxx_extensions.dart';
 import '../../plugins/base.dart';
 import '../../plugins/load_modules.dart';
 import '../../plugins/localization.dart';
-import '../../plugins/tag/tag.dart';
 import '../../translations.g.dart';
 import '../../utils/utils.dart';
 import '../models/tag.dart';
