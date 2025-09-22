@@ -79,19 +79,13 @@ Future<void> _main() async {
   );
   GetIt.I.registerSingleton(connection);
 
-  final commands = CommandsPlugin(
-    prefix: mentionOr(dmOr((_) => settings.prefix)),
-    options: CommandsOptions(
-      logErrors: false,
-      defaultResponseLevel: ResponseLevel(hideInteraction: false, isDm: false, mention: false, preserveComponentMessages: true),
-    ),
-  );
-
   final cacheProvider = Cache.inMemoryCacheProvider(1000);
   final cache = Cache(cacheProvider);
   final kiwiiCache = cache.withPrefix('kiwii').withCodec(utf8);
 
   final client = await Kiwii.connect();
+
+  final commands = client.options.plugins.whereType<CommandsPlugin>().single;
 
   GetIt.I.registerSingleton(client);
   GetIt.I.registerSingleton(commands);

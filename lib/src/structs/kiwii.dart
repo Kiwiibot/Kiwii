@@ -21,6 +21,9 @@ class Kiwii extends NyxxGateway {
   SentryHttpHandler get httpHandler => SentryHttpHandler(this);
 
   static Future<NyxxGateway> connect() async {
+    // because the `logging` top variable is lazy, it only initialises when passed to the plugins, which can lead to missing logs, so we properly call it here.
+    // this looks very stupid though.
+    logging;
     registerCommands();
     registerConverters();
     final status = '${settings.prefix}help ─ ${settings.statuses[Random().nextInt(settings.statuses.length)]}';
