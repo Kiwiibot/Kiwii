@@ -48,7 +48,7 @@ Future<void> onMessageDelete(MessageDeleteEvent event) async {
 
   final guild = await event.guild!.get();
 
-  final channel = await message.channel.get() as GuildTextChannel;
+  final channel = await message.channel.get() as GuildChannel;
 
   if (message case Message(author: User(isBot: true) || WebhookAuthor())) {
     return;
