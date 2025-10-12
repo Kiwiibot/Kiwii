@@ -18,6 +18,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:get_it/get_it.dart';
 import 'package:kiwii/events/appeal.dart';
@@ -29,16 +30,22 @@ import 'package:kiwii/events/message_reaction_add.dart';
 import 'package:kiwii/events/ready.dart';
 import 'package:kiwii/events/timeouts.dart';
 import 'package:kiwii/kiwii.dart';
+import 'package:kiwii/plugins/images_plugin.dart';
+import 'package:kiwii/plugins/load_modules.dart';
 import 'package:kiwii/plugins/localization.dart';
 import 'package:kiwii/plugins/prometheus.dart';
+import 'package:kiwii/plugins/tag/tag.dart';
+import 'package:kiwii/plugins/track_presences.dart';
+import 'package:kiwii/plugins/tracking.dart';
 import 'package:kiwii/services/api.dart';
 import 'package:kiwii/src/settings.dart' as settings;
-import 'package:kiwii/src/structs/kiwii.dart';
+import 'package:kiwii/utils/commands.dart';
 
 import 'package:neat_cache/neat_cache.dart';
 import 'package:nyxx/nyxx.dart' hide Cache, Connection;
 import 'package:nyxx_commands/nyxx_commands.dart' hide userConverter, memberConverter;
 import 'package:nyxx_extensions/nyxx_extensions.dart';
+import 'package:nyxx_lavalink/nyxx_lavalink.dart';
 import 'package:sentry/sentry_io.dart';
 import 'package:sentry_logging/sentry_logging.dart';
 import 'package:postgres/postgres.dart';
@@ -48,22 +55,26 @@ import 'package:shelf/shelf_io.dart' as io;
 import 'package:prometheus_client/runtime_metrics.dart' as runtime_metrics;
 
 void main() async {
-  runZonedGuarded(() async {
+  try {
     await Sentry.init((options) {
       options.dsn = settings.dsn;
       options.tracesSampleRate = 1.0;
+      options.sampleRate = 1.0;
       options.environment = settings.isDev ? 'debug' : 'production';
       options.enableLogs = true;
       options.addIntegration(LoggingIntegration());
     });
 
     await _main();
-  }, (error, stackTrace) async {
+  } catch (error, stackTrace) {
     await Sentry.captureException(error, stackTrace: stackTrace);
-  });
+  }
 }
 
 Future<void> _main() async {
+  // because the `logging` top variable is lazy, it only initialises when passed to the plugins, which can lead to missing logs, so we properly call it here.
+  // this looks very stupid though.
+  logging;
   runtime_metrics.register();
   await initializeDateFormatting();
 
@@ -83,11 +94,45 @@ Future<void> _main() async {
   final cache = Cache(cacheProvider);
   final kiwiiCache = cache.withPrefix('kiwii').withCodec(utf8);
 
-  final client = await Kiwii.connect();
+  registerCommands();
+  registerConverters();
+  final status = '${settings.prefix}help ─ ${settings.statuses[Random().nextInt(settings.statuses.length)]}';
+  final lavalink = LavalinkPlugin(base: Uri.http('localhost:2333'), password: 'youshallnotpass');
 
-  final commands = client.options.plugins.whereType<CommandsPlugin>().single;
+  final client = await Nyxx.connectGatewayWithOptions(
+    GatewayApiOptions(
+      token: settings.token,
+      intents: GatewayIntents.all,
+      payloadFormat: GatewayPayloadFormat.etf,
+      browser: 'Discord Android',
+      initialPresence: PresenceBuilder(
+        isAfk: false,
+        status: CurrentUserStatus.idle,
+        activities: [ActivityBuilder(type: ActivityType.custom, name: status, state: status)],
+      ),
+      // httpClient: SentryHttpClient(),
+    ),
+    GatewayClientOptions(
+      plugins: [
+        logging,
+        TagPlugin(),
+        ModulesPlugin(),
+        TrackPresences(),
+        ImagesPlugin(),
+        tracking,
+        cliIntegration,
+        commands,
+        pagination,
+        localization,
+        ignoreExceptions,
+        guildJoins,
+        lavalink,
+      ],
+    ),
+  );
 
   GetIt.I.registerSingleton(client);
+  GetIt.I.registerSingleton(lavalink);
   GetIt.I.registerSingleton(commands);
   GetIt.I.registerSingleton(kiwiiCache);
 

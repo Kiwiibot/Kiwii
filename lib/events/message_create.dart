@@ -24,36 +24,10 @@ import 'package:neat_cache/neat_cache.dart';
 // ignore: implementation_imports
 import 'package:neat_cache/src/providers/inmemory.dart';
 
-import '../utils/extensions.dart';
-
-// import '../utils/extensions.dart';
-
 final attachmentsCache = Cache(InMemoryCacheProvider<Uint8List>(512)).withTTL(const Duration(minutes: 30));
 
 Future<void> onMessageCreate(MessageCreateEvent event) async {
   final message = event.message;
-
-  if (message.content == 'emit') {
-    final member = await event.guild!.get().then((g) => g.members.get(message.author.id));
-    // final user = await event.message.manager.client.users.get(message.author.id);
-    // final mockMember = member.copyWith(user: user.copyWith(id: Snowflake.fromDateTime(DateTime.now().subtract(Duration(days: 14)))));
-
-    // event.gateway.messagesController.add(
-    //   EventReceived(
-    //     event: GuildMemberRemoveEvent(gateway: event.gateway, guildId: event.guildId!, removedMember: member, user: user)..isIntentional = true,
-    //   ),
-    // );
-    event.gateway.messagesController.add(
-      EventReceived(
-        event: GuildMemberUpdateEvent(
-          gateway: event.gateway,
-          oldMember: member,
-          member: member.copyWith(communicationDisabledUntil: DateTime.now().add(const Duration(seconds: 60))),
-          guildId: event.guildId!,
-        )..isIntentional = true,
-      ),
-    );
-  }
 
   if (message.attachments.isEmpty) {
     return;
