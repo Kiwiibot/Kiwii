@@ -84,8 +84,13 @@ Future<void> userReport(
     color: const DiscordColor(0x2f3136),
   );
 
+  AttachmentBuilder? resolvedAttachmentBuilder;
+
   if (attachment != null) {
-    embed.image = EmbedImageBuilder(url: attachment.url);
+    // In case it's an ephemeral attachment, we can't show it in the embed, we need to fetch it first.
+    final resolvedAttachment = await attachment.fetch();
+    embed.image = EmbedImageBuilder(url: Uri.parse('attachment://${attachment.fileName.toLowerCase()}'));
+    resolvedAttachmentBuilder = AttachmentBuilder(data: resolvedAttachment, fileName: attachment.fileName.toLowerCase(), description: attachment.description);
   }
 
   final message = await ctx.interaction.updateOriginalResponse(
@@ -95,6 +100,7 @@ Future<void> userReport(
       components: [
         ActionRowBuilder(components: [cancelButton, reportButton, trustAndSafetyButton]),
       ],
+      attachments: [?resolvedAttachmentBuilder],
     ),
   );
 
@@ -121,7 +127,14 @@ Future<void> userReport(
     if (pendingReport != null) {
       final attachmentUrl = await forwardReport((author: ctx.user, reason: trimmedReason), guild!, attachment, pendingReport);
 
-      await updateReport(UpdateReport(reportId: pendingReport.reportId, guildId: ctx.guild!.id, attachmentUrl: Option.fromNullable(attachmentUrl?.toString()), updatedAt: Some(DateTime.now())));
+      await updateReport(
+        UpdateReport(
+          reportId: pendingReport.reportId,
+          guildId: ctx.guild!.id,
+          attachmentUrl: Option.fromNullable(attachmentUrl?.toString()),
+          updatedAt: Some(DateTime.now()),
+        ),
+      );
     } else {
       if (await cache[key].get() != null) {
         await buttonContext.interaction.respond(

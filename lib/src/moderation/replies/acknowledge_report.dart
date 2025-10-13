@@ -181,7 +181,7 @@ Future<EmbedBuilder> formatMessageToEmbed(Message message, Translations t) async
 
   final attachment = message.attachments.firstOrNull;
   final attachmentIsImage = ['image/jpeg', 'image/gif', 'image/png', 'image/webp'].contains(attachment?.contentType ?? '');
-  final attachmentIsImageNaive = ['.jpg', '.jpeg', '.webp', '.gif'].any((e) => attachment?.fileName.endsWith(e) ?? false);
+  final attachmentIsImageNaive = ['.jpg', '.jpeg', '.webp', '.gif', '.png'].any((e) => attachment?.fileName.endsWith(e) ?? false);
 
   if (attachment != null && (attachmentIsImage || attachmentIsImageNaive)) {
     embed.image = EmbedImageBuilder(url: attachment.url);
@@ -226,7 +226,7 @@ Future<String> formatMessagesToString(
           t['logs.guildLogs.messageBulkDeleted.replyTo${doesMentions ? mentionsKey : ''}'](
             messageId: message.id,
             messageUrl: 'https://discord.com/channels/${message.channelId}/${message.id}',
-            userTag: message.referencedMessage?.author.tag ?? 'Unkown Author',
+            userTag: message.referencedMessage?.author.tag ?? 'Unknown Author',
             userId: message.referencedMessage?.author.id ?? 'Unknown Author',
           ),
         );
