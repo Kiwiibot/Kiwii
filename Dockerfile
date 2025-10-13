@@ -11,7 +11,7 @@ COPY . /bot/
 RUN dart pub get --offline
 
 # Generate the files
-RUN dart run build_runner build --delete-conflicting-outputs
+# RUN dart run build_runner build --delete-conflicting-outputs
 RUN dart run slang build
 RUN dart run bin/emojis.dart
 RUN dart compile exe -o run-migrations bin/migrations.dart
