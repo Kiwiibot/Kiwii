@@ -110,7 +110,7 @@ Future<void> userInfoHandler(CommandContext ctx, User user, [Member? member, boo
     ],
     thumbnail: EmbedThumbnailBuilder(url: member?.avatar?.get(size: 4096) ?? user.avatar.get(size: 4096)),
     footer: EmbedFooterBuilder(text: t.id(id: user.id), iconUrl: user.avatar.get(size: 128)),
-    color: user.accentColor ?? sortedRoles?.firstOrNull?.color,
+    color: user.accentColor ?? sortedRoles?.firstOrNull?.colors.primary,
   );
 
   if (member?.banner?.url != null || user.banner?.url != null) {

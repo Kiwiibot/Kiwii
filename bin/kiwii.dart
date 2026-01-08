@@ -37,7 +37,6 @@ import 'package:kiwii/plugins/prometheus.dart';
 import 'package:kiwii/plugins/tag/tag.dart';
 import 'package:kiwii/plugins/track_presences.dart';
 import 'package:kiwii/plugins/tracking.dart';
-import 'package:kiwii/services/api.dart';
 import 'package:kiwii/src/settings.dart' as settings;
 import 'package:kiwii/utils/commands.dart';
 
@@ -46,29 +45,13 @@ import 'package:nyxx/nyxx.dart' hide Cache, Connection;
 import 'package:nyxx_commands/nyxx_commands.dart' hide userConverter, memberConverter;
 import 'package:nyxx_extensions/nyxx_extensions.dart';
 import 'package:nyxx_lavalink/nyxx_lavalink.dart';
-import 'package:sentry/sentry_io.dart';
-import 'package:sentry_logging/sentry_logging.dart';
 import 'package:postgres/postgres.dart';
 // ignore: depend_on_referenced_packages
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:shelf/shelf_io.dart' as io;
 import 'package:prometheus_client/runtime_metrics.dart' as runtime_metrics;
 
 void main() async {
-  try {
-    await Sentry.init((options) {
-      options.dsn = settings.dsn;
-      options.tracesSampleRate = 1.0;
-      options.sampleRate = 1.0;
-      options.environment = settings.isDev ? 'debug' : 'production';
-      options.enableLogs = true;
-      options.addIntegration(LoggingIntegration());
-    });
-
-    await _main();
-  } catch (error, stackTrace) {
-    await Sentry.captureException(error, stackTrace: stackTrace);
-  }
+  await _main();
 }
 
 Future<void> _main() async {
@@ -110,7 +93,6 @@ Future<void> _main() async {
         status: CurrentUserStatus.idle,
         activities: [ActivityBuilder(type: ActivityType.custom, name: status, state: status)],
       ),
-      // httpClient: SentryHttpClient(),
     ),
     GatewayClientOptions(
       plugins: [
@@ -288,16 +270,8 @@ Future<void> _main() async {
 
     commands.logger.shout('Uncaught exception in command\n${error.message}', error, error.stackTrace);
 
-    if (!settings.isDev) {
-      await Sentry.captureException(error, stackTrace: error.stackTrace);
-    }
-
     if (error case CommandInvocationException(:final context)) {
       await context.respond(MessageBuilder(content: 'An error occurred while executing the command\n${error.message}'), level: ResponseLevel.hint);
     }
   });
-
-  final apiServer = await api();
-
-  await io.serve(apiServer, '0.0.0.0', 8080);
 }

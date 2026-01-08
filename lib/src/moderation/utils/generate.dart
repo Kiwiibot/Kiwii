@@ -21,7 +21,6 @@ import 'dart:math';
 import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart';
 import 'package:nyxx_extensions/nyxx_extensions.dart';
-import 'package:sentry/sentry.dart';
 
 import '../../../kiwii.dart';
 import '../../../translations.g.dart';
@@ -192,8 +191,8 @@ Future<String> generateCaseLog(Case ccase, Snowflake logChannelId, Translations 
       final role = await guild.roles.get(ccase.roleId!);
 
       action += ' `@${role.name}` (${role.id})';
-    } catch (e) {
-      Sentry.logger.fmt.warn('Failed to fetch role for case %s', [ccase.caseId], attributes: {'exception': SentryLogAttribute.string(e.toString())});
+    } catch (e, st) {
+      client.logger.warning('Failed to fetch role for case ${ccase.caseId}', e, st);
     }
   }
 

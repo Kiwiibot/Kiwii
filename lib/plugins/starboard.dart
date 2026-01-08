@@ -9,6 +9,7 @@ import 'package:postgres/postgres.dart';
 import '../commands/utils/settings.dart';
 import '../utils/extensions.dart';
 import 'base.dart';
+import 'localization.dart';
 
 // taken from _commands
 final RegExp _snowflakePattern = RegExp(r'^(?:<(?:@(?:!|&)?|#)([0-9]{15,20})>|([0-9]{15,20}))$');
@@ -156,7 +157,17 @@ RETURNING starrers.entry_id, entry.self_message_id;
 
       final (content, embed) = await _getStarboardEmbed(message, count, emoji);
 
-      await selfMessage.edit(MessageUpdateBuilder(content: content, embeds: [embed]));
+      await selfMessage.edit(
+        MessageUpdateBuilder(
+          content: content,
+          embeds: [embed],
+          components: [
+            ActionRowBuilder(
+              components: [ButtonBuilder.link(url: await message.url, label: channel.guild.t.general.starboard.jump)],
+            ),
+          ],
+        ),
+      );
     }
   }
 

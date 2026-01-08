@@ -20,7 +20,6 @@ dependencies:
   dart_openai: ^5.1.0
   darq: ^2.0.0
   stdlibc: ^0.1.4
-  sentry: ^9.6.0
   nyxx: ^6.4.3
   # overfast_api:
   #   git:
@@ -57,16 +56,11 @@ dependencies:
   xml: ^6.5.0
   lavalink: ^1.0.0
   nyxx_lavalink: 4.0.0-dev.1
-  sentry_logging: ^9.6.0
 dependency_overrides:
   nyxx:
     git:
       url: https://github.com/Lexedia/nyxx.git
       ref: feat/priv-utils
-  nyxx_extensions:
-    git:
-      url: https://github.com/nyxx-discord/nyxx_extensions.git
-      ref: feat/escapers
   nyxx_commands:
     git:
       url: https://github.com/Lexedia/nyxx_commands.git

@@ -72,8 +72,6 @@ final chatbotUrl = fromEnvironment('CHATBOT_URL');
 
 final initialPrompt = fromEnvironmentNullable('INITIAL_PROMPT');
 
-final dsn = fromEnvironment('SENTRY_DSN');
-
 final ownerId = Snowflake.parse(fromEnvironment('OWNER_ID', '253554702858452992'));
 
 final testGuildId = Snowflake.parse(fromEnvironment('TEST_GUILD_ID', '911736666551640075'));

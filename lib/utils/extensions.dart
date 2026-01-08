@@ -165,7 +165,13 @@ extension RoleExtensions on Role {
   Map<String, Object?> toJson() => {
     'id': id.toString(),
     'name': name,
+    // ignore: deprecated_member_use
     'color': color.value,
+    'colors': {
+      'primary': colors.primary,
+      'secondary': ?colors.secondary,
+      'tertiary': ?colors.tertiary
+    },
     'hoist': isHoisted,
     'position': position,
     'permissions': permissions.value.toString(),
@@ -377,6 +383,7 @@ extension UserExtension on User {
     publicFlags: publicFlags ?? this.publicFlags,
     avatarDecorationHash: avatarDecorationHash ?? this.avatarDecorationHash,
     avatarDecorationData: avatarDecorationData ?? this.avatarDecorationData,
+    primaryGuild: primaryGuild,
     manager: manager,
   );
 }

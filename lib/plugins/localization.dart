@@ -71,6 +71,6 @@ class LocalizationPlugin extends NyxxPlugin<NyxxGateway> {
   }
 }
 
-extension LocaleGuild on Guild? {
+extension LocaleGuild on PartialGuild? {
   Translations get t => this != null ? _locales[guildLocales[this!.id]] ?? defaultBuiltLocale : defaultBuiltLocale;
 }

@@ -19,7 +19,6 @@
 import 'package:darq/darq.dart';
 import 'package:nyxx/nyxx.dart' hide Cache;
 import 'package:nyxx_extensions/nyxx_extensions.dart';
-import 'package:sentry/sentry.dart';
 
 import '../kiwii.dart';
 import '../plugins/localization.dart';
@@ -67,12 +66,8 @@ Future<void> onAutoModerationActionExecutionTimeout(AutoModerationActionExecutio
     );
 
     await acknowledgeCase(guild, ccase, '/', await guild.manager.client.user.get());
-  } catch (e) {
-    Sentry.logger.fmt.warn(
-      'Failed create case for timeout action',
-      [],
-      attributes: {'guildId': SentryLogAttribute.string(event.guildId.toString()), 'userId': SentryLogAttribute.string(event.userId.toString())},
-    );
+  } catch (e, st) {
+    event.guild.manager.client.logger.warning('Failed to create case for timeout action (${event.user.id}, ${event.guild.id})', e, st);
   }
 }
 
@@ -141,43 +136,38 @@ Future<void> onGuildMemberUpdateTimeout(GuildMemberUpdateEvent event) async {
       target = await client.users.get(logs.targetId!);
     }
 
-    final ccase =
-        hasTimeoutEnded
-            ? await deleteCase(
-              DeleteCase(
-                guildId: event.guildId,
-                modId: logs.userId,
-                modTag: user?.tag,
-                targetId: logs.targetId,
-                targetTag: target?.tag,
-                reason: logs.reason,
-                action: CaseAction.timeout,
-              ),
-              await event.guild.get(),
-              isManual: true,
-              shouldSkip: true,
-            )
-            : await createCase(
-              (await event.guild.get()),
-              CreateCase(
-                guildId: event.guildId,
-                action: CaseAction.timeout,
-                targetId: target!.id,
-                targetTag: target.tag,
-                duration: (newMember.communicationDisabledUntil ?? DateTime.now()).difference(DateTime.now()),
-                modId: logs.userId,
-                modTag: user?.tag,
-                reason: logs.reason,
-              ),
-              skip: true,
-            );
+    final ccase = hasTimeoutEnded
+        ? await deleteCase(
+            DeleteCase(
+              guildId: event.guildId,
+              modId: logs.userId,
+              modTag: user?.tag,
+              targetId: logs.targetId,
+              targetTag: target?.tag,
+              reason: logs.reason,
+              action: CaseAction.timeout,
+            ),
+            await event.guild.get(),
+            isManual: true,
+            shouldSkip: true,
+          )
+        : await createCase(
+            (await event.guild.get()),
+            CreateCase(
+              guildId: event.guildId,
+              action: CaseAction.timeout,
+              targetId: target!.id,
+              targetTag: target.tag,
+              duration: (newMember.communicationDisabledUntil ?? DateTime.now()).difference(DateTime.now()),
+              modId: logs.userId,
+              modTag: user?.tag,
+              reason: logs.reason,
+            ),
+            skip: true,
+          );
 
     await acknowledgeCase(guild, ccase, '/', user);
-  } catch (e) {
-    Sentry.logger.fmt.warn(
-      'Failed to update timeout for user %s',
-      [event.member.id],
-      attributes: {'guildId': SentryLogAttribute.string(event.guildId.toString()), 'userId': SentryLogAttribute.string(event.member.id.toString())},
-    );
+  } catch (e, st) {
+    event.guild.manager.client.logger.warning('Failed to update case for timeout action (${event.member.id}, ${event.guild.id})', e, st);
   }
 }

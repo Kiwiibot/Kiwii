@@ -23,7 +23,6 @@ import 'package:get_it/get_it.dart';
 import 'package:nyxx/nyxx.dart' hide Connection;
 import 'package:nyxx_extensions/nyxx_extensions.dart';
 import 'package:postgres/postgres.dart';
-import 'package:sentry/sentry.dart';
 // import 'package:style_cron_job/style_cron_job.dart';
 
 // import '../database.dart';
@@ -64,8 +63,8 @@ Future<void> modActionTimers(Connection connection, NyxxGateway client) async {
           guild,
         );
         await acknowledgeCase(guild, newCase, '/', await client.user.get());
-      } catch (e) {
-        Sentry.logger.fmt.warn('Failed to process mod action timer for case %s in guild %s', [ccase.caseId, ccase.guildId]);
+      } catch (e, st) {
+        client.logger.warning('Failed to process mod action timer for case ${ccase.caseId} in guild ${ccase.guildId}', e, st);
       }
     }
   }

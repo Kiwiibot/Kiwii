@@ -66,3 +66,6 @@ categories:
 common:
   no_content: <No message content>
   message_reference: Original message
+
+starboard:
+  jump: Jump to message

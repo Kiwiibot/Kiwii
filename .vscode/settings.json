@@ -16,5 +16,5 @@
     "editor.indentSize": 2,
   },
   "dart.lineLength": 160,
-  "editor.hover.enabled": true,
+  "editor.hover.enabled": "on",
 }
